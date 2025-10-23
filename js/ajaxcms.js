@@ -77,26 +77,38 @@ function mpIndex(m) {
 }
 
 
-// Parse apache directory listing data... add to pages
+// Fetch JSON directory listing data... add to pages
 function load_pages(url) {
 	url = url.replace(/\/$/,''); // Remove trailing slash from starting point url
 	pages_count++;
-	$.get( url, function( data ) {
-		var f;
-		var rows = $(data).find('tr');
-		for (i = 3; i < rows.length - 1; i++) {
-			f = url + '/' + $(rows[i]).find('td a')[0].innerHTML;
-			pages.push(f);
-			
-			// Call directory recursively.
-			if (/\/$/.test(f)) { // if file list ends in / then it is a dir
-				load_pages(f);
+
+	// Fetch recursive directory listing as JSON
+	$.getJSON('api/list-recursive?dir=' + encodeURIComponent(url), function(data) {
+		// Add all files to pages array
+		for (var i = 0; i < data.files.length; i++) {
+			var filePath = url + '/' + data.files[i].path;
+			pages.push(filePath);
+		}
+
+		// Also need to add directories for menu structure
+		// Extract unique directory paths from file paths
+		var dirs = {};
+		for (var i = 0; i < data.files.length; i++) {
+			var parts = data.files[i].path.split('/');
+			for (var j = 0; j < parts.length - 1; j++) {
+				var dirPath = parts.slice(0, j + 1).join('/') + '/';
+				dirs[dirPath] = true;
 			}
+		}
+
+		// Add directories to pages array
+		for (var dir in dirs) {
+			pages.push(url + '/' + dir);
 		}
 	}).then(function(){
 		pages_count--;
 		if (pages_count === 0) {
-			
+
 			// Stuff to run after menu list is loaded.
 			menus = findMenus().sort();
 			makemenu();
@@ -104,20 +116,20 @@ function load_pages(url) {
 			menu_pages = $.grep(just_pages, function(n,i){return /\/menus\/.+/.test(n)});
 
 			// if there is a splash page then display
-			if (pages.indexOf("./pages/splash.html") && !param('page')) {
+			if (pages.indexOf("./pages/splash.html") >= 0 && !param('page')) {
 				$.get("./pages/splash.html",function(data){
 					$(".container").before("<div id='splash' style='width:100%; position:absolute;'>"+data+"</div>");
 				});
-				
+
 				setTimeout(function(){
 					$('#splash').fadeOut(2000);
 					$('.container').fadeIn(1000);
-				},ajaxcms_splash_time);	
-				
+				},ajaxcms_splash_time);
+
 			} else {
 				$('.container').fadeIn(1000)
 			}
-			
+
 			// Load the page in the params if specified, first menu page otherwise.
 			p = param('page');
 			console.log("p=" + p);
@@ -136,64 +148,61 @@ function load_pages(url) {
 }
 
 
-// Parse apache directory listing data... add to images
+// Fetch JSON directory listing data... add to images
 function load_images(url) {
 	url = url.replace(/\/$/,''); // Remove trailing slash from starting point url
 	images_count++;
-	$.get( url, function( data ) {
-		var f;
-		var rows = $(data).find('tr');
-		for (i = 3; i < rows.length - 1; i++) {
-			f = $(rows[i]).find('td a')[0].innerHTML;
-			if (f == 'icon/') { continue; }
-			if (f == 'thumb/') { continue; }
-			if (f == 'small/') { continue; }
-			if (f == 'medium/') { continue; }
-			if (f == 'large/') { continue; }
-			images.push(url+'/'+f);
-			// Call directory recursively.
-			if (/\/$/.test(f)) { // if file list ends in / then it is a dir
-				load_images(url+'/'+f);
-			}
+
+	// Fetch recursive directory listing as JSON
+	$.getJSON('api/list-recursive?dir=' + encodeURIComponent(url), function(data) {
+		// Add all image files to images array
+		for (var i = 0; i < data.files.length; i++) {
+			var filePath = data.files[i].path;
+
+			// Skip special directories
+			if (filePath.indexOf('icon/') === 0) { continue; }
+			if (filePath.indexOf('thumb/') === 0) { continue; }
+			if (filePath.indexOf('small/') === 0) { continue; }
+			if (filePath.indexOf('medium/') === 0) { continue; }
+			if (filePath.indexOf('large/') === 0) { continue; }
+
+			images.push(url + '/' + filePath);
 		}
 	}).then(function(){
 		images_count--;
 		if (images_count === 0) {
-			// Stuff to run after page list is loaded.	
+			// Stuff to run after page list is loaded.
 		}
 	});
 }
 
-// Parse apache directory listing data... add to themes
+// Fetch JSON directory listing data... add to themes
 function load_themes(url) {
 	url = url.replace(/\/$/,''); // Remove trailing slash from starting point url
-	images_count++;
-	$.get( url, function( data ) {
-		var f;
-		var rows = $(data).find('tr');
-		for (i = 3; i < rows.length - 1; i++) {
-			f = $(rows[i]).find('td a')[0].innerHTML;
-			// Save only the first level of directories.
-			if (/\/$/.test(f)) { // if file list ends in / then it is a dir
-				themes.push(f.replace(/\/$/,''));
-			}
+
+	// Fetch directory listing as JSON (non-recursive, just top level)
+	$.getJSON('api/list?dir=' + encodeURIComponent(url), function(data) {
+		// Add only first-level directories as themes
+		for (var i = 0; i < data.directories.length; i++) {
+			var dirName = data.directories[i].name;
+			themes.push(dirName);
 		}
 	}).then(function(){
-		var menutext = 
-		
+		var menutext =
+
 			"<ul class=\"nav navbar-nav navbar-right\">" +
-				"<li class=\"dropdown\">" + 
+				"<li class=\"dropdown\">" +
 					"<a class=\"dropdown-toggle\" data-toggle=\"dropdown\" href=\"#\">Themes" +
-	        		"<span class=\"caret\"></span></a>" + 
+	        		"<span class=\"caret\"></span></a>" +
 					"<ul class=\"dropdown-menu\">"
-	    
+
 	    for (var ii=0; ii<themes.length; ii++) {
 	    	if(themes[ii] == "default") {continue}
 	    	menutext += "<li><a href=\"?theme="+themes[ii]+"&page=blank.html\">"+themes[ii]+"</a></li>"
-	    }    		
-	    
+	    }
+
 	    menutext += "</ul></li></ul>"
-    		
+
     	$('#menu').after(menutext);
 	});
 }

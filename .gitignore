@@ -11,3 +11,10 @@
 /images/medium/*.jpg
 /images/large/*.jpg
 sitemap.xml
+
+# Node.js
+node_modules/
+npm-debug.log
+.env
+
+# Sites directory (multi-site installations)

@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AjaxCMS Sites</title>
+
+    <!-- Markdown parser -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.5/marked.min.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .sites-table-wrapper {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #667eea;
+            color: white;
+        }
+
+        th {
+            padding: 20px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #eee;
+            transition: background 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background: #f8f9ff;
+        }
+
+        tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        td {
+            padding: 20px;
+            vertical-align: top;
+        }
+
+        td.site-name {
+            font-weight: 600;
+            color: #667eea;
+            white-space: nowrap;
+            width: 200px;
+        }
+
+        td.site-url {
+            font-family: monospace;
+            color: #666;
+            font-size: 0.9em;
+            width: 250px;
+        }
+
+        td.site-url a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        td.site-url a:hover {
+            text-decoration: underline;
+        }
+
+        td.site-description {
+            color: #333;
+            line-height: 1.6;
+        }
+
+        td.site-description p {
+            margin: 0 0 10px 0;
+        }
+
+        td.site-description p:last-child {
+            margin-bottom: 0;
+        }
+
+        td.site-description em {
+            color: #999;
+        }
+
+        .loading {
+            text-align: center;
+            color: white;
+            font-size: 1.2em;
+            padding: 40px;
+        }
+
+        .error {
+            background: #ff6b6b;
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .no-sites {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            text-align: center;
+            color: #666;
+        }
+
+        .no-sites h2 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .no-sites code {
+            background: #f4f4f4;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            opacity: 0.8;
+            margin-top: 40px;
+        }
+
+        @media (max-width: 768px) {
+            table, thead, tbody, th, td, tr {
+                display: block;
+            }
+
+            thead {
+                display: none;
+            }
+
+            tbody tr {
+                margin-bottom: 20px;
+                border: 1px solid #eee;
+                border-radius: 8px;
+                overflow: hidden;
+            }
+
+            td {
+                border: none;
+                position: relative;
+                padding-left: 50%;
+            }
+
+            td::before {
+                position: absolute;
+                left: 20px;
+                font-weight: 600;
+                color: #667eea;
+            }
+
+            td.site-name::before {
+                content: "Site:";
+            }
+
+            td.site-url::before {
+                content: "URL:";
+            }
+
+            td.site-description::before {
+                content: "Description:";
+            }
+
+            td.site-name,
+            td.site-url {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>AjaxCMS Sites</h1>
+            <p>Select a site to visit</p>
+        </div>
+
+        <div id="sites-container">
+            <div class="loading">Loading sites...</div>
+        </div>
+
+        <div class="footer">
+            <p>AjaxCMS Multi-Site Server</p>
+        </div>
+    </div>
+
+    <script>
+        async function loadSites() {
+            const container = document.getElementById('sites-container');
+
+            try {
+                const response = await fetch('/api/sites');
+                if (!response.ok) {
+                    throw new Error('Failed to load sites');
+                }
+
+                const data = await response.json();
+                const sites = data.sites;
+
+                if (sites.length === 0) {
+                    container.innerHTML = `
+                        <div class="no-sites">
+                            <h2>No sites found</h2>
+                            <p>Create a new site by adding a directory to the <code>sites/</code> folder.</p>
+                            <p style="margin-top: 15px;">Example: <code>sites/mysite.com/</code></p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const rows = sites.map(site => {
+                    // Create clickable link - use path-based routing for localhost
+                    const sitePath = `/${site.name}/`;
+
+                    // Convert markdown description to HTML
+                    let descriptionHtml = '<em>No description</em>';
+                    if (site.description && site.description.trim()) {
+                        descriptionHtml = marked(site.description);
+                    }
+
+                    return `
+                        <tr>
+                            <td class="site-name">${site.name}</td>
+                            <td class="site-url"><a href="${sitePath}">${sitePath}</a></td>
+                            <td class="site-description">${descriptionHtml}</td>
+                        </tr>
+                    `;
+                }).join('');
+
+                container.innerHTML = `
+                    <div class="sites-table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Site</th>
+                                    <th>URL</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${rows}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+
+            } catch (error) {
+                console.error('Error loading sites:', error);
+                container.innerHTML = `
+                    <div class="error">
+                        <h2>Error loading sites</h2>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        loadSites();
+    </script>
+</body>
+</html>
