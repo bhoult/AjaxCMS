@@ -9,4 +9,112 @@ num_nodes = (page_width * page_height / 150000);
 
 ////////////////////////////////////////////////////////////////////
 
-var _0x7c60=["\x78","\x79","\x76\x65\x6C\x6F\x63\x69\x74\x79","\x68\x73\x6C","\x66\x72\x61\x6D\x65","\x67\x65\x74\x31\x64","\x72\x6F\x74\x61\x74\x65\x44\x65\x67","\x6C\x65\x6E\x67\x74\x68","\x63\x6C\x6F\x6E\x65","\x64\x69\x76\x69\x64\x65","\x69\x6E\x76\x65\x72\x74\x58","\x69\x6E\x76\x65\x72\x74\x59","\x70\x75\x74\x49\x6D\x61\x67\x65\x44\x61\x74\x61","\x62\x61\x63\x6B\x67\x72\x6F\x75\x6E\x64","\x67\x65\x74\x45\x6C\x65\x6D\x65\x6E\x74\x42\x79\x49\x64","\x32\x64","\x67\x65\x74\x43\x6F\x6E\x74\x65\x78\x74","\x77\x69\x64\x74\x68","\x63\x61\x6E\x76\x61\x73","\x68\x65\x69\x67\x68\x74","\x73\x74\x72\x6F\x6B\x65\x53\x74\x79\x6C\x65","\x62\x6C\x61\x63\x6B","\x66\x69\x6C\x6C\x53\x74\x79\x6C\x65","\x72\x67\x62\x61\x28\x32\x35\x35\x2C\x32\x35\x35\x2C\x32\x35\x35\x2C\x30\x2E\x30\x31\x38\x29","\x67\x65\x74\x49\x6D\x61\x67\x65\x44\x61\x74\x61","\x70\x75\x73\x68","\x72\x69\x62\x62\x6F\x6E\x73","\x3C\x64\x69\x76\x20\x73\x74\x79\x6C\x65\x3D\x27\x66\x6F\x6E\x74\x2D\x77\x65\x69\x67\x68\x74\x3A\x62\x6F\x6C\x64\x3B\x62\x6F\x72\x64\x65\x72\x2D\x62\x6F\x74\x74\x6F\x6D\x3A\x31\x70\x78\x20\x73\x6F\x6C\x69\x64\x20\x62\x6C\x61\x63\x6B\x3B\x27\x3E\x54\x68\x65\x6D\x65\x3A","\x3C\x73\x70\x61\x6E\x20\x73\x74\x79\x6C\x65\x3D\x27\x66\x6C\x6F\x61\x74\x3A\x72\x69\x67\x68\x74\x27\x3E\x26\x63\x6F\x70\x79\x3B\x20\x41\x6A\x61\x78\x43\x4D\x53\x20\x32\x30\x31\x36\x3C\x2F\x73\x70\x61\x6E\x3E\x3C\x2F\x64\x69\x76\x3E","\x3C\x64\x69\x76\x20\x73\x74\x79\x6C\x65\x3D\x27\x74\x65\x78\x74\x2D\x61\x6C\x69\x67\x6E\x3A\x63\x65\x6E\x74\x65\x72\x3B\x27\x3E\x3C\x64\x69\x76\x3E\x49\x6E\x64\x69\x76\x69\x64\x75\x61\x6C\x20\x4C\x69\x73\x65\x6E\x63\x65\x3A\x20\x24\x35\x30\x20\x2F\x20\x55\x6E\x6C\x69\x6D\x69\x74\x65\x64\x20\x55\x73\x65\x3A\x20\x24\x31\x30\x30\x3C\x2F\x64\x69\x76\x3E","\x3C\x64\x69\x76\x3E\x44\x65\x76\x65\x6C\x6F\x70\x6D\x65\x6E\x74\x20\x6F\x66\x20\x41\x6A\x61\x78\x43\x4D\x53\x20\x69\x73\x20\x6D\x61\x64\x65\x20\x70\x6F\x73\x73\x69\x62\x6C\x65\x20\x62\x79\x20\x74\x68\x65\x20\x73\x61\x6C\x65\x20\x6F\x66\x20\x74\x68\x65\x6D\x65\x73\x20\x6C\x69\x6B\x65\x20\x74\x68\x69\x73\x20\x6F\x6E\x65\x2E\x20\x20\x50\x6C\x65\x61\x73\x65\x20\x65\x6D\x61\x69\x6C\x3A\x20\x3C\x61\x20\x73\x74\x79\x6C\x65\x3D\x27\x63\x6F\x6C\x6F\x72\x3A\x23\x30\x30\x44\x3B\x27\x20\x68\x72\x65\x66\x3D\x27\x6D\x61\x69\x6C\x74\x6F\x3A\x62\x72\x61\x6E\x6F\x64\x6E\x2E\x68\x6F\x75\x6C\x74\x40\x73\x6F\x66\x74\x77\x79\x72\x65\x2E\x63\x6F\x6D\x27\x3E\x62\x72\x61\x6E\x64\x6F\x6E\x2E\x68\x6F\x75\x6C\x74\x40\x73\x6F\x66\x74\x77\x79\x72\x65\x2E\x63\x6F\x6D\x3C\x2F\x61\x3E\x20","\x74\x6F\x20\x70\x75\x72\x63\x68\x61\x73\x65\x20\x61\x20\x6C\x69\x63\x65\x6E\x63\x65\x2E\x20\x3C\x2F\x64\x69\x76\x3E\x3C\x2F\x64\x69\x76\x3E","\x3C\x64\x69\x76\x20\x73\x74\x79\x6C\x65\x3D\x27\x70\x6F\x73\x69\x74\x69\x6F\x6E\x3A\x66\x69\x78\x65\x64\x3B\x20\x62\x6F\x74\x74\x6F\x6D\x3A\x34\x30\x70\x78\x3B\x20\x72\x69\x67\x68\x74\x3A\x31\x30\x70\x78\x3B\x20\x68\x65\x69\x67\x68\x74\x3A\x31\x32\x30\x70\x78\x3B\x20\x77\x69\x64\x74\x68\x3A\x33\x35\x30\x70\x78\x3B\x20\x62\x6F\x72\x64\x65\x72\x2D\x72\x61\x64\x69\x75\x73\x3A\x35\x70\x78\x3B\x20\x70\x61\x64\x64\x69\x6E\x67\x3A\x35\x70\x78\x3B\x20\x62\x61\x63\x6B\x67\x72\x6F\x75\x6E\x64\x2D\x63\x6F\x6C\x6F\x72\x3A\x72\x67\x62\x61\x28\x32\x35\x35\x2C\x32\x35\x35\x2C\x32\x35\x35\x2C\x30\x2E\x38\x29\x3B\x63\x6F\x6C\x6F\x72\x3A\x62\x6C\x61\x63\x6B\x3B\x27\x3E","\x3C\x2F\x64\x69\x76\x3E","\x70\x72\x65\x70\x65\x6E\x64","\x23\x62\x61\x63\x6B\x67\x72\x6F\x75\x6E\x64\x2D\x64\x69\x76","\x75\x73\x65\x72\x41\x67\x65\x6E\x74","\x69\x6E\x6E\x65\x72\x57\x69\x64\x74\x68","\x69\x6E\x6E\x65\x72\x48\x65\x69\x67\x68\x74","\x64\x6F\x6D\x61\x69\x6E","\x68\x74\x74\x70\x3A\x2F\x2F\x61\x6A\x61\x78\x63\x6D\x73\x68\x65\x6C\x70\x65\x72\x2E\x73\x6F\x66\x74\x77\x79\x72\x65\x2E\x63\x6F\x6D\x2F\x68\x69\x74","\x70\x6F\x73\x74","\x61\x6A\x61\x78"];function node(_0xdc94x2,_0xdc94x3,_0xdc94x4,_0xdc94x5,_0xdc94x6,_0xdc94x7,_0xdc94x8,_0xdc94x9){this[_0x7c60[0]]= _0xdc94x2;this[_0x7c60[1]]= _0xdc94x3;this[_0x7c60[2]]=  new Victor(_0xdc94x4,_0xdc94x5);this[_0x7c60[3]]= [_0xdc94x6,_0xdc94x7,_0xdc94x8];this[_0x7c60[4]]= function(_0xdc94xa){for(i= 0;i< velocity_per_frame;i++){var _0xdc94xb=hslToRgb(this[_0x7c60[3]][0],this[_0x7c60[3]][1],this[_0x7c60[3]][2]);var _0xdc94xc=_0xdc94xb[0];var _0xdc94xd=_0xdc94xb[1];var _0xdc94xe=_0xdc94xb[2];this[_0x7c60[3]][0]+= 0.001;this[_0x7c60[2]][_0x7c60[6]](perlin[_0x7c60[5]](frame/ 600+ _0xdc94x2+ _0xdc94x3)* curliness);for(_0xdc94x8= 0;_0xdc94x8< this[_0x7c60[2]][_0x7c60[7]]();_0xdc94x8++){var _0xdc94xf=this[_0x7c60[2]][_0x7c60[8]]();_0xdc94xf[_0x7c60[9]](Victor(this[_0x7c60[2]][_0x7c60[7]](),this[_0x7c60[2]][_0x7c60[7]]()));var _0xdc94x10=_0xdc94xf[_0x7c60[0]];var _0xdc94x11=_0xdc94xf[_0x7c60[1]];this[_0x7c60[0]]+= _0xdc94x10;this[_0x7c60[1]]+= _0xdc94x11;setPixel(_0xdc94xa,this[_0x7c60[0]],this[_0x7c60[1]],_0xdc94xc,_0xdc94xd,_0xdc94xe,_0xdc94x9);spray(_0xdc94xa,this[_0x7c60[0]],this[_0x7c60[1]],this[_0x7c60[3]],30);if(this[_0x7c60[0]]> page_width){this[_0x7c60[0]]= page_width;this[_0x7c60[2]][_0x7c60[10]]()};if(this[_0x7c60[0]]< 0){this[_0x7c60[0]]= 0;this[_0x7c60[2]][_0x7c60[10]]()};if(this[_0x7c60[1]]> page_height){this[_0x7c60[1]]= page_height;this[_0x7c60[2]][_0x7c60[11]]()};if(this[_0x7c60[1]]< 0){this[_0x7c60[1]]= 0;this[_0x7c60[2]][_0x7c60[11]]()}}}}}function drawFrame(_0xdc94x13,_0xdc94x14){for(n= 0;n< nodes[_0x7c60[7]];n++){nodes[n][_0x7c60[4]](cd)};cdFade(cd,40,5);cdDiffuse(cd,150,15);_0xdc94x13[_0x7c60[12]](cd,0,0)}startBackground= function(){nodes= [];frame= 0;canvas= document[_0x7c60[14]](_0x7c60[13]);ctx= canvas[_0x7c60[16]](_0x7c60[15]);ctx[_0x7c60[18]][_0x7c60[17]]= page_width;ctx[_0x7c60[18]][_0x7c60[19]]= page_height;ctx[_0x7c60[20]]= _0x7c60[21];ctx[_0x7c60[22]]= _0x7c60[23];cd= ctx[_0x7c60[24]](0,0,canvas[_0x7c60[17]],canvas[_0x7c60[19]]);for(i= 0;i< num_nodes;i++){nodes[_0x7c60[25]]( new node(rand(page_width),rand(page_height),rand(10)- 5,rand(10)- 5,rand(360),1,0.5,255))};function _0xdc94x15(){requestAnimationFrame(_0xdc94x15);frame++;drawFrame(ctx,frame)}_0xdc94x15()};theme= _0x7c60[26];ad= _0x7c60[27]+ theme+ _0x7c60[28]+ _0x7c60[29]+ _0x7c60[30]+ _0x7c60[31];$(_0x7c60[35])[_0x7c60[34]](_0x7c60[32]+ ad+ _0x7c60[33]);hit_data= {theme:theme,user_agent:navigator[_0x7c60[36]],resolution_x:window[_0x7c60[37]],resolution_y:window[_0x7c60[38]],url:document[_0x7c60[39]]};$[_0x7c60[42]]({url:_0x7c60[40],type:_0x7c60[41],data:{hit_data:hit_data}});startBackground()
+function node(x, y, vx, vy, h, s, l, a) {
+  this.x = x;
+  this.y = y;
+  this.velocity = new Victor(vx, vy);
+  this.hsl = [h, s, l];
+
+  this.frame = function(cd) {
+    
+    // Number of iterations to draw per frame
+    for (i = 0; i < velocity_per_frame; i++) {
+      var rgb = hslToRgb(this.hsl[0], this.hsl[1], this.hsl[2]);
+      var r = rgb[0];
+      var g = rgb[1];
+      var b = rgb[2];
+      this.hsl[0] += 0.001;
+      
+      // Rotate the velocity using perlin noise.
+      this.velocity.rotateDeg(perlin.get1d(frame / 600 + x + y) * curliness); // Curliness 
+      
+      // Step through each pixel of node velocity (we are drawing one pixel at a time)
+      for (l = 0; l < this.velocity.length(); l++) {
+        var v1 = this.velocity.clone();
+        v1.divide(Victor(this.velocity.length(), this.velocity.length())); // the length of the section we are drawing for this frame.
+        var offsetX = v1.x;
+        var offsetY = v1.y;
+       
+        // Apply Movement
+        this.x += offsetX;
+        this.y += offsetY;
+        
+        // Draw Node as Pixel
+        setPixel(cd, this.x, this.y, r, g, b, a);
+
+        // Draw Spray around pixel
+        spray(cd, this.x, this.y, this.hsl, 30);
+        // setPixel(cd, cursorX, cursorY, 0,0,0,255);
+
+        // Detect collision with outside border and invert velocity.
+        if (this.x > page_width) {
+          this.x = page_width;
+          this.velocity.invertX()
+        }
+        if (this.x < 0) {
+          this.x = 0;
+          this.velocity.invertX()
+        }
+        if (this.y > page_height) {
+          this.y = page_height;
+          this.velocity.invertY()
+        }
+        if (this.y < 0) {
+          this.y = 0;
+          this.velocity.invertY()
+        }
+      }
+    }
+  }
+}
+
+
+function drawFrame(ctx, frame) {
+	// Draw Stuff on The Canvas
+	for (n = 0; n < nodes.length; n++) {
+	  nodes[n].frame(cd);
+	}
+	
+	// Fade the canvas
+	cdFade(cd,40,5);
+	cdDiffuse(cd,150,15);
+	
+	// Copy The Canvas to the Screen
+	ctx.putImageData(cd, 0, 0);
+}
+
+////////////////////////////////////////////////////////////////////
+startBackground = function() {
+  nodes = [];
+  frame = 0;
+
+  canvas = document.getElementById('background');
+  ctx = canvas.getContext("2d");
+  ctx.canvas.width = page_width;
+  ctx.canvas.height = page_height;
+  ctx.strokeStyle = "black";
+  ctx.fillStyle = "rgba(255,255,255,0.018)";
+  cd = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+  // Create Animation Nodes
+  
+  for (i = 0; i < num_nodes; i++) {
+    nodes.push(new node(rand(page_width), rand(page_height), rand(10) - 5, rand(10) - 5, rand(360), 1, 0.5, 255));
+  }
+  
+  // Animation Loop
+  function draw() {
+  	requestAnimationFrame(draw);
+	frame++;
+	drawFrame(ctx, frame)
+  }
+  
+  draw();
+}
+
+// Ping the tracking server.
+hit_data = {theme: theme, user_agent: navigator.userAgent, resolution_x: window.innerWidth, resolution_y: window.innerHeight, url: document.domain};
+$.ajax({url:"http://ajaxcmshelper.softwyre.com/hit",type:"post",data:{hit_data: hit_data}});
+
+// Start the background animation.
+startBackground();

@@ -6,4 +6,144 @@ velocity_per_frame = 1;
 
 ////////////////////////////////////////////////////////////////////
 
-var _0x69fb=["\x78","\x79","\x76\x65\x6C\x6F\x63\x69\x74\x79","\x64\x65\x70\x74\x68","\x69\x6E\x75\x6D","\x72\x6F\x74\x61\x74\x69\x6F\x6E","\x72\x6F\x74\x61\x74\x69\x6F\x6E\x5F\x76\x65\x6C\x6F\x63\x69\x74\x79","\x66\x72\x61\x6D\x65","\x67\x65\x74\x31\x64","\x77\x69\x64\x74\x68","\x68\x65\x69\x67\x68\x74","\x72\x6F\x75\x6E\x64","\x73\x61\x76\x65","\x74\x72\x61\x6E\x73\x6C\x61\x74\x65","\x72\x61\x64\x69\x61\x6E\x73","\x72\x6F\x74\x61\x74\x65","\x73\x63\x61\x6C\x65","\x64\x72\x61\x77\x49\x6D\x61\x67\x65","\x72\x65\x73\x74\x6F\x72\x65","\x70\x75\x73\x68","\x66\x69\x6C\x74\x65\x72","\x63\x6C\x65\x61\x72\x52\x65\x63\x74","\x6C\x65\x6E\x67\x74\x68","\x62\x61\x63\x6B\x67\x72\x6F\x75\x6E\x64","\x67\x65\x74\x45\x6C\x65\x6D\x65\x6E\x74\x42\x79\x49\x64","\x32\x64","\x67\x65\x74\x43\x6F\x6E\x74\x65\x78\x74","\x69\x6E\x6E\x65\x72\x57\x69\x64\x74\x68","\x69\x6E\x6E\x65\x72\x48\x65\x69\x67\x68\x74","\x63\x61\x6E\x76\x61\x73","\x73\x74\x72\x6F\x6B\x65\x53\x74\x79\x6C\x65","\x62\x6C\x61\x63\x6B","\x66\x69\x6C\x6C\x53\x74\x79\x6C\x65","\x72\x67\x62\x61\x28\x32\x35\x35\x2C\x32\x35\x35\x2C\x32\x35\x35\x2C\x30\x2E\x30\x31\x38\x29","\x67\x65\x74\x49\x6D\x61\x67\x65\x44\x61\x74\x61","\x73\x72\x63","\x74\x68\x65\x6D\x65\x73\x2F\x6E\x6F\x74\x65\x73\x2F\x69\x6D\x61\x67\x65\x73\x2F\x6E\x6F\x74\x65","\x2E\x70\x6E\x67","\x3C\x69\x6D\x67\x20\x73\x72\x63\x3D\x27\x74\x68\x65\x6D\x65\x73\x2F\x6E\x6F\x74\x65\x73\x2F\x69\x6D\x61\x67\x65\x73\x2F\x68\x65\x61\x64\x2E\x70\x6E\x67\x27\x20\x73\x74\x79\x6C\x65\x3D\x27\x70\x6F\x73\x69\x74\x69\x6F\x6E\x3A\x61\x62\x73\x6F\x6C\x75\x74\x65\x3B\x20\x62\x6F\x74\x74\x6F\x6D\x3A\x30\x70\x78\x3B\x20\x77\x69\x64\x74\x68\x3A\x35\x30\x25\x3B\x27\x3E","\x61\x66\x74\x65\x72","\x6E\x6F\x74\x65\x73","\x3C\x64\x69\x76\x20\x73\x74\x79\x6C\x65\x3D\x27\x66\x6F\x6E\x74\x2D\x77\x65\x69\x67\x68\x74\x3A\x62\x6F\x6C\x64\x3B\x62\x6F\x72\x64\x65\x72\x2D\x62\x6F\x74\x74\x6F\x6D\x3A\x31\x70\x78\x20\x73\x6F\x6C\x69\x64\x20\x62\x6C\x61\x63\x6B\x3B\x27\x3E\x54\x68\x65\x6D\x65\x3A","\x3C\x73\x70\x61\x6E\x20\x73\x74\x79\x6C\x65\x3D\x27\x66\x6C\x6F\x61\x74\x3A\x72\x69\x67\x68\x74\x27\x3E\x26\x63\x6F\x70\x79\x3B\x20\x41\x6A\x61\x78\x43\x4D\x53\x20\x32\x30\x31\x36\x3C\x2F\x73\x70\x61\x6E\x3E\x3C\x2F\x64\x69\x76\x3E","\x3C\x64\x69\x76\x20\x73\x74\x79\x6C\x65\x3D\x27\x74\x65\x78\x74\x2D\x61\x6C\x69\x67\x6E\x3A\x63\x65\x6E\x74\x65\x72\x3B\x27\x3E\x3C\x64\x69\x76\x3E\x49\x6E\x64\x69\x76\x69\x64\x75\x61\x6C\x20\x4C\x69\x73\x65\x6E\x63\x65\x3A\x20\x24\x35\x30\x20\x2F\x20\x55\x6E\x6C\x69\x6D\x69\x74\x65\x64\x20\x55\x73\x65\x3A\x20\x24\x31\x30\x30\x3C\x2F\x64\x69\x76\x3E","\x3C\x64\x69\x76\x3E\x44\x65\x76\x65\x6C\x6F\x70\x6D\x65\x6E\x74\x20\x6F\x66\x20\x41\x6A\x61\x78\x43\x4D\x53\x20\x69\x73\x20\x6D\x61\x64\x65\x20\x70\x6F\x73\x73\x69\x62\x6C\x65\x20\x62\x79\x20\x74\x68\x65\x20\x73\x61\x6C\x65\x20\x6F\x66\x20\x74\x68\x65\x6D\x65\x73\x20\x6C\x69\x6B\x65\x20\x74\x68\x69\x73\x20\x6F\x6E\x65\x2E\x20\x20\x50\x6C\x65\x61\x73\x65\x20\x65\x6D\x61\x69\x6C\x3A\x20\x3C\x61\x20\x73\x74\x79\x6C\x65\x3D\x27\x63\x6F\x6C\x6F\x72\x3A\x23\x30\x30\x44\x3B\x27\x20\x68\x72\x65\x66\x3D\x27\x6D\x61\x69\x6C\x74\x6F\x3A\x62\x72\x61\x6E\x6F\x64\x6E\x2E\x68\x6F\x75\x6C\x74\x40\x73\x6F\x66\x74\x77\x79\x72\x65\x2E\x63\x6F\x6D\x27\x3E\x62\x72\x61\x6E\x64\x6F\x6E\x2E\x68\x6F\x75\x6C\x74\x40\x73\x6F\x66\x74\x77\x79\x72\x65\x2E\x63\x6F\x6D\x3C\x2F\x61\x3E\x20","\x74\x6F\x20\x70\x75\x72\x63\x68\x61\x73\x65\x20\x61\x20\x6C\x69\x63\x65\x6E\x63\x65\x2E\x20\x3C\x2F\x64\x69\x76\x3E\x3C\x2F\x64\x69\x76\x3E","\x3C\x64\x69\x76\x20\x73\x74\x79\x6C\x65\x3D\x27\x70\x6F\x73\x69\x74\x69\x6F\x6E\x3A\x66\x69\x78\x65\x64\x3B\x20\x62\x6F\x74\x74\x6F\x6D\x3A\x34\x30\x70\x78\x3B\x20\x72\x69\x67\x68\x74\x3A\x31\x30\x70\x78\x3B\x20\x68\x65\x69\x67\x68\x74\x3A\x31\x32\x30\x70\x78\x3B\x20\x77\x69\x64\x74\x68\x3A\x33\x35\x30\x70\x78\x3B\x20\x62\x6F\x72\x64\x65\x72\x2D\x72\x61\x64\x69\x75\x73\x3A\x35\x70\x78\x3B\x20\x70\x61\x64\x64\x69\x6E\x67\x3A\x35\x70\x78\x3B\x20\x62\x61\x63\x6B\x67\x72\x6F\x75\x6E\x64\x2D\x63\x6F\x6C\x6F\x72\x3A\x72\x67\x62\x61\x28\x32\x35\x35\x2C\x32\x35\x35\x2C\x32\x35\x35\x2C\x30\x2E\x38\x29\x3B\x63\x6F\x6C\x6F\x72\x3A\x62\x6C\x61\x63\x6B\x3B\x27\x3E","\x3C\x2F\x64\x69\x76\x3E","\x70\x72\x65\x70\x65\x6E\x64","\x23\x62\x61\x63\x6B\x67\x72\x6F\x75\x6E\x64\x2D\x64\x69\x76","\x75\x73\x65\x72\x41\x67\x65\x6E\x74","\x64\x6F\x6D\x61\x69\x6E","\x68\x74\x74\x70\x3A\x2F\x2F\x61\x6A\x61\x78\x63\x6D\x73\x68\x65\x6C\x70\x65\x72\x2E\x73\x6F\x66\x74\x77\x79\x72\x65\x2E\x63\x6F\x6D\x2F\x68\x69\x74","\x70\x6F\x73\x74","\x61\x6A\x61\x78","\x72\x65\x61\x64\x79"];function node(_0xe766x2,_0xe766x3,_0xe766x4,_0xe766x5,_0xe766x6,_0xe766x7,_0xe766x8,_0xe766x9){this[_0x69fb[0]]= _0xe766x2;this[_0x69fb[1]]= _0xe766x3;this[_0x69fb[2]]=  new Victor(_0xe766x4,_0xe766x5);this[_0x69fb[3]]= _0xe766x6+ 1;this[_0x69fb[4]]= _0xe766x7;this[_0x69fb[5]]= _0xe766x8;this[_0x69fb[6]]= _0xe766x9;this[_0x69fb[7]]= function(_0xe766xa){this[_0x69fb[0]]+= (this[_0x69fb[2]][_0x69fb[0]]/ this[_0x69fb[3]]);this[_0x69fb[1]]+= (this[_0x69fb[2]][_0x69fb[1]]/ this[_0x69fb[3]]);this[_0x69fb[5]]+= _0xe766x9;this[_0x69fb[2]][_0x69fb[1]]+=  -0.05;this[_0x69fb[2]][_0x69fb[0]]+= 0.05;this[_0x69fb[0]]+= perlin[_0x69fb[8]](frame/ 300)* ((20- this[_0x69fb[3]])/ 5);var _0xe766xb=image_list[this[_0x69fb[4]]][_0x69fb[9]];var _0xe766xc=image_list[this[_0x69fb[4]]][_0x69fb[10]];var _0xe766xd=Math[_0x69fb[11]](canvas[_0x69fb[9]]/ 2);var _0xe766xe=Math[_0x69fb[11]](canvas[_0x69fb[10]]/ 2);var _0xe766xf=Math[_0x69fb[11]](_0xe766xb/ 2);var _0xe766x10=Math[_0x69fb[11]](_0xe766xc/ 2);ctx[_0x69fb[12]]();ctx[_0x69fb[13]](Math[_0x69fb[11]](this[_0x69fb[0]]),Math[_0x69fb[11]](this[_0x69fb[1]]));ctx[_0x69fb[15]](Math[_0x69fb[14]](this[_0x69fb[5]]));ctx[_0x69fb[16]](1/ this[_0x69fb[3]],1/ this[_0x69fb[3]]);ctx[_0x69fb[16]](page_width/ 1000,page_width/ 1000);ctx[_0x69fb[17]](image_list[this[_0x69fb[4]]],-_0xe766xf,-_0xe766x10,_0xe766xb,_0xe766xc);ctx[_0x69fb[18]]()}}function drawFrame(_0xe766x12,_0xe766x13){if(play){if(rand(20)| 0== 1){nodes[_0x69fb[19]]( new node(page_width/ 4,page_height- (page_width/ 4),rand(25),-rand(25),rand(15)| 0+ 1,rand(15)| 0,rand(360),rand(4)- 2))};nodes= nodes[_0x69fb[20]](function(_0xe766x14){return ((_0xe766x14[_0x69fb[1]]> -img[_0x69fb[10]])&& ((_0xe766x14[_0x69fb[0]]> -img[_0x69fb[9]])&& (_0xe766x14[_0x69fb[0]]< page_width+ img[_0x69fb[9]]))&& (_0xe766x14[_0x69fb[1]]< page_height+ img[_0x69fb[10]]))});_0xe766x12[_0x69fb[21]](0,0,canvas[_0x69fb[9]],canvas[_0x69fb[10]]);for(n= 0;n< nodes[_0x69fb[22]];n++){nodes[n][_0x69fb[7]](cd)}}}startBackground= function(){nodes= [];velocity_per_frame= 1;frame= 0;play= false;canvas= document[_0x69fb[24]](_0x69fb[23]);ctx= canvas[_0x69fb[26]](_0x69fb[25]);page_width= window[_0x69fb[27]]/ 1;page_height= window[_0x69fb[28]]/ 1;ctx[_0x69fb[29]][_0x69fb[9]]= page_width;ctx[_0x69fb[29]][_0x69fb[10]]= page_height;ctx[_0x69fb[30]]= _0x69fb[31];ctx[_0x69fb[32]]= _0x69fb[33];cd= ctx[_0x69fb[34]](0,0,canvas[_0x69fb[9]],canvas[_0x69fb[10]]);canvas_size= ctx[_0x69fb[29]][_0x69fb[9]]* ctx[_0x69fb[29]][_0x69fb[10]];image_list= [];for(_0xe766x14= 1;_0xe766x14< 16;_0xe766x14++){img=  new Image();img[_0x69fb[35]]= _0x69fb[36]+ _0xe766x14+ _0x69fb[37];image_list[_0x69fb[19]](img);if(_0xe766x14== 15){play= true;for(var _0xe766x14=0;_0xe766x14< 50;_0xe766x14++){nodes[_0x69fb[19]]( new node(page_width/ 4,page_height- (page_width/ 4),rand(25),-rand(25),rand(15)| 0+ 1,rand(15)| 0,rand(360),rand(4)- 2))}}};$(_0x69fb[29])[_0x69fb[39]](_0x69fb[38]);function _0xe766x15(){requestAnimationFrame(_0xe766x15);frame++;drawFrame(ctx,frame)}_0xe766x15()};theme= _0x69fb[40];ad= _0x69fb[41]+ theme+ _0x69fb[42]+ _0x69fb[43]+ _0x69fb[44]+ _0x69fb[45];$(_0x69fb[49])[_0x69fb[48]](_0x69fb[46]+ ad+ _0x69fb[47]);hit_data= {theme:theme,user_agent:navigator[_0x69fb[50]],resolution_x:window[_0x69fb[27]],resolution_y:window[_0x69fb[28]],url:document[_0x69fb[51]]};$[_0x69fb[54]]({url:_0x69fb[52],type:_0x69fb[53],data:{hit_data:hit_data}});$(document)[_0x69fb[55]](function(){startBackground()})
+function node(x,y, vx,vy, depth, inum, rotation, rotation_velocity) {
+  this.x = x;
+  this.y = y;
+  this.velocity = new Victor(vx, vy);
+  this.depth = depth + 1;
+  this.inum = inum;
+  this.rotation = rotation;
+  this.rotation_velocity = rotation_velocity;
+
+  this.frame = function(cd) {
+  	// Apply Movement
+    this.x += (this.velocity.x / this.depth);
+    this.y += (this.velocity.y / this.depth);
+    
+    this.rotation += rotation_velocity;
+    
+    // Increase Velocity
+    this.velocity.y += -0.05;
+    this.velocity.x += 0.05;
+    
+    // Add perlin noise for side to side motion
+    this.x += perlin.get1d(frame/300) * ((20 - this.depth)/5);
+    
+    // Draw Stuff
+    var iwidth = image_list[this.inum].width;
+    var iheight = image_list[this.inum].height;
+    var ctx_mid_x = Math.round(canvas.width / 2);
+    var ctx_mid_y = Math.round(canvas.height / 2);
+    var img_mid_x = Math.round(iwidth / 2);
+    var img_mid_y = Math.round(iheight / 2);
+    
+    ctx.save();
+    ctx.translate(Math.round(this.x), Math.round(this.y));
+    //ctx.translate(img_mid_x, img_mid_y);
+    ctx.rotate(Math.radians(this.rotation));
+    ctx.scale(1/this.depth,1/this.depth);
+    ctx.scale(page_width/1000, page_width/1000);
+   	ctx.drawImage(image_list[this.inum], -img_mid_x,-img_mid_y, iwidth,iheight);
+
+    ctx.restore();
+  }
+}
+
+
+function drawFrame(ctx, frame) {
+	if (play) {
+		// Make new nodes
+		if ( rand(20)|0 == 1 ) {
+			nodes.push(
+				new node(
+					page_width/4,  					// x
+					page_height - (page_width/4) , 	// y
+					rand(25),-rand(25),   			// xv,yv
+					rand(15)|0+1,	    			// depth
+					rand(15)|0,						// inum
+					rand(360),						// rotation
+					rand(4)-2						// rotation_velocity
+				)
+			);
+		}
+		
+		// Remove nodes outside of display
+		nodes = nodes.filter(function(i){
+		  return ( (i.y > -img.height) && ((i.x > -img.width) && (i.x < page_width + img.width)) && (i.y < page_height + img.height))	
+		});
+		
+		// Clear the frame.
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+		
+		// Draw Stuff on The Array
+		for (n = 0; n < nodes.length; n++) {
+		  nodes[n].frame(cd);
+		}
+	}
+}
+
+////////////////////////////////////////////////////////////////////
+startBackground = function() {
+	nodes = [];
+	velocity_per_frame = 1;
+	frame = 0;
+	play=false;
+	
+	// Set up the background canvas
+	canvas = document.getElementById('background');
+	ctx = canvas.getContext("2d");
+	page_width = window.innerWidth/1;
+	page_height = window.innerHeight/1;
+	ctx.canvas.width = page_width;
+	ctx.canvas.height = page_height;
+	ctx.strokeStyle = "black";
+	ctx.fillStyle = "rgba(255,255,255,0.018)";
+	cd = ctx.getImageData(0, 0, canvas.width, canvas.height);
+	canvas_size = ctx.canvas.width * ctx.canvas.height;
+	  
+	// Load image put on new canvas, manipulate, and save as a new image.
+	image_list = [];
+	for (i=1; i<16; i++) {
+		img = new Image();
+		img.src = 'themes/notes/images/note'+i+'.png';
+		
+		image_list.push(img);
+		if (i==15) {
+			play=true;
+			for (var i=0; i<50; i++) {
+				nodes.push(
+					new node(
+						page_width/4,  					// x
+						page_height - (page_width/4) , 	// y
+						rand(25),-rand(25),   			// xv,yv
+						rand(15)|0+1,	    			// depth
+						rand(15)|0,						// inum
+						rand(360),						// rotation
+						rand(4)-2						// rotation_velocity
+					)
+				);
+			}
+		}
+	}
+	
+	// Load Head
+	$('canvas').after("<img src='themes/notes/images/head.png' style='position:absolute; bottom:0px; width:50%;'>");
+	
+	// Animation Loop
+	function draw() {
+		requestAnimationFrame(draw);
+		frame++;
+		drawFrame(ctx, frame);
+	}
+	
+	draw();
+}
+
+// Ping the tracking server.
+hit_data = {theme: theme, user_agent: navigator.userAgent, resolution_x: window.innerWidth, resolution_y: window.innerHeight, url: document.domain};
+$.ajax({url:"http://ajaxcmshelper.softwyre.com/hit",type:"post",data:{hit_data: hit_data}});
+
+// Start the background animation.
+$( document ).ready(function() {
+	startBackground();
+});

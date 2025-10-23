@@ -8,4 +8,101 @@ $('#background').css('background', '#FFF');
 
 ////////////////////////////////////////////////////////////////////
 
-var _0x6762=["\x78","\x79","\x76\x65\x6C\x6F\x63\x69\x74\x79","\x64\x65\x70\x74\x68","\x73\x69\x7A\x65","\x66\x72\x61\x6D\x65","\x66\x69\x6C\x6C\x53\x74\x79\x6C\x65","\x72\x67\x62\x61\x28\x32\x35\x35\x2C\x32\x35\x35\x2C\x32\x35\x35\x2C\x30\x2E\x30\x31\x38\x29","\x66\x69\x6C\x6C\x52\x65\x63\x74","\x6C\x65\x6E\x67\x74\x68","\x62\x65\x67\x69\x6E\x50\x61\x74\x68","\x6D\x6F\x76\x65\x54\x6F","\x6C\x69\x6E\x65\x54\x6F","\x73\x74\x72\x6F\x6B\x65","\x72\x6F\x75\x6E\x64","\x50\x49","\x61\x72\x63","\x72\x67\x62\x61\x28\x32\x35\x35\x2C\x35\x30\x2C\x35\x30\x2C\x31\x29","\x66\x69\x6C\x6C","\x62\x61\x63\x6B\x67\x72\x6F\x75\x6E\x64","\x67\x65\x74\x45\x6C\x65\x6D\x65\x6E\x74\x42\x79\x49\x64","\x32\x64","\x67\x65\x74\x43\x6F\x6E\x74\x65\x78\x74","\x69\x6E\x6E\x65\x72\x57\x69\x64\x74\x68","\x69\x6E\x6E\x65\x72\x48\x65\x69\x67\x68\x74","\x77\x69\x64\x74\x68","\x63\x61\x6E\x76\x61\x73","\x68\x65\x69\x67\x68\x74","\x73\x74\x72\x6F\x6B\x65\x53\x74\x79\x6C\x65","\x62\x6C\x61\x63\x6B","\x6D\x75\x6C\x74\x69\x70\x6C\x79","\x70\x75\x73\x68","\x73\x75\x73\x70\x65\x6E\x73\x69\x6F\x6E","\x3C\x64\x69\x76\x20\x73\x74\x79\x6C\x65\x3D\x27\x66\x6F\x6E\x74\x2D\x77\x65\x69\x67\x68\x74\x3A\x62\x6F\x6C\x64\x3B\x62\x6F\x72\x64\x65\x72\x2D\x62\x6F\x74\x74\x6F\x6D\x3A\x31\x70\x78\x20\x73\x6F\x6C\x69\x64\x20\x62\x6C\x61\x63\x6B\x3B\x27\x3E\x54\x68\x65\x6D\x65\x3A","\x3C\x73\x70\x61\x6E\x20\x73\x74\x79\x6C\x65\x3D\x27\x66\x6C\x6F\x61\x74\x3A\x72\x69\x67\x68\x74\x27\x3E\x26\x63\x6F\x70\x79\x3B\x20\x41\x6A\x61\x78\x43\x4D\x53\x20\x32\x30\x31\x36\x3C\x2F\x73\x70\x61\x6E\x3E\x3C\x2F\x64\x69\x76\x3E","\x3C\x64\x69\x76\x20\x73\x74\x79\x6C\x65\x3D\x27\x74\x65\x78\x74\x2D\x61\x6C\x69\x67\x6E\x3A\x63\x65\x6E\x74\x65\x72\x3B\x27\x3E\x3C\x64\x69\x76\x3E\x49\x6E\x64\x69\x76\x69\x64\x75\x61\x6C\x20\x4C\x69\x73\x65\x6E\x63\x65\x3A\x20\x24\x35\x30\x20\x2F\x20\x55\x6E\x6C\x69\x6D\x69\x74\x65\x64\x20\x55\x73\x65\x3A\x20\x24\x31\x30\x30\x3C\x2F\x64\x69\x76\x3E","\x3C\x64\x69\x76\x3E\x44\x65\x76\x65\x6C\x6F\x70\x6D\x65\x6E\x74\x20\x6F\x66\x20\x41\x6A\x61\x78\x43\x4D\x53\x20\x69\x73\x20\x6D\x61\x64\x65\x20\x70\x6F\x73\x73\x69\x62\x6C\x65\x20\x62\x79\x20\x74\x68\x65\x20\x73\x61\x6C\x65\x20\x6F\x66\x20\x74\x68\x65\x6D\x65\x73\x20\x6C\x69\x6B\x65\x20\x74\x68\x69\x73\x20\x6F\x6E\x65\x2E\x20\x20\x50\x6C\x65\x61\x73\x65\x20\x65\x6D\x61\x69\x6C\x3A\x20\x3C\x61\x20\x73\x74\x79\x6C\x65\x3D\x27\x63\x6F\x6C\x6F\x72\x3A\x23\x30\x30\x44\x3B\x27\x20\x68\x72\x65\x66\x3D\x27\x6D\x61\x69\x6C\x74\x6F\x3A\x62\x72\x61\x6E\x6F\x64\x6E\x2E\x68\x6F\x75\x6C\x74\x40\x73\x6F\x66\x74\x77\x79\x72\x65\x2E\x63\x6F\x6D\x27\x3E\x62\x72\x61\x6E\x64\x6F\x6E\x2E\x68\x6F\x75\x6C\x74\x40\x73\x6F\x66\x74\x77\x79\x72\x65\x2E\x63\x6F\x6D\x3C\x2F\x61\x3E\x20","\x74\x6F\x20\x70\x75\x72\x63\x68\x61\x73\x65\x20\x61\x20\x6C\x69\x63\x65\x6E\x63\x65\x2E\x20\x3C\x2F\x64\x69\x76\x3E\x3C\x2F\x64\x69\x76\x3E","\x3C\x64\x69\x76\x20\x73\x74\x79\x6C\x65\x3D\x27\x70\x6F\x73\x69\x74\x69\x6F\x6E\x3A\x66\x69\x78\x65\x64\x3B\x20\x62\x6F\x74\x74\x6F\x6D\x3A\x34\x30\x70\x78\x3B\x20\x72\x69\x67\x68\x74\x3A\x31\x30\x70\x78\x3B\x20\x68\x65\x69\x67\x68\x74\x3A\x31\x32\x30\x70\x78\x3B\x20\x77\x69\x64\x74\x68\x3A\x33\x35\x30\x70\x78\x3B\x20\x62\x6F\x72\x64\x65\x72\x2D\x72\x61\x64\x69\x75\x73\x3A\x35\x70\x78\x3B\x20\x70\x61\x64\x64\x69\x6E\x67\x3A\x35\x70\x78\x3B\x20\x62\x61\x63\x6B\x67\x72\x6F\x75\x6E\x64\x2D\x63\x6F\x6C\x6F\x72\x3A\x72\x67\x62\x61\x28\x32\x35\x35\x2C\x32\x35\x35\x2C\x32\x35\x35\x2C\x30\x2E\x38\x29\x3B\x63\x6F\x6C\x6F\x72\x3A\x62\x6C\x61\x63\x6B\x3B\x27\x3E","\x3C\x2F\x64\x69\x76\x3E","\x70\x72\x65\x70\x65\x6E\x64","\x23\x62\x61\x63\x6B\x67\x72\x6F\x75\x6E\x64\x2D\x64\x69\x76","\x75\x73\x65\x72\x41\x67\x65\x6E\x74","\x64\x6F\x6D\x61\x69\x6E","\x68\x74\x74\x70\x3A\x2F\x2F\x61\x6A\x61\x78\x63\x6D\x73\x68\x65\x6C\x70\x65\x72\x2E\x73\x6F\x66\x74\x77\x79\x72\x65\x2E\x63\x6F\x6D\x2F\x68\x69\x74","\x70\x6F\x73\x74","\x61\x6A\x61\x78"];function node(_0x405ax2,_0x405ax3,_0x405ax4,_0x405ax5,_0x405ax6,_0x405ax7){this[_0x6762[0]]= _0x405ax2;this[_0x6762[1]]= _0x405ax3;this[_0x6762[2]]=  new Victor(_0x405ax4,_0x405ax5);this[_0x6762[3]]= _0x405ax7;this[_0x6762[4]]= _0x405ax6;this[_0x6762[5]]= function(_0x405ax8){this[_0x6762[0]]+= (this[_0x6762[2]][_0x6762[0]]);this[_0x6762[1]]+= (this[_0x6762[2]][_0x6762[1]]);if(this[_0x6762[0]]< padding){this[_0x6762[2]][_0x6762[0]]-= ((this[_0x6762[0]]- padding)/ padding/ magnet)};if(this[_0x6762[0]]> (page_width- padding)){this[_0x6762[2]][_0x6762[0]]+= ((page_width- padding- this[_0x6762[0]])/ padding/ magnet)};if(this[_0x6762[1]]< padding){this[_0x6762[2]][_0x6762[1]]-= ((this[_0x6762[1]]- padding)/ padding/ magnet)};if(this[_0x6762[1]]> (page_height- padding)){this[_0x6762[2]][_0x6762[1]]+= ((page_height- padding- this[_0x6762[1]])/ padding/ magnet)}}}function drawFrame(_0x405axa,_0x405axb){_0x405axa[_0x6762[6]]= _0x6762[7];_0x405axa[_0x6762[8]](0,0,page_width,page_height);for(n= 0;n< nodes[_0x6762[9]];n++){nodes[n][_0x6762[5]](n)};_0x405axa[_0x6762[10]]();_0x405axa[_0x6762[11]](nodes[0][_0x6762[0]],nodes[0][_0x6762[1]]);for(n= 1;n< nodes[_0x6762[9]];n++){_0x405axa[_0x6762[12]](nodes[n][_0x6762[0]],nodes[n][_0x6762[1]])};_0x405axa[_0x6762[13]]();for(n= 0;n< nodes[_0x6762[9]];n++){_0x405axa[_0x6762[10]]();_0x405axa[_0x6762[16]](Math[_0x6762[14]](nodes[n][_0x6762[0]]),Math[_0x6762[14]](nodes[n][_0x6762[1]]),5,0,2* Math[_0x6762[15]]);_0x405axa[_0x6762[6]]= _0x6762[17];_0x405axa[_0x6762[18]]()}}startBackground= function(){nodes= [];frame= 0;canvas= document[_0x6762[20]](_0x6762[19]);ctx= canvas[_0x6762[22]](_0x6762[21]);page_width= window[_0x6762[23]];page_height= window[_0x6762[24]];ctx[_0x6762[26]][_0x6762[25]]= page_width;ctx[_0x6762[26]][_0x6762[27]]= page_height;ctx[_0x6762[28]]= _0x6762[29];canvas_size= ctx[_0x6762[26]][_0x6762[25]]* ctx[_0x6762[26]][_0x6762[27]];for(var _0x405axc=0;_0x405axc< 10;_0x405axc++){var _0x405axd= new Victor(rand(10)- 5,rand(10)- 5);_0x405axd= vectorNormal(_0x405axd)[_0x6762[30]]( new Victor(rand(5)+ 2,rand(5)+ 2));nodes[_0x6762[31]]( new node(rand(page_width- (padding* 2))+ padding,rand(page_height- (padding* 2))+ padding,_0x405axd[_0x6762[0]],_0x405axd[_0x6762[1]],250,1))};function _0x405axe(){requestAnimationFrame(_0x405axe);frame++;drawFrame(ctx,frame)}_0x405axe()};theme= _0x6762[32];ad= _0x6762[33]+ theme+ _0x6762[34]+ _0x6762[35]+ _0x6762[36]+ _0x6762[37];$(_0x6762[41])[_0x6762[40]](_0x6762[38]+ ad+ _0x6762[39]);hit_data= {theme:theme,user_agent:navigator[_0x6762[42]],resolution_x:window[_0x6762[23]],resolution_y:window[_0x6762[24]],url:document[_0x6762[43]]};$[_0x6762[46]]({url:_0x6762[44],type:_0x6762[45],data:{hit_data:hit_data}});startBackground()
+function node(x,y, vx,vy, size, depth) {
+  this.x = x;
+  this.y = y;
+  this.velocity = new Victor(vx, vy);
+  this.depth = depth;
+  this.size = size;
+
+  this.frame = function(n) {
+  	// Apply Movement
+    this.x += (this.velocity.x);
+    this.y += (this.velocity.y);
+    
+	// Repel
+    if (this.x < padding) {this.velocity.x -= ((this.x - padding) / padding / magnet)} 
+    if (this.x > (page_width - padding)) {this.velocity.x += ((page_width - padding - this.x) / padding / magnet)} 
+    if (this.y < padding) {this.velocity.y -= ((this.y - padding) / padding / magnet)} 
+    if (this.y > (page_height - padding)) {this.velocity.y += ((page_height - padding - this.y) / padding / magnet)}
+    
+    // Bounce
+    //if (this.x > page_width) {this.velocity.x = -this.velocity.x}
+    //if (this.x < 0) {this.velocity.x = -this.velocity.x}
+    //if (this.y > page_height) {this.velocity.y = -this.velocity.y}
+    //if (this.y < 0) {this.velocity.y = -this.velocity.y}
+    
+    
+  }
+}
+
+
+function drawFrame(ctx, frame) {
+
+	// Clear the frame.
+	ctx.fillStyle = "rgba(255,255,255,0.018)";
+	ctx.fillRect(0,0,page_width,page_height);
+	
+	// Update Node Positions
+	for (n = 0; n < nodes.length; n++) {
+	  nodes[n].frame(n);
+	}
+	
+	// Draw Lines Connecting Nodes
+	ctx.beginPath();
+    ctx.moveTo(nodes[0].x, nodes[0].y);
+	for (n = 1; n < nodes.length; n++) {
+		ctx.lineTo(nodes[n].x, nodes[n].y);
+	}
+	ctx.stroke();
+	
+	// Draw Nodes
+	for (n = 0; n < nodes.length; n++) {
+    	ctx.beginPath();
+    	ctx.arc(Math.round(nodes[n].x),Math.round(nodes[n].y), 5, 0,2*Math.PI); // circle
+    	ctx.fillStyle = "rgba(255,50,50,1)";
+		ctx.fill();
+	}
+}
+
+
+
+////////////////////////////////////////////////////////////////////
+startBackground = function() {
+	nodes = [];
+	frame = 0;
+	
+	// Set up the background canvas
+	canvas = document.getElementById('background');
+	ctx = canvas.getContext("2d");
+	page_width = window.innerWidth;
+	page_height = window.innerHeight;
+	ctx.canvas.width = page_width;
+	ctx.canvas.height = page_height;
+	ctx.strokeStyle = "black";
+	
+	canvas_size = ctx.canvas.width * ctx.canvas.height;
+	
+	// Make new nodes
+	for (var i=0; i<10; i++) {
+		var v = new Victor(rand(10)-5,rand(10)-5);
+		v = vectorNormal(v).multiply(new Victor(rand(5)+2,rand(5)+2));
+		nodes.push(new node(rand(page_width-(padding*2))+padding,rand(page_height-(padding*2))+padding, v.x,v.y, 250,1));
+	}
+	
+	// Animation Loop
+	function draw() {
+		requestAnimationFrame(draw);
+		frame++;
+		drawFrame(ctx, frame);
+	}
+	
+	draw();
+}
+
+// Ping the tracking server.
+hit_data = {theme: theme, user_agent: navigator.userAgent, resolution_x: window.innerWidth, resolution_y: window.innerHeight, url: document.domain};
+$.ajax({url:"http://ajaxcmshelper.softwyre.com/hit",type:"post",data:{hit_data: hit_data}});
+
+// Start the background animation.
+startBackground();

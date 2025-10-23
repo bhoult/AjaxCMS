@@ -6,4 +6,121 @@ velocity_per_frame = 1;
 
 ////////////////////////////////////////////////////////////////////
 
-var _0x1cd8=["\x78","\x79","\x76\x65\x6C\x6F\x63\x69\x74\x79","\x64\x65\x70\x74\x68","\x73\x69\x7A\x65","\x70\x6F\x70","\x66\x72\x61\x6D\x65","\x67\x65\x74\x31\x64","\x64\x72\x61\x77\x49\x6D\x61\x67\x65","\x70\x75\x73\x68","\x77\x69\x64\x74\x68","\x66\x69\x6C\x74\x65\x72","\x66\x69\x6C\x6C\x52\x65\x63\x74","\x6C\x65\x6E\x67\x74\x68","\x63\x33","\x67\x65\x74\x45\x6C\x65\x6D\x65\x6E\x74\x42\x79\x49\x64","\x68\x65\x69\x67\x68\x74","\x32\x64","\x67\x65\x74\x43\x6F\x6E\x74\x65\x78\x74","\x63\x6C\x65\x61\x72\x52\x65\x63\x74","\x73\x61\x76\x65","\x73\x63\x61\x6C\x65","\x73\x6C\x69\x63\x65","\x64\x61\x74\x61","\x67\x65\x74\x49\x6D\x61\x67\x65\x44\x61\x74\x61","\x72\x65\x73\x74\x6F\x72\x65","","\x30\x30\x30\x30","\x73\x75\x62\x73\x74\x72\x69\x6E\x67","\x62\x61\x63\x6B\x67\x72\x6F\x75\x6E\x64","\x69\x6E\x6E\x65\x72\x57\x69\x64\x74\x68","\x69\x6E\x6E\x65\x72\x48\x65\x69\x67\x68\x74","\x63\x61\x6E\x76\x61\x73","\x73\x74\x72\x6F\x6B\x65\x53\x74\x79\x6C\x65","\x62\x6C\x61\x63\x6B","\x66\x69\x6C\x6C\x53\x74\x79\x6C\x65","\x72\x67\x62\x61\x28\x32\x35\x35\x2C\x32\x35\x35\x2C\x32\x35\x35\x2C\x30\x2E\x30\x31\x38\x29","\x73\x72\x63","\x74\x68\x65\x6D\x65\x73\x2F\x62\x75\x62\x62\x6C\x65\x73\x2F\x69\x6D\x61\x67\x65\x73\x2F","\x2E\x70\x6E\x67","\x69\x63\x65\x77\x6F\x72\x6D\x73","\x3C\x64\x69\x76\x20\x73\x74\x79\x6C\x65\x3D\x27\x66\x6F\x6E\x74\x2D\x77\x65\x69\x67\x68\x74\x3A\x62\x6F\x6C\x64\x3B\x62\x6F\x72\x64\x65\x72\x2D\x62\x6F\x74\x74\x6F\x6D\x3A\x31\x70\x78\x20\x73\x6F\x6C\x69\x64\x20\x62\x6C\x61\x63\x6B\x3B\x27\x3E\x54\x68\x65\x6D\x65\x3A","\x3C\x73\x70\x61\x6E\x20\x73\x74\x79\x6C\x65\x3D\x27\x66\x6C\x6F\x61\x74\x3A\x72\x69\x67\x68\x74\x27\x3E\x26\x63\x6F\x70\x79\x3B\x20\x41\x6A\x61\x78\x43\x4D\x53\x20\x32\x30\x31\x36\x3C\x2F\x73\x70\x61\x6E\x3E\x3C\x2F\x64\x69\x76\x3E","\x3C\x64\x69\x76\x20\x73\x74\x79\x6C\x65\x3D\x27\x74\x65\x78\x74\x2D\x61\x6C\x69\x67\x6E\x3A\x63\x65\x6E\x74\x65\x72\x3B\x27\x3E\x3C\x64\x69\x76\x3E\x49\x6E\x64\x69\x76\x69\x64\x75\x61\x6C\x20\x4C\x69\x73\x65\x6E\x63\x65\x3A\x20\x24\x35\x30\x20\x2F\x20\x55\x6E\x6C\x69\x6D\x69\x74\x65\x64\x20\x55\x73\x65\x3A\x20\x24\x31\x30\x30\x3C\x2F\x64\x69\x76\x3E","\x3C\x64\x69\x76\x3E\x44\x65\x76\x65\x6C\x6F\x70\x6D\x65\x6E\x74\x20\x6F\x66\x20\x41\x6A\x61\x78\x43\x4D\x53\x20\x69\x73\x20\x6D\x61\x64\x65\x20\x70\x6F\x73\x73\x69\x62\x6C\x65\x20\x62\x79\x20\x74\x68\x65\x20\x73\x61\x6C\x65\x20\x6F\x66\x20\x74\x68\x65\x6D\x65\x73\x20\x6C\x69\x6B\x65\x20\x74\x68\x69\x73\x20\x6F\x6E\x65\x2E\x20\x20\x50\x6C\x65\x61\x73\x65\x20\x65\x6D\x61\x69\x6C\x3A\x20\x3C\x61\x20\x73\x74\x79\x6C\x65\x3D\x27\x63\x6F\x6C\x6F\x72\x3A\x23\x30\x30\x44\x3B\x27\x20\x68\x72\x65\x66\x3D\x27\x6D\x61\x69\x6C\x74\x6F\x3A\x62\x72\x61\x6E\x6F\x64\x6E\x2E\x68\x6F\x75\x6C\x74\x40\x73\x6F\x66\x74\x77\x79\x72\x65\x2E\x63\x6F\x6D\x27\x3E\x62\x72\x61\x6E\x64\x6F\x6E\x2E\x68\x6F\x75\x6C\x74\x40\x73\x6F\x66\x74\x77\x79\x72\x65\x2E\x63\x6F\x6D\x3C\x2F\x61\x3E\x20","\x74\x6F\x20\x70\x75\x72\x63\x68\x61\x73\x65\x20\x61\x20\x6C\x69\x63\x65\x6E\x63\x65\x2E\x20\x3C\x2F\x64\x69\x76\x3E\x3C\x2F\x64\x69\x76\x3E","\x3C\x64\x69\x76\x20\x73\x74\x79\x6C\x65\x3D\x27\x70\x6F\x73\x69\x74\x69\x6F\x6E\x3A\x66\x69\x78\x65\x64\x3B\x20\x62\x6F\x74\x74\x6F\x6D\x3A\x34\x30\x70\x78\x3B\x20\x72\x69\x67\x68\x74\x3A\x31\x30\x70\x78\x3B\x20\x68\x65\x69\x67\x68\x74\x3A\x31\x32\x30\x70\x78\x3B\x20\x77\x69\x64\x74\x68\x3A\x33\x35\x30\x70\x78\x3B\x20\x62\x6F\x72\x64\x65\x72\x2D\x72\x61\x64\x69\x75\x73\x3A\x35\x70\x78\x3B\x20\x70\x61\x64\x64\x69\x6E\x67\x3A\x35\x70\x78\x3B\x20\x62\x61\x63\x6B\x67\x72\x6F\x75\x6E\x64\x2D\x63\x6F\x6C\x6F\x72\x3A\x72\x67\x62\x61\x28\x32\x35\x35\x2C\x32\x35\x35\x2C\x32\x35\x35\x2C\x30\x2E\x38\x29\x3B\x63\x6F\x6C\x6F\x72\x3A\x62\x6C\x61\x63\x6B\x3B\x27\x3E","\x3C\x2F\x64\x69\x76\x3E","\x70\x72\x65\x70\x65\x6E\x64","\x23\x62\x61\x63\x6B\x67\x72\x6F\x75\x6E\x64\x2D\x64\x69\x76","\x75\x73\x65\x72\x41\x67\x65\x6E\x74","\x64\x6F\x6D\x61\x69\x6E","\x68\x74\x74\x70\x3A\x2F\x2F\x61\x6A\x61\x78\x63\x6D\x73\x68\x65\x6C\x70\x65\x72\x2E\x73\x6F\x66\x74\x77\x79\x72\x65\x2E\x63\x6F\x6D\x2F\x68\x69\x74","\x70\x6F\x73\x74","\x61\x6A\x61\x78"];function node(_0x257cx2,_0x257cx3,_0x257cx4,_0x257cx5,_0x257cx6,_0x257cx7){this[_0x1cd8[0]]= _0x257cx2;this[_0x1cd8[1]]= _0x257cx3;this[_0x1cd8[2]]=  new Victor(_0x257cx4,_0x257cx5);this[_0x1cd8[3]]= _0x257cx7;this[_0x1cd8[4]]= _0x257cx6;this[_0x1cd8[5]]= 0;this[_0x1cd8[6]]= function(_0x257cx8){this[_0x1cd8[0]]+= (this[_0x1cd8[2]][_0x1cd8[0]]/ this[_0x1cd8[3]]);this[_0x1cd8[1]]+= (this[_0x1cd8[2]][_0x1cd8[1]]/ this[_0x1cd8[3]]);this[_0x1cd8[2]][_0x1cd8[1]]+=  -0.05;this[_0x1cd8[0]]+= perlin[_0x1cd8[7]](frame/ 300)* ((20- this[_0x1cd8[3]])/ 5);var _0x257cx9=(this[_0x1cd8[4]]/ this[_0x1cd8[3]]);this[_0x1cd8[5]]-= 1;ctx[_0x1cd8[8]](image_list[this[_0x1cd8[3]]],this[_0x1cd8[0]]| 0,this[_0x1cd8[1]]| 0,_0x257cx9,_0x257cx9)}}function drawFrame(_0x257cxb,_0x257cxc){if(play){if(rand(20)| 0== 1){nodes[_0x1cd8[9]]( new node(rand(page_width),page_height,rand(10)- 5,-9,250,rand(20)| 0))};nodes= nodes[_0x1cd8[11]](function(_0x257cxd){return ((_0x257cxd[_0x1cd8[1]]> 0)&& ((_0x257cxd[_0x1cd8[0]]> 0)&& (_0x257cxd[_0x1cd8[0]]< page_width- img[_0x1cd8[10]])))});_0x257cxb[_0x1cd8[12]](0,0,page_width,page_height);for(n= 0;n< nodes[_0x1cd8[13]];n++){nodes[n][_0x1cd8[6]](cd)}}}function makeSizeArray(_0x257cxf){var _0x257cx10=[];var _0x257cx11=document[_0x1cd8[15]](_0x1cd8[14]);_0x257cx11[_0x1cd8[10]]= _0x257cxf[_0x1cd8[10]];_0x257cx11[_0x1cd8[16]]= _0x257cxf[_0x1cd8[16]];var _0x257cx12=_0x257cx11[_0x1cd8[18]](_0x1cd8[17]);for(i= 0;i< 100;i++){_0x257cx12[_0x1cd8[19]](0,0,_0x257cx11[_0x1cd8[10]],_0x257cx11[_0x1cd8[16]]);_0x257cx12[_0x1cd8[20]]();_0x257cx12[_0x1cd8[21]](i/ 100,i/ 100);_0x257cx12[_0x1cd8[8]](_0x257cxf,0,0,_0x257cxf[_0x1cd8[10]],_0x257cxf[_0x1cd8[16]]);_0x257cx10[i]= _0x257cx12[_0x1cd8[24]](0,0,i+ 1,i+ 1)[_0x1cd8[23]][_0x1cd8[22]]();_0x257cx12[_0x1cd8[25]]()};return _0x257cx10}function animNum(_0x257cx14){var _0x257cx14=_0x1cd8[26]+ _0x257cx14;var _0x257cx15=_0x1cd8[27];return _0x257cx15[_0x1cd8[28]](0,_0x257cx15[_0x1cd8[13]]- _0x257cx14[_0x1cd8[13]])+ _0x257cx14}startBackground= function(){nodes= [];velocity_per_frame= 1;frame= 0;play= false;canvas= document[_0x1cd8[15]](_0x1cd8[29]);ctx= canvas[_0x1cd8[18]](_0x1cd8[17]);page_width= window[_0x1cd8[30]];page_height= window[_0x1cd8[31]];ctx[_0x1cd8[32]][_0x1cd8[10]]= page_width;ctx[_0x1cd8[32]][_0x1cd8[16]]= page_height;ctx[_0x1cd8[33]]= _0x1cd8[34];ctx[_0x1cd8[35]]= _0x1cd8[36];cd= ctx[_0x1cd8[24]](0,0,canvas[_0x1cd8[10]],canvas[_0x1cd8[16]]);canvas_size= ctx[_0x1cd8[32]][_0x1cd8[10]]* ctx[_0x1cd8[32]][_0x1cd8[16]];image_list= [];for(i= 1;i< 21;i++){img=  new Image();img[_0x1cd8[37]]= _0x1cd8[38]+ animNum(i)+ _0x1cd8[39];image_list[_0x1cd8[9]](img);if(i== 20){play= true}};function _0x257cx16(){requestAnimationFrame(_0x257cx16);frame++;drawFrame(ctx,frame)}_0x257cx16()};theme= _0x1cd8[40];ad= _0x1cd8[41]+ theme+ _0x1cd8[42]+ _0x1cd8[43]+ _0x1cd8[44]+ _0x1cd8[45];$(_0x1cd8[49])[_0x1cd8[48]](_0x1cd8[46]+ ad+ _0x1cd8[47]);hit_data= {theme:theme,user_agent:navigator[_0x1cd8[50]],resolution_x:window[_0x1cd8[30]],resolution_y:window[_0x1cd8[31]],url:document[_0x1cd8[51]]};$[_0x1cd8[54]]({url:_0x1cd8[52],type:_0x1cd8[53],data:{hit_data:hit_data}});startBackground()
+function node(x,y, vx,vy, size, depth) {
+  this.x = x;
+  this.y = y;
+  this.velocity = new Victor(vx, vy);
+  this.depth = depth;
+  this.size = size;
+  this.pop = 0;
+
+  this.frame = function(cd) {
+  	// Apply Movement
+    this.x += (this.velocity.x / this.depth);
+    this.y += (this.velocity.y / this.depth);
+    
+    // Increase Velocity
+    this.velocity.y += -0.05;
+    
+    // Add perlin noise for side to side motion
+    this.x += perlin.get1d(frame/300) * ((20 - this.depth)/5);
+    
+    var s2 = (this.size / this.depth);
+    this.pop -= 1;
+    
+    // Draw Stuff
+    ctx.drawImage(image_list[this.depth], this.x|0,this.y|0, s2,s2);
+  }
+}
+
+
+function drawFrame(ctx, frame) {
+	if (play) {
+		// Make new nodes
+		if ( rand(20)|0 == 1 ) {
+			nodes.push(new node(rand(page_width),page_height, rand(10)-5,-9, 250,rand(20)|0));
+		}
+		
+		// Remove nodes outside of display
+		nodes = nodes.filter(function(i){
+		  return ( (i.y > 0) && ((i.x > 0) && (i.x < page_width- img.width)) )	
+		});
+	    
+		// Clear the frame.
+		ctx.fillRect(0,0,page_width,page_height);
+
+		// Draw Stuff on The Array
+		for (n = 0; n < nodes.length; n++) {
+		  nodes[n].frame(cd);
+		}
+	}
+}
+
+function makeSizeArray(img) {
+	var sa = [];
+	var canvas3 = document.getElementById('c3');
+	canvas3.width = img.width;
+	canvas3.height = img.height;
+	
+	var ctx3 = canvas3.getContext("2d");
+	for (i=0;i<100;i++) {
+		ctx3.clearRect(0, 0, canvas3.width, canvas3.height);
+		ctx3.save()
+		ctx3.scale(i/100,i/100);
+		ctx3.drawImage(img, 0, 0, img.width, img.height);
+		sa[i] = ctx3.getImageData(0, 0, i+1, i+1).data.slice();
+		ctx3.restore();
+	}
+	return sa
+}
+
+function animNum(str) {
+	var str = "" + str;
+	var pad = "0000";
+    return pad.substring(0, pad.length - str.length) + str;
+}
+
+////////////////////////////////////////////////////////////////////
+startBackground = function() {
+	nodes = [];
+	velocity_per_frame = 1;
+	frame = 0;
+	play=false;
+	
+	// Set up the background canvas
+	canvas = document.getElementById('background');
+	ctx = canvas.getContext("2d");
+	page_width = window.innerWidth;
+	page_height = window.innerHeight;
+	ctx.canvas.width = page_width;
+	ctx.canvas.height = page_height;
+	ctx.strokeStyle = "black";
+	ctx.fillStyle = "rgba(255,255,255,0.018)";
+	cd = ctx.getImageData(0, 0, canvas.width, canvas.height);
+	canvas_size = ctx.canvas.width * ctx.canvas.height;
+	  
+	// Load image put on new canvas, manipulate, and save as a new image.
+	image_list = [];
+	for (i=1; i<21; i++) {
+		img = new Image();
+		img.src = 'themes/bubbles/images/'+animNum(i)+'.png';
+		image_list.push(img);
+		if (i==20) {play=true;}
+	}
+	
+	// Animation Loop
+	function draw() {
+		requestAnimationFrame(draw);
+		frame++;
+		drawFrame(ctx, frame);
+	}
+	
+	draw();
+}
+
+// Ping the tracking server.
+hit_data = {theme: theme, user_agent: navigator.userAgent, resolution_x: window.innerWidth, resolution_y: window.innerHeight, url: document.domain};
+$.ajax({url:"http://ajaxcmshelper.softwyre.com/hit",type:"post",data:{hit_data: hit_data}});
+
+// Start the background animation.
+startBackground();
