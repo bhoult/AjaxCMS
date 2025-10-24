@@ -601,8 +601,13 @@ function loadPageSlide(data,url) {
 
 // Set load_transition variable at top to set transition type for page loads.
 function loadPage(url,save) {
+	// Prevent loading undefined or invalid pages
+	if (!url || url === 'undefined' || url === 'null') {
+		return;
+	}
+
 	highlightMenu(url);
-	
+
 	$.get( url, function(d) {
 		var layout_url = lastLayout(url);
 		$.get( layout_url )
@@ -724,13 +729,21 @@ $( document ).ready(function() {
     
     // Setup Swipe Events
 	$("#a").on("swiperight",function(event){
-		if (mpIndex(current_page) > 0  && !in_transition){
-			loadPage(menu_pages[mpIndex(current_page)-1],true);
+		var currentIndex = mpIndex(current_page);
+		if (currentIndex > 0 && !in_transition){
+			var nextPage = menu_pages[currentIndex - 1];
+			if (nextPage) {
+				loadPage(nextPage, true);
+			}
 		}
 	});
 	$("#a").on("swipeleft",function(event){
-		if (mpIndex(current_page) < menu_pages.length && !in_transition){
-			loadPage(menu_pages[mpIndex(current_page)+1],true);
+		var currentIndex = mpIndex(current_page);
+		if (currentIndex >= 0 && currentIndex < menu_pages.length - 1 && !in_transition){
+			var nextPage = menu_pages[currentIndex + 1];
+			if (nextPage) {
+				loadPage(nextPage, true);
+			}
 		}
 	});
 	
@@ -743,18 +756,26 @@ $( document ).ready(function() {
 	// Detect keypress
 	$(function(){
     	$('html').keydown(function(e){
-        
+
 	        // left key
 	        if (e.keyCode == 39 && !in_transition) {
-	        	if (mpIndex(current_page) < menu_pages.length){
-					loadPage(menu_pages[mpIndex(current_page)+1],true);
+	        	var currentIndex = mpIndex(current_page);
+	        	if (currentIndex >= 0 && currentIndex < menu_pages.length - 1){
+	        		var nextPage = menu_pages[currentIndex + 1];
+	        		if (nextPage) {
+						loadPage(nextPage, true);
+					}
 	        	}
 			}
-	        
+
 	        // right key
 	        if (e.keyCode == 37 && !in_transition) {
-	        	if (mpIndex(current_page) > 0){
-					loadPage(menu_pages[mpIndex(current_page)-1],true);
+	        	var currentIndex = mpIndex(current_page);
+	        	if (currentIndex > 0){
+	        		var nextPage = menu_pages[currentIndex - 1];
+	        		if (nextPage) {
+						loadPage(nextPage, true);
+					}
 	        	}
 			}
 	    });
