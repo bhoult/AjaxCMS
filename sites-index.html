@@ -44,85 +44,103 @@
             opacity: 0.9;
         }
 
-        .sites-table-wrapper {
+        .sites-wrapper {
             background: white;
             border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            overflow: hidden;
+            padding: 30px;
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
+        .folder {
+            margin-bottom: 30px;
         }
 
-        thead {
-            background: #667eea;
-            color: white;
+        .folder-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
         }
 
-        th {
-            padding: 20px;
-            text-align: left;
+        .folder-icon {
+            font-size: 1.5em;
+            margin-right: 10px;
+            color: #667eea;
+        }
+
+        .folder-name {
+            font-size: 1.3em;
             font-weight: 600;
+            color: #667eea;
+        }
+
+        .folder-root .folder-name {
+            color: #764ba2;
+        }
+
+        .sites-list {
+            margin-left: 20px;
+        }
+
+        .site-item {
+            padding: 15px;
+            margin: 10px 0;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            background: #fafafa;
+            transition: all 0.2s ease;
+        }
+
+        .site-item:hover {
+            background: #f8f9ff;
+            border-color: #667eea;
+            box-shadow: 0 2px 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .site-header {
+            display: flex;
+            align-items: baseline;
+            margin-bottom: 10px;
+            gap: 15px;
+        }
+
+        .site-name {
+            font-weight: 600;
+            color: #667eea;
             font-size: 1.1em;
         }
 
-        tbody tr {
-            border-bottom: 1px solid #eee;
-            transition: background 0.2s ease;
-        }
-
-        tbody tr:hover {
-            background: #f8f9ff;
-        }
-
-        tbody tr:last-child {
-            border-bottom: none;
-        }
-
-        td {
-            padding: 20px;
-            vertical-align: top;
-        }
-
-        td.site-name {
-            font-weight: 600;
-            color: #667eea;
-            white-space: nowrap;
-            width: 200px;
-        }
-
-        td.site-url {
+        .site-url {
             font-family: monospace;
             color: #666;
             font-size: 0.9em;
-            width: 250px;
         }
 
-        td.site-url a {
+        .site-url a {
             color: #667eea;
             text-decoration: none;
         }
 
-        td.site-url a:hover {
+        .site-url a:hover {
             text-decoration: underline;
         }
 
-        td.site-description {
+        .site-description {
             color: #333;
             line-height: 1.6;
+            margin-left: 0;
         }
 
-        td.site-description p {
+        .site-description p {
             margin: 0 0 10px 0;
         }
 
-        td.site-description p:last-child {
+        .site-description p:last-child {
             margin-bottom: 0;
         }
 
-        td.site-description em {
+        .site-description em {
             color: #999;
         }
 
@@ -169,49 +187,30 @@
         }
 
         @media (max-width: 768px) {
-            table, thead, tbody, th, td, tr {
-                display: block;
+            .sites-wrapper {
+                padding: 20px;
             }
 
-            thead {
-                display: none;
+            .sites-list {
+                margin-left: 10px;
             }
 
-            tbody tr {
-                margin-bottom: 20px;
-                border: 1px solid #eee;
-                border-radius: 8px;
-                overflow: hidden;
+            .folder-name {
+                font-size: 1.1em;
             }
 
-            td {
-                border: none;
-                position: relative;
-                padding-left: 50%;
+            .site-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
             }
 
-            td::before {
-                position: absolute;
-                left: 20px;
-                font-weight: 600;
-                color: #667eea;
+            .site-name {
+                font-size: 1em;
             }
 
-            td.site-name::before {
-                content: "Site:";
-            }
-
-            td.site-url::before {
-                content: "URL:";
-            }
-
-            td.site-description::before {
-                content: "Description:";
-            }
-
-            td.site-name,
-            td.site-url {
-                width: 100%;
+            .site-url {
+                font-size: 0.85em;
             }
         }
     </style>
@@ -256,40 +255,67 @@
                     return;
                 }
 
-                const rows = sites.map(site => {
-                    // Create clickable link - use path-based routing for localhost
-                    const sitePath = `/${site.path}/`;
-                    const displayPath = site.path.includes('/') ? site.path : site.name;
+                // Organize sites by folder
+                const folders = {};
+                sites.forEach(site => {
+                    const pathParts = site.path.split('/');
+                    const folderPath = pathParts.length > 1 ? pathParts.slice(0, -1).join('/') : '';
 
-                    // Convert markdown description to HTML
-                    let descriptionHtml = '<em>No description</em>';
-                    if (site.description && site.description.trim()) {
-                        descriptionHtml = marked(site.description);
+                    if (!folders[folderPath]) {
+                        folders[folderPath] = [];
                     }
+                    folders[folderPath].push(site);
+                });
+
+                // Sort folder keys so root comes first, then alphabetically
+                const sortedFolders = Object.keys(folders).sort((a, b) => {
+                    if (a === '') return -1;
+                    if (b === '') return 1;
+                    return a.localeCompare(b);
+                });
+
+                // Generate HTML for each folder
+                const foldersHtml = sortedFolders.map(folderPath => {
+                    const folderSites = folders[folderPath];
+                    const folderName = folderPath || 'Root';
+                    const isRoot = folderPath === '';
+
+                    const sitesHtml = folderSites.map(site => {
+                        const sitePath = `/${site.path}/`;
+
+                        // Convert markdown description to HTML
+                        let descriptionHtml = '<em>No description</em>';
+                        if (site.description && site.description.trim()) {
+                            descriptionHtml = marked(site.description);
+                        }
+
+                        return `
+                            <div class="site-item">
+                                <div class="site-header">
+                                    <div class="site-name">${site.name}</div>
+                                    <div class="site-url"><a href="${sitePath}">${sitePath}</a></div>
+                                </div>
+                                <div class="site-description">${descriptionHtml}</div>
+                            </div>
+                        `;
+                    }).join('');
 
                     return `
-                        <tr>
-                            <td class="site-name">${displayPath}</td>
-                            <td class="site-url"><a href="${sitePath}">${sitePath}</a></td>
-                            <td class="site-description">${descriptionHtml}</td>
-                        </tr>
+                        <div class="folder ${isRoot ? 'folder-root' : ''}">
+                            <div class="folder-header">
+                                <span class="folder-icon">${isRoot ? '🏠' : '📁'}</span>
+                                <span class="folder-name">${folderName}</span>
+                            </div>
+                            <div class="sites-list">
+                                ${sitesHtml}
+                            </div>
+                        </div>
                     `;
                 }).join('');
 
                 container.innerHTML = `
-                    <div class="sites-table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Site</th>
-                                    <th>URL</th>
-                                    <th>Description</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${rows}
-                            </tbody>
-                        </table>
+                    <div class="sites-wrapper">
+                        ${foldersHtml}
                     </div>
                 `;
 
