@@ -254,6 +254,64 @@ GET /api/list-recursive?dir=pages
 }
 ```
 
+## Testing
+
+AjaxCMS includes a comprehensive test suite with 59 tests covering all core features.
+
+### Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode (re-runs on file changes)
+npm run test:watch
+
+# Generate coverage report
+npm run test:coverage
+```
+
+### Test Coverage
+
+The test suite achieves **83.57% code coverage** and includes tests for:
+
+- **Server API endpoints** (`/api/sites`, `/api/list`, `/api/list-recursive`)
+- **Multi-site routing** (path-based and nested site paths)
+- **Resource fallback system** (`js/`, `themes/`, `images/` sharing)
+- **Static file serving** (HTML, CSS, JavaScript with proper content-types)
+- **Sites index page** (dynamic site listing)
+- **Security features** (directory traversal prevention, path sanitization)
+- **Helper syntax patterns** ({{a|...}}, {{i|...}}, {{carousel:...}}, {{blog|...}}, etc.)
+- **Helper parameter parsing** (pipes, arrow syntax for attributes)
+- **Individual helpers** (link, image, carousel, blog, filelist, insert)
+- **Page and image matching** (partial match algorithms)
+- **Script security** (XSS prevention)
+- **Markdown processing**
+
+### Test Files
+
+- `__tests__/server.spec.js` - Server functionality, routing, and API tests
+- `__tests__/helpers.spec.js` - Helper syntax and processing tests
+
+### Example Test Output
+
+```
+PASS __tests__/helpers.spec.js
+PASS __tests__/server.spec.js
+
+Test Suites: 2 passed, 2 total
+Tests:       59 passed, 59 total
+Snapshots:   0 total
+Time:        0.331 s
+
+-----------|---------|----------|---------|---------|---
+File       | % Stmts | % Branch | % Funcs | % Lines |
+-----------|---------|----------|---------|---------|---
+All files  |   83.57 |    78.46 |   93.75 |   83.21 |
+ server.js |   83.57 |    78.46 |   93.75 |   83.21 |
+-----------|---------|----------|---------|---------|---
+```
+
 ## Production Deployment
 
 ### Using PM2
@@ -450,6 +508,7 @@ AjaxCMS/                    # This repository (template)
 - **Add pages** to `sites/yoursite.com/pages/menus/` to create navigation items
 - **Create custom themes** by overriding files in `sites/yoursite.com/themes/`
 - **Share resources** - update `js/`, `themes/`, or `images/` in the main directory to affect all sites
+- **Run tests** - verify everything works with `npm test` (see [Testing](#testing) section)
 - **Read `CLAUDE.md`** for development guidance and architecture details
 - **Explore themes** - AjaxCMS includes 15+ animated canvas themes
 
