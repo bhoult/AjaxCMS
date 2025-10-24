@@ -157,6 +157,12 @@ pm2 start server.js --name ajaxcms
 # This runs on port 3000 without SSL
 ```
 
+**Content updates are automatic!**
+- Edit any site file (pages, images, CSS, JS) - changes appear immediately
+- No server restart needed
+- Browsers automatically fetch updated files
+- Uses ETag-based caching with file modification timestamps
+
 ## File Structure
 
 ```
