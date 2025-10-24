@@ -21,8 +21,9 @@ function layer(jqo, speed, offset) {
 }
 
 function drawFrame(frame) {
+	if (cursorX === undefined) {cursorX = 0}
 	if (cursorY === undefined) {cursorY = 0}
-	
+
 	var layer_bottom = -layer_height/2;
     var layer_distance_spread = layer_height / 2.6;
 		
@@ -72,6 +73,13 @@ startBackground = function() {
   
   draw();
 }
+
+// Restart if window is resized
+$(window).resize(function(){
+  page_width = window.innerWidth;
+  page_height = window.innerHeight;
+  layer_height = page_height;	// Height of layers in pixels
+});
 
 // Ping the tracking server.
 hit_data = {theme: theme, user_agent: navigator.userAgent, resolution_x: window.innerWidth, resolution_y: window.innerHeight, url: document.domain};
