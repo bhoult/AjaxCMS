@@ -727,7 +727,8 @@ $( document ).ready(function() {
 		loadPage(current_page, true);
     });
     
-    // Setup Swipe Events
+    // Setup Swipe Events - TEMPORARILY DISABLED FOR TESTING
+	/*
 	$("#a").on("swiperight",function(event){
 		var currentIndex = mpIndex(current_page);
 		if (currentIndex > 0 && !in_transition){
@@ -746,6 +747,7 @@ $( document ).ready(function() {
 			}
 		}
 	});
+	*/
 	
 	// Back button clicked
 	$(window).on("popstate", function(e) {
