@@ -1,5 +1,6 @@
 const express = require('express');
 const fs = require('fs').promises;
+const fsSync = require('fs');
 const path = require('path');
 
 const app = express();
@@ -11,6 +12,38 @@ const MAINTAINER_EMAIL = process.env.MAINTAINER_EMAIL || '';
 // In SSL mode: use 80/443 (standard ports)
 // In HTTP-only mode: use PORT env var or 3000 (development)
 const HTTP_PORT = ENABLE_SSL ? 80 : (process.env.PORT || 3000);
+
+// Helper function to send files with ETag based on modification time
+function sendFileWithCache(filePath, req, res, next) {
+  fsSync.stat(filePath, (err, stats) => {
+    if (err) {
+      if (next) next();
+      return;
+    }
+
+    // Create ETag from file modification timestamp (in milliseconds)
+    const etag = `"${stats.mtimeMs}"`;
+
+    // Check if client has cached version
+    const clientEtag = req.headers['if-none-match'];
+    if (clientEtag === etag) {
+      // File hasn't changed, send 304 Not Modified
+      res.status(304).end();
+      return;
+    }
+
+    // Set cache headers
+    res.setHeader('ETag', etag);
+    res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+
+    // Send the file
+    res.sendFile(filePath, (sendErr) => {
+      if (sendErr && next) {
+        next();
+      }
+    });
+  });
+}
 
 // API endpoint to list all available sites (recursively finds sites in subdirectories)
 app.get('/api/sites', async (req, res) => {
@@ -222,10 +255,10 @@ app.get('*/api/list-recursive', async (req, res) => {
 });
 
 // Serve index page for root or site root
-app.get('/', (req, res) => {
+app.get('/', (req, res, next) => {
   if (!req.siteName) {
-    // Serve the sites index page
-    res.sendFile(path.join(__dirname, 'sites-index.html'));
+    // Serve the sites index page with caching
+    sendFileWithCache(path.join(__dirname, 'sites-index.html'), req, res, next);
   } else {
     // This shouldn't happen with our routing
     next();
@@ -236,10 +269,8 @@ app.get('/', (req, res) => {
 app.get('*/', (req, res, next) => {
   if (req.siteName && req.sitePath && req.path === req.sitePrefix + '/') {
     const filePath = path.join(req.sitePath, 'index.html');
-    res.sendFile(filePath, (err) => {
-      if (err) {
-        res.status(404).send('Site not found');
-      }
+    sendFileWithCache(filePath, req, res, () => {
+      res.status(404).send('Site not found');
     });
   } else {
     next();
@@ -267,36 +298,30 @@ app.use((req, res, next) => {
     return res.status(403).send('Access denied');
   }
 
-  // Try to serve from site directory first
-  res.sendFile(filePath, (err) => {
-    if (err) {
-      // If file not found in site directory, check if it's in js/, themes/, or images/
-      // and try to serve from main AjaxCMS directory as fallback
-      if (err.code === 'ENOENT' && (relativePath.startsWith('/js/') || relativePath.startsWith('/themes/') || relativePath.startsWith('/images/'))) {
-        const fallbackPath = path.join(__dirname, relativePath);
+  // Try to serve from site directory first with caching
+  sendFileWithCache(filePath, req, res, () => {
+    // If file not found in site directory, check if it's in js/, themes/, or images/
+    // and try to serve from main AjaxCMS directory as fallback
+    if (relativePath.startsWith('/js/') || relativePath.startsWith('/themes/') || relativePath.startsWith('/images/')) {
+      const fallbackPath = path.join(__dirname, relativePath);
 
-        // Security check for fallback path
-        const allowedPaths = [
-          path.resolve(__dirname, 'js'),
-          path.resolve(__dirname, 'themes'),
-          path.resolve(__dirname, 'images')
-        ];
+      // Security check for fallback path
+      const allowedPaths = [
+        path.resolve(__dirname, 'js'),
+        path.resolve(__dirname, 'themes'),
+        path.resolve(__dirname, 'images')
+      ];
 
-        const resolvedFallback = path.resolve(fallbackPath);
-        const isAllowed = allowedPaths.some(allowed => resolvedFallback.startsWith(allowed));
+      const resolvedFallback = path.resolve(fallbackPath);
+      const isAllowed = allowedPaths.some(allowed => resolvedFallback.startsWith(allowed));
 
-        if (isAllowed) {
-          res.sendFile(fallbackPath, (fallbackErr) => {
-            if (fallbackErr) {
-              next();
-            }
-          });
-        } else {
-          next();
-        }
+      if (isAllowed) {
+        sendFileWithCache(fallbackPath, req, res, next);
       } else {
         next();
       }
+    } else {
+      next();
     }
   });
 });
