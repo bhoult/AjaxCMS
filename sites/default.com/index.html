@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+		<meta charset="UTF-8">
+		<title>AjaxCMS</title>
+		
+		<!-- Configuration -->
+		<script>
+			var default_background = "default";
+			var ajaxcms_google_analytics = 'UA-84079705-1';
+			var ajaxcms_themes_menu = true;
+			var ajaxcms_splash_time = 3000;
+		</script>
+		
+		<!-- Jquery -->
+		<script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
+		<script src="https://code.jquery.com/ui/1.12.0-rc.2/jquery-ui.min.js"   integrity="sha256-55Jz3pBCF8z9jBO1qQ7cIf0L+neuPTD1u7Ytzrp2dqo="   crossorigin="anonymous"></script>  
+		
+		<!-- Bootstrap -->
+		<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+		
+		<!-- Markdown parser -->
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.5/marked.min.js"></script>
+		
+		<!-- Polyfills -->
+		<script src="js/array.generics.min.js"></script>
+		
+		<!-- Background Animation -->
+		<script src="js/victor.js"></script>
+		<script src="js/canvasstuff.js"></script>
+		<script src="js/jquery-mobile-swipe.js"></script>
+		<script src="js/segment.js"></script>
+		
+		<!-- CMS Javascript -->
+		<script src="js/ajaxcms.js"></script>
+		
+		<!-- fonts.google.com -->
+		<link href="https://fonts.googleapis.com/css?family=Montserrat+Alternates:700" rel="stylesheet">
+		
+		<!--<script src="themes/bubbles/background.js"></script>-->
+		<!--<link href="themes/bubbles/theme.css" type="text/css" rel='stylesheet'>-->
+		
+		<!-- This will allow the user to set themes... remove below and uncomment above to set to fixed theme. -->
+		<script>
+			theme = param('theme');
+			if (theme) {
+				$.getScript('themes/'+theme+'/background.js');
+				$('<link>').appendTo('head').attr({type : 'text/css', rel : 'stylesheet'}).attr('href', 'themes/'+theme+'/theme.css');
+			} else {
+				$.getScript('themes/'+default_background+'/background.js');  // Default background
+				$('<link>').appendTo('head').attr({type : 'text/css', rel : 'stylesheet'}).attr('href', 'themes/'+default_background+'/theme.css');
+			}
+		</script>
+		
+		<style>
+			body {
+				overflow-x: hidden;
+			}
+			
+			#background {
+			  position:fixed;
+			  z-index:-1;
+			  width:100%;
+			  height:100%;
+			  background: linear-gradient(#FFF, #225);
+			}
+			#background-div {
+			  position:fixed;
+			  z-index:0;
+			  width:100%;
+			  height:100%;
+			  overflow:hidden;
+			}
+			
+			nav.navbar {
+				margin-bottom:0px;
+				z-index:1;
+				border-radius:0px 0px 10px 10px;
+			}
+			
+			.container {
+				padding:0px;
+				border-radius:4px 4px 0px 0px;
+				color:black;
+			}
+			
+			#a, #b {
+				position:absolute; 
+				top: 0px;
+				width:100%;
+				z-index:0;
+				background-color:rgba(200,200,255,0.9);
+				border-radius:0px 0px 8px 8px;
+				color:black;
+				margin-bottom:50px;
+			}
+			
+			#main {
+				width:98%!important;
+				margin: 0 auto;
+			}
+			
+			#main>div {
+				padding: 0px 10px;
+			}
+			
+			#main img {
+				margin:10px;
+			}
+			#main .carousel img {
+				margin:0px;
+			}
+			img.thumb {
+				width:20px;
+			}
+			img.icon {
+				width:70px;
+			}
+			img.small {
+				width:300px;
+			}
+			img.medium {
+				width:600px;
+			}
+			img.large {
+				width:900px;
+			}
+			img.left {
+				float:left;
+			}
+			img.right {
+				float:right;
+			}
+			
+			.carousel {
+				padding:0px;
+			}
+			
+			ul.filelist li {
+				list-style-type:none;
+			}
+			ul.filelist li a.folder:hover {
+				text-decoration:none;
+			}
+			
+			footer {   
+				position:fixed;
+				left:0px;
+				bottom:0px;
+				width:100%;
+				background:white;
+				color:black;
+				text-align:center;
+				padding:5px;
+				font-size:2vw;
+			}
+			footer a {color:blue;}
+			footer a:hover {color:#55F;}
+			
+			.blog .blog_entry {
+				border:1px solid black;
+				border-radius:10px;
+				margin:10px;
+				padding:5px;
+				background-color:rgba(255,255,255,0.8);
+				position:relative;
+				cursor: pointer; 
+			}
+			.blog .blog_entry h1 {
+				margin-top:0px;
+				font-size:150%;
+			}
+			.blog .blog_entry time {
+				position:absolute;
+				top:5px;
+				right:5px;
+			}
+			
+			
+			@media (min-width: 544px) {  }
+			@media (min-width: 768px) { footer {font-size:14px;} }
+			@media (min-width: 992px) {  }
+			@media (min-width: 1200px) {  }
+			
+		</style>
+	</head>
+	
+	<body>
+		<canvas id="background"></canvas>
+		<div id="background-div"></div>
+		<div class="container" style="display:none;">
+			<header>
+			</header>
+			
+			<!-- Static navbar -->
+			<nav class="navbar navbar-default">
+				<div class="container-fluid">
+				  <div class="navbar-header">
+				    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+				      <span class="sr-only">Toggle navigation</span>
+				      <span class="icon-bar"></span>
+				      <span class="icon-bar"></span>
+				      <span class="icon-bar"></span>
+				    </button>
+				    <a class="navbar-brand" href="#" style="width:200px;"><img src='images/ajaxcms.svg' style="position:relative; top: -20px; z-index:2; width:100%;"></a>
+				  </div>
+				  <div id="navbar" class="navbar-collapse collapse">
+				    <ul id='menu' class="nav navbar-nav">
+				    	<!-- Pages get inserted here to make menu -->
+				    </ul>
+				  </div><!--/.nav-collapse -->
+				</div><!--/.container-fluid -->
+			</nav>
+			
+			<main id="main" style="position:relative; width:100%;">
+				<!-- Content gets inserted here, a and b are for making page style transitions. -->
+				<div id='a' style=""></div>
+				<div id='b' style="display:none;"></div>
+			</main>
+			
+			<footer>
+				<div>
+					&#9400; AjaxCMS 2016 All Rights Reserved. Email: <a href="mailto:brandon.hoult@softwyre.com">brandon.hoult@softwyre.com</a> for more information. 
+				</div>
+			</footer>
+		</div>
+		
+		<!-- Google Analytics -->
+		<script>
+		  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+		
+		  ga('create', ajaxcms_google_analytics, 'auto');
+		  //ga('send', 'pageview');
+		</script>
+	</body>
+
+</html>
