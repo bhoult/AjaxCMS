@@ -109,7 +109,7 @@ This means:
 ```bash
 # Most sites use shared themes, but mysite.com wants a custom one
 mkdir -p sites/mysite.com/themes/custom
-cp -r themes/default/* sites/mysite.com/themes/custom/
+cp -r themes/starter/* sites/mysite.com/themes/custom/
 # Now edit sites/mysite.com/themes/custom/background.js for custom animations
 ```
 

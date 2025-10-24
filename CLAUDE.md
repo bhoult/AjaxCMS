@@ -156,7 +156,7 @@ When adding new pages:
 
 When creating new themes:
 - Create directory in `themes/` with `background.js` and `theme.css`
-- Follow existing theme structure (see `themes/default/` or `themes/gears/`)
+- Follow existing theme structure (see `themes/starter/` or `themes/gears/`)
 - Canvas animation should use global variables for configuration
 - Test theme with `?theme=yourtheme&page=blank.html`
 
