@@ -93,62 +93,75 @@ SITES_DIR=/path/to/sites npm start
 
 ## Production Deployment
 
-### Using systemd (Linux)
+**Prerequisites:**
+- Domain names pointing to your server's IP address
+- Ports 80 and 443 open in firewall
 
-**1. Deploy to production location:**
+**1. Install PM2 globally:**
 
 ```bash
-sudo mkdir -p /var/www/AjaxCMS
-sudo cp -r * /var/www/AjaxCMS/
+npm install -g pm2
+```
+
+**2. Deploy to production location:**
+
+```bash
+# Clone or copy AjaxCMS to production location
+mkdir -p /var/www/AjaxCMS
+cp -r * /var/www/AjaxCMS/
 cd /var/www/AjaxCMS
-sudo npm install --production
+
+# Install dependencies
+npm install --production
 ```
 
-**2. Configure service file:**
-
-Edit `ajaxcms.service` and update `MAINTAINER_EMAIL` with your email address:
-```ini
-Environment=MAINTAINER_EMAIL=your-email@example.com
-```
-
-**3. Install systemd service:**
+**3. Start AjaxCMS with PM2 and SSL:**
 
 ```bash
-# Copy service file
-sudo cp ajaxcms.service /etc/systemd/system/
+# Set your email address for Let's Encrypt
+ENABLE_SSL=true MAINTAINER_EMAIL=admin@example.com pm2 start server.js --name ajaxcms
 
-# Set ownership
-sudo chown -R www-data:www-data /var/www/AjaxCMS
+# Save PM2 configuration
+pm2 save
 
-# Enable and start
-sudo systemctl daemon-reload
-sudo systemctl enable ajaxcms
-sudo systemctl start ajaxcms
-
-# Check status
-sudo systemctl status ajaxcms
+# Configure PM2 to start on boot
+pm2 startup
+# Follow the command that PM2 outputs
 ```
 
-**4. View logs:**
+**4. Manage the server:**
 
 ```bash
-sudo journalctl -u ajaxcms -f
+# View status
+pm2 status
+
+# View logs
+pm2 logs ajaxcms
+
+# Restart
+pm2 restart ajaxcms
+
+# Stop
+pm2 stop ajaxcms
 ```
 
-**SSL is enabled by default!** The service will:
+**SSL certificates are automatically provisioned!** The server will:
 - Listen on ports 80 (HTTP) and 443 (HTTPS)
 - Automatically provision Let's Encrypt certificates for all domains
 - Redirect HTTP to HTTPS
 - Auto-renew certificates before expiration
 
-**Note:** SSL requires domain names pointing to your server. For local testing without domains, use `npm start` instead of systemd.
+**For local testing without SSL:**
+```bash
+pm2 start server.js --name ajaxcms
+# This runs on port 3000 without SSL
+```
 
 ## File Structure
 
 ```
 AjaxCMS/
-├── server.js               # Node.js server
-├── ajaxcms.service         # systemd service file
+├── server.js               # Node.js server with built-in SSL
 ├── package.json            # Dependencies
 ├── index.html              # Template (copy to sites)
 ├── js/                     # Shared JavaScript
@@ -178,6 +191,7 @@ AjaxCMS/
 - **No sites found**: Ensure `sites/` directory exists with at least one site containing `index.html`
 - **Site not loading**: Check that site directory has both `index.html` and `pages/` directory
 - **Shared resources not loading**: Verify `js/`, `themes/`, and `images/` exist in main directory
-- **Service won't start**: Check logs with `sudo journalctl -u ajaxcms -n 50`
+- **Server won't start**: Check logs with `pm2 logs ajaxcms`
+- **SSL not working**: Ensure domains point to your server and ports 80/443 are open
 
 For detailed troubleshooting, see [README.md](README.md).
