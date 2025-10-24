@@ -300,9 +300,15 @@ app.use((req, res) => {
   res.status(404).send('Not found');
 });
 
-app.listen(PORT, () => {
-  console.log(`AjaxCMS Multi-Site Server running on port ${PORT}`);
-  console.log(`Sites directory: ${path.resolve(__dirname, SITES_DIR)}`);
-  console.log(`\nLocal development: http://localhost:${PORT}`);
-  console.log(`\nFor multi-site support, configure your hosts file or DNS to point domains to this server.`);
-});
+// Only start server if this file is run directly (not imported for testing)
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`AjaxCMS Multi-Site Server running on port ${PORT}`);
+    console.log(`Sites directory: ${path.resolve(__dirname, SITES_DIR)}`);
+    console.log(`\nLocal development: http://localhost:${PORT}`);
+    console.log(`\nFor multi-site support, configure your hosts file or DNS to point domains to this server.`);
+  });
+}
+
+// Export app for testing
+module.exports = app;
