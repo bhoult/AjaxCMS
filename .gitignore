@@ -17,4 +17,10 @@ node_modules/
 npm-debug.log
 .env
 
+# SSL certificates (Let's Encrypt via Greenlock)
+greenlock.d/
+
+# Test coverage
+coverage/
+
 # Sites directory (multi-site installations)

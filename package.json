@@ -18,7 +18,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.18.2"
+    "express": "^4.18.2",
+    "greenlock-express": "^4.0.3"
   },
   "devDependencies": {
     "nodemon": "^3.0.1",

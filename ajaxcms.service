@@ -9,14 +9,18 @@ User=www-data
 Group=www-data
 WorkingDirectory=/var/www/AjaxCMS
 Environment=NODE_ENV=production
-Environment=PORT=3000
 Environment=SITES_DIR=./sites
+Environment=ENABLE_SSL=true
+Environment=MAINTAINER_EMAIL=admin@example.com
 ExecStart=/usr/bin/node server.js
 Restart=on-failure
 RestartSec=10
 StandardOutput=syslog
 StandardError=syslog
 SyslogIdentifier=ajaxcms
+
+# Allow binding to privileged ports (80, 443)
+AmbientCapabilities=CAP_NET_BIND_SERVICE
 
 # Security settings
 NoNewPrivileges=true

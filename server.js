@@ -3,8 +3,14 @@ const fs = require('fs').promises;
 const path = require('path');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 const SITES_DIR = process.env.SITES_DIR || './sites';
+const ENABLE_SSL = process.env.ENABLE_SSL === 'true';
+const MAINTAINER_EMAIL = process.env.MAINTAINER_EMAIL || '';
+
+// Port configuration
+// In SSL mode: use 80/443 (standard ports)
+// In HTTP-only mode: use PORT env var or 3000 (development)
+const HTTP_PORT = ENABLE_SSL ? 80 : (process.env.PORT || 3000);
 
 // API endpoint to list all available sites (recursively finds sites in subdirectories)
 app.get('/api/sites', async (req, res) => {
@@ -37,7 +43,7 @@ app.get('/api/sites', async (req, res) => {
             sites.push({
               name: item.name,
               path: relPath,
-              url: `http://localhost:${PORT}/${relPath}/`,
+              url: ENABLE_SSL ? `https://localhost/${relPath}/` : `http://localhost:${HTTP_PORT}/${relPath}/`,
               description: description
             });
           } catch (err) {
@@ -302,12 +308,43 @@ app.use((req, res) => {
 
 // Only start server if this file is run directly (not imported for testing)
 if (require.main === module) {
-  app.listen(PORT, () => {
-    console.log(`AjaxCMS Multi-Site Server running on port ${PORT}`);
-    console.log(`Sites directory: ${path.resolve(__dirname, SITES_DIR)}`);
-    console.log(`\nLocal development: http://localhost:${PORT}`);
-    console.log(`\nFor multi-site support, configure your hosts file or DNS to point domains to this server.`);
-  });
+  if (ENABLE_SSL) {
+    // Production mode with automatic SSL via Let's Encrypt
+    const greenlockExpress = require('greenlock-express');
+
+    if (!MAINTAINER_EMAIL) {
+      console.error('ERROR: MAINTAINER_EMAIL environment variable is required when ENABLE_SSL=true');
+      console.error('Example: MAINTAINER_EMAIL=admin@example.com ENABLE_SSL=true node server.js');
+      process.exit(1);
+    }
+
+    greenlockExpress
+      .init({
+        packageRoot: __dirname,
+        configDir: './greenlock.d',
+        maintainerEmail: MAINTAINER_EMAIL,
+        cluster: false
+      })
+      .ready((glx) => {
+        // Serves on 80 and 443
+        glx.serveApp(app);
+        console.log('AjaxCMS Multi-Site Server with SSL');
+        console.log(`Sites directory: ${path.resolve(__dirname, SITES_DIR)}`);
+        console.log('\nListening on:');
+        console.log('  - HTTP:  port 80 (redirects to HTTPS)');
+        console.log('  - HTTPS: port 443');
+        console.log('\nSSL certificates will be automatically provisioned via Let\'s Encrypt');
+        console.log('Maintainer email:', MAINTAINER_EMAIL);
+      });
+  } else {
+    // Development mode - HTTP only
+    app.listen(HTTP_PORT, () => {
+      console.log(`AjaxCMS Multi-Site Server (HTTP-only mode)`);
+      console.log(`Sites directory: ${path.resolve(__dirname, SITES_DIR)}`);
+      console.log(`\nLocal development: http://localhost:${HTTP_PORT}`);
+      console.log(`\nFor production with SSL, set: ENABLE_SSL=true MAINTAINER_EMAIL=your@email.com`);
+    });
+  }
 }
 
 // Export app for testing

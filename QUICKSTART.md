@@ -104,7 +104,14 @@ cd /var/www/AjaxCMS
 sudo npm install --production
 ```
 
-**2. Install systemd service:**
+**2. Configure service file:**
+
+Edit `ajaxcms.service` and update `MAINTAINER_EMAIL` with your email address:
+```ini
+Environment=MAINTAINER_EMAIL=your-email@example.com
+```
+
+**3. Install systemd service:**
 
 ```bash
 # Copy service file
@@ -122,54 +129,36 @@ sudo systemctl start ajaxcms
 sudo systemctl status ajaxcms
 ```
 
-**3. View logs:**
+**4. View logs:**
 
 ```bash
 sudo journalctl -u ajaxcms -f
 ```
 
-**Note:** Edit `ajaxcms.service` to customize user, port, or working directory before installing.
+**SSL is enabled by default!** The service will:
+- Listen on ports 80 (HTTP) and 443 (HTTPS)
+- Automatically provision Let's Encrypt certificates for all domains
+- Redirect HTTP to HTTPS
+- Auto-renew certificates before expiration
+
+**To disable SSL** (development only), edit `ajaxcms.service`:
+```ini
+Environment=ENABLE_SSL=false
+```
 
 ### Using PM2 (Alternative)
 
 ```bash
 npm install -g pm2
+
+# Without SSL (development)
 pm2 start server.js --name ajaxcms
+
+# With SSL (production)
+pm2 start server.js --name ajaxcms -- ENABLE_SSL=true MAINTAINER_EMAIL=admin@example.com
+
 pm2 save
 pm2 startup
-```
-
-### Reverse Proxy with nginx
-
-For production with SSL, use nginx as a reverse proxy:
-
-```bash
-# Install nginx and certbot
-sudo apt install nginx certbot python3-certbot-nginx
-
-# Configure nginx (example for one site)
-sudo nano /etc/nginx/sites-available/mysite.com
-```
-
-Basic nginx config:
-```nginx
-server {
-    listen 80;
-    server_name mysite.com www.mysite.com;
-
-    location / {
-        proxy_pass http://localhost:3000;
-        proxy_set_header Host $host;
-    }
-}
-```
-
-Enable SSL with Let's Encrypt:
-```bash
-sudo ln -s /etc/nginx/sites-available/mysite.com /etc/nginx/sites-enabled/
-sudo nginx -t
-sudo systemctl reload nginx
-sudo certbot --nginx -d mysite.com -d www.mysite.com
 ```
 
 ## File Structure
