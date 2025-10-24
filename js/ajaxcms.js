@@ -140,7 +140,7 @@ function load_pages(url) {
 				// Store the URL of the current page in the history *** for some reason firefox needs this or it will break the splash animation.
 				var new_url = base_url+'?page='+current_page.replace(/^\.\//,'');
 				window.history.pushState({page: new_url},'test',new_url);
-				loadPage(current_page, true); // Load the first page (home page) on init.
+				loadPage(current_page, false); // Load the first page (home page) on init.
 			}
 		}
 	});
@@ -722,13 +722,14 @@ $( document ).ready(function() {
 	load_pages('./pages');
 
     // Home on Brand Click
-    $('.navbar-brand').click(function(){
+    $('.navbar-brand').click(function(e){
+    	e.preventDefault();
     	current_page = menu_pages[0];
 		loadPage(current_page, true);
+		return false;
     });
     
-    // Setup Swipe Events - TEMPORARILY DISABLED FOR TESTING
-	/*
+    // Setup Swipe Events
 	$("#a").on("swiperight",function(event){
 		var currentIndex = mpIndex(current_page);
 		if (currentIndex > 0 && !in_transition){
@@ -747,7 +748,6 @@ $( document ).ready(function() {
 			}
 		}
 	});
-	*/
 	
 	// Back button clicked
 	$(window).on("popstate", function(e) {
