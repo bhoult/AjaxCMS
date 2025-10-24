@@ -254,13 +254,13 @@ function process_page(sdata) {
         
 		// Anchors
 		if (parts[0]=='a' && parts.length == 2) {
-			return "<a href=\"#\" "+attributes_string+" onclick=\"loadPage(\'" + pageMatch(parts[1]) + "\'); return false;\">"+parts[1]+"</a>";
+			return "<a href=\"javascript:void(0);\" "+attributes_string+" onclick=\"loadPage(\'" + pageMatch(parts[1]) + "\'); return false;\">"+parts[1]+"</a>";
 		}
 		if (parts[0]=='a' && parts.length == 3) {
-			return "<a href=\"#\" "+attributes_string+" onclick=\"loadPage(\'" + pageMatch(parts[1]) + "\'); return false;\">"+parts[2]+"</a>";
+			return "<a href=\"javascript:void(0);\" "+attributes_string+" onclick=\"loadPage(\'" + pageMatch(parts[1]) + "\'); return false;\">"+parts[2]+"</a>";
 		}
 		if (parts[0]=='a' && parts.length == 4) {
-			return "<a href=\"#\" "+attributes_string+" onclick=\"loadPage(\'" + pageMatch(parts[1]) + "\'); return false;\" alt=\"" + parts[3] + "\">"+parts[2]+"</a>";
+			return "<a href=\"javascript:void(0);\" "+attributes_string+" onclick=\"loadPage(\'" + pageMatch(parts[1]) + "\'); return false;\" alt=\"" + parts[3] + "\">"+parts[2]+"</a>";
 		}
 		
 		// Images
@@ -305,9 +305,9 @@ function process_page(sdata) {
 			return 	"<div "+attributes_string+" id=\"carousel_"+idn+"\" class=\"carousel slide auto\" data-ride=\"carousel\">" +
 					"<ol class=\"carousel-indicators\">"+carousel_indicators+"</ol>" +
 					"<div class=\"carousel-inner\" role=\"listbox\">" + slides + "</div>" +
-					"<a class=\"left carousel-control\" href=\"#carousel_"+idn+"\" role=\"button\" data-slide=\"prev\">" +
+					"<a class=\"left carousel-control\" href=\"javascript:void(0);\" data-target=\"#carousel_"+idn+"\" role=\"button\" data-slide=\"prev\">" +
 					"<span class=\"glyphicon glyphicon-chevron-left\" aria-hidden=\"true\"></span><span class=\"sr-only\">Previous</span></a>" +
-					"<a class=\"right carousel-control\" href=\"#carousel_"+idn+"\" role=\"button\" data-slide=\"next\">" +
+					"<a class=\"right carousel-control\" href=\"javascript:void(0);\" data-target=\"#carousel_"+idn+"\" role=\"button\" data-slide=\"next\">" +
 					"<span class=\"glyphicon glyphicon-chevron-right\" aria-hidden=\"true\"></span><span class=\"sr-only\">Next</span></a>" +
 					"</div>"
 		}
@@ -342,9 +342,9 @@ function process_page(sdata) {
 		        }
 		        var item = $("<li>").appendTo(list);
 		        if (!/\.html|\.md/.test(this.url)) {
-		        	$("<a>").attr("href", "#").attr('class','folder').text(this.name).appendTo(item);	
+		        	$("<a>").attr("href", "javascript:void(0);").attr('class','folder').text(this.name).appendTo(item);	
 		        } else {
-		        	$("<a>").attr("href", "#").attr("onclick", "loadPage(\""+this.url+"\"); return false;").attr('class','file').text(this.name).appendTo(item);
+		        	$("<a>").attr("href", "javascript:void(0);").attr("onclick", "loadPage(\""+this.url+"\"); return false;").attr('class','file').text(this.name).appendTo(item);
 		        }
 		        elements[this.url] = item;
 		    });
@@ -379,7 +379,7 @@ function process_page(sdata) {
 			// Make a li for each blog entry
 			var output = "";
 			for (var i=0; i < blog_list.length; i++){
-				output += "<li class=\"blog_entry\"><a href=\"#\" onclick=\"loadPage('"+blog_list[i].url+"'); return false;\">" + blog_list[i].name + "</a></li>"
+				output += "<li class=\"blog_entry\"><a href=\"javascript:void(0);\" onclick=\"loadPage('"+blog_list[i].url+"'); return false;\">" + blog_list[i].name + "</a></li>"
 			}
 			
 			// Output all the blog entries wrapped in a div and then use javascript to load the contgents of each.
@@ -688,7 +688,7 @@ function makemenu() {
 	    	if (/\/$/.test(filename)) { 
 	    		// It is a directory
 	    		$('#menu').append(
-	    			'<li class="dropdown '+classname+'"><a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">'
+	    			'<li class="dropdown '+classname+'"><a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">'
 	    			+ filename.replace(/\/$/,'')
 	    			+ '<span class="caret"></span></a><ul class="dropdown-menu" id="'+filename+'"></ul></li>'
 	    		);
@@ -696,9 +696,9 @@ function makemenu() {
 	    		// It is a file
 	    		var parts = filename.split('/');
 	    		if (parts.length > 1) {
-	    			$('#'+parts[0]+'\\\/').append('<li class="file '+classname+'"><a href="#" onclick="loadPage(\''+file.replace(/\//g,'\\\/')+'\'); return false;">'+parts[1].replace(/\d+\-/,'')+'</a></li>');
+	    			$('#'+parts[0]+'\\\/').append('<li class="file '+classname+'"><a href="javascript:void(0);" onclick="loadPage(\''+file.replace(/\//g,'\\\/')+'\'); return false;">'+parts[1].replace(/\d+\-/,'')+'</a></li>');
 	    		} else {
-					$('#menu').append('<li class="file '+classname+'"><a href="#" onclick="loadPage(\''+file.replace(/\//g,'\\\/')+'\'); return false;">'+filename+'</a></li>');
+					$('#menu').append('<li class="file '+classname+'"><a href="javascript:void(0);" onclick="loadPage(\''+file.replace(/\//g,'\\\/')+'\'); return false;">'+filename+'</a></li>');
 	    		}
 	    	}
     	}
