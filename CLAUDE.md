@@ -35,8 +35,8 @@ Demo and documentation: http://ajaxcms.org
 ### Core System Flow
 
 1. **Initialization** (`index.html` loads → `ajaxcms.js` executes):
-   - Parse configuration variables in `index.html` (`default_background`, `ajaxcms_google_analytics`, `ajaxcms_themes_menu`, `ajaxcms_splash_time`)
-   - Load directory listings via `load_pages('./pages')`, `load_images('./images')`, and `load_themes('./themes')`
+   - Parse configuration variables in `index.html` (`default_background`, `ajaxcms_google_analytics`, `ajaxcms_splash_time`)
+   - Load directory listings via `load_pages('./pages')` and `load_images('./images')`
    - Build navigation menu from files in `pages/menus/`
    - Display splash page if present (`pages/splash.html`), then fade to main content
    - Load initial page from URL param or first menu page
@@ -116,10 +116,10 @@ Demo and documentation: http://ajaxcms.org
 - Swipe gestures and arrow keys navigate between menu pages
 
 **Theme System:**
-- Theme selected via URL parameter: `?theme=themename`
+- Each site has a fixed theme set via `default_background` variable in `index.html`
 - Each theme has `background.js` (canvas animation) and `theme.css` (styles)
 - Animated backgrounds use `<canvas id="background">` with requestAnimationFrame
-- Themes menu auto-generated from `themes/` directory if `ajaxcms_themes_menu = true`
+- Theme is loaded on page initialization and cannot be changed dynamically
 
 **Blog Functionality:**
 - Blog posts named with date prefix: `YYYY-MM-DD-Post_Title.html` or `.md`

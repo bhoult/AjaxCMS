@@ -21,7 +21,6 @@ var pages = [];
 var layouts = [];
 var blogs = [];
 var images = [];
-var themes = [];
 
 var menu_count = 0; // Keep track of recursive asyncronous directory list.
 var pages_count = 0;
@@ -173,37 +172,6 @@ function load_images(url) {
 		if (images_count === 0) {
 			// Stuff to run after page list is loaded.
 		}
-	});
-}
-
-// Fetch JSON directory listing data... add to themes
-function load_themes(url) {
-	url = url.replace(/\/$/,''); // Remove trailing slash from starting point url
-
-	// Fetch directory listing as JSON (non-recursive, just top level)
-	$.getJSON('api/list?dir=' + encodeURIComponent(url), function(data) {
-		// Add only first-level directories as themes
-		for (var i = 0; i < data.directories.length; i++) {
-			var dirName = data.directories[i].name;
-			themes.push(dirName);
-		}
-	}).then(function(){
-		var menutext =
-
-			"<ul class=\"nav navbar-nav navbar-right\">" +
-				"<li class=\"dropdown\">" +
-					"<a class=\"dropdown-toggle\" data-toggle=\"dropdown\" href=\"#\">Themes" +
-	        		"<span class=\"caret\"></span></a>" +
-					"<ul class=\"dropdown-menu\">"
-
-	    for (var ii=0; ii<themes.length; ii++) {
-	    	if(themes[ii] == "default") {continue}
-	    	menutext += "<li><a href=\"?theme="+themes[ii]+"&page=blank.html\">"+themes[ii]+"</a></li>"
-	    }
-
-	    menutext += "</ul></li></ul>"
-
-    	$('#menu').after(menutext);
 	});
 }
 
@@ -747,9 +715,7 @@ $( document ).ready(function() {
 	// Get the directory listings.
 	load_images('./images');
 	load_pages('./pages');
-	
-	if (ajaxcms_themes_menu) {load_themes('./themes');}
-	
+
     // Home on Brand Click
     $('.navbar-brand').click(function(){
     	current_page = menu_pages[0];
