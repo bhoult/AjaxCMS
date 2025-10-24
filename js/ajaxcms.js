@@ -254,13 +254,13 @@ function process_page(sdata) {
         
 		// Anchors
 		if (parts[0]=='a' && parts.length == 2) {
-			return "<a "+attributes_string+" onclick=\"loadPage(\'" + pageMatch(parts[1]) + "\')\">"+parts[1]+"</a>";
+			return "<a href=\"#\" "+attributes_string+" onclick=\"loadPage(\'" + pageMatch(parts[1]) + "\'); return false;\">"+parts[1]+"</a>";
 		}
 		if (parts[0]=='a' && parts.length == 3) {
-			return "<a "+attributes_string+" onclick=\"loadPage(\'" + pageMatch(parts[1]) + "\')\">"+parts[2]+"</a>";
+			return "<a href=\"#\" "+attributes_string+" onclick=\"loadPage(\'" + pageMatch(parts[1]) + "\'); return false;\">"+parts[2]+"</a>";
 		}
 		if (parts[0]=='a' && parts.length == 4) {
-			return "<a "+attributes_string+" onclick=\"loadPage(\'" + pageMatch(parts[1]) + "\')\" alt=\"" + parts[3] + "\">"+parts[2]+"</a>";
+			return "<a href=\"#\" "+attributes_string+" onclick=\"loadPage(\'" + pageMatch(parts[1]) + "\'); return false;\" alt=\"" + parts[3] + "\">"+parts[2]+"</a>";
 		}
 		
 		// Images
@@ -344,7 +344,7 @@ function process_page(sdata) {
 		        if (!/\.html|\.md/.test(this.url)) {
 		        	$("<a>").attr("href", "#").attr('class','folder').text(this.name).appendTo(item);	
 		        } else {
-		        	$("<a>").attr("onclick", "loadPage(\""+this.url+"\")").attr('class','file').text(this.name).appendTo(item);
+		        	$("<a>").attr("href", "#").attr("onclick", "loadPage(\""+this.url+"\"); return false;").attr('class','file').text(this.name).appendTo(item);
 		        }
 		        elements[this.url] = item;
 		    });
@@ -379,7 +379,7 @@ function process_page(sdata) {
 			// Make a li for each blog entry
 			var output = "";
 			for (var i=0; i < blog_list.length; i++){
-				output += "<li class=\"blog_entry\"><a href=\"#\" onclick=\"loadPage('"+blog_list[i].url+"')\">" + blog_list[i].name + "</a></li>"
+				output += "<li class=\"blog_entry\"><a href=\"#\" onclick=\"loadPage('"+blog_list[i].url+"'); return false;\">" + blog_list[i].name + "</a></li>"
 			}
 			
 			// Output all the blog entries wrapped in a div and then use javascript to load the contgents of each.
@@ -464,7 +464,7 @@ function pre_process_page(sdata) {
 			// Make a div for each blog entry
 			var output = "";
 			for (var i=0; i < blog_list.length; i++){
-				output += "<div class='blog_entry' data-url='"+blog_list[i].url+"' onclick=\"loadPage('"+blog_list[i].url+"')\">"
+				output += "<div class='blog_entry' data-url='"+blog_list[i].url+"' onclick=\"loadPage('"+blog_list[i].url+"'); return false;\" style=\"cursor: pointer;\">"
 				output += "<h1>"+blog_list[i].name+"</h1><time>"+blog_list[i].date.toLocaleDateString()+"</time><div class='blog_content'>\n{{insert | "+blog_list[i].url+" | false}}\n</div></div>"
 			}
 			
@@ -696,9 +696,9 @@ function makemenu() {
 	    		// It is a file
 	    		var parts = filename.split('/');
 	    		if (parts.length > 1) {
-	    			$('#'+parts[0]+'\\\/').append('<li class="file '+classname+'"><a onclick="loadPage(\''+file.replace(/\//g,'\\\/')+'\');">'+parts[1].replace(/\d+\-/,'')+'</a></li>');
+	    			$('#'+parts[0]+'\\\/').append('<li class="file '+classname+'"><a href="#" onclick="loadPage(\''+file.replace(/\//g,'\\\/')+'\'); return false;">'+parts[1].replace(/\d+\-/,'')+'</a></li>');
 	    		} else {
-					$('#menu').append('<li class="file '+classname+'"><a onclick="loadPage(\''+file.replace(/\//g,'\\\/')+'\');">'+filename+'</a></li>');
+					$('#menu').append('<li class="file '+classname+'"><a href="#" onclick="loadPage(\''+file.replace(/\//g,'\\\/')+'\'); return false;">'+filename+'</a></li>');
 	    		}
 	    	}
     	}
