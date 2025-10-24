@@ -196,13 +196,13 @@ AjaxCMS uses a **resource fallback system** that allows sites to share common fi
 
 ### How It Works
 
-When a site requests a file from `js/` or `themes/`, the server:
+When a site requests a file from `js/`, `themes/`, or `images/`, the server:
 
 1. **First** checks the site's local directory: `sites/mysite.com/js/ajaxcms.js`
 2. **If not found**, falls back to the main directory: `js/ajaxcms.js`
 
 This means:
-- **All sites share** the same `js/` and `themes/` folders by default
+- **All sites share** the same `js/`, `themes/`, and `images/` folders by default
 - **No duplication** - you don't need to copy these folders to each site
 - **Easy updates** - update one file and all sites get the change
 - **Override anytime** - create a local copy to customize for a specific site
@@ -238,12 +238,12 @@ cp js/ajaxcms.js sites/mysite.com/js/
 
 - **`js/`** - All JavaScript files (ajaxcms.js, libraries, etc.)
 - **`themes/`** - All theme directories and files
+- **`images/`** - All images (with per-site override support)
 
 ### What's NOT Shared
 
 - **`index.html`** - Each site has its own (for custom config)
 - **`pages/`** - Site-specific content
-- **`images/`** - Site-specific images
 - **`description.md`** - Site description for the index
 
 ## Code Changes

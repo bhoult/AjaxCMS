@@ -247,15 +247,16 @@ app.use((req, res, next) => {
   // Try to serve from site directory first
   res.sendFile(filePath, (err) => {
     if (err) {
-      // If file not found in site directory, check if it's in js/ or themes/
+      // If file not found in site directory, check if it's in js/, themes/, or images/
       // and try to serve from main AjaxCMS directory as fallback
-      if (err.code === 'ENOENT' && (relativePath.startsWith('/js/') || relativePath.startsWith('/themes/'))) {
+      if (err.code === 'ENOENT' && (relativePath.startsWith('/js/') || relativePath.startsWith('/themes/') || relativePath.startsWith('/images/'))) {
         const fallbackPath = path.join(__dirname, relativePath);
 
         // Security check for fallback path
         const allowedPaths = [
           path.resolve(__dirname, 'js'),
-          path.resolve(__dirname, 'themes')
+          path.resolve(__dirname, 'themes'),
+          path.resolve(__dirname, 'images')
         ];
 
         const resolvedFallback = path.resolve(fallbackPath);

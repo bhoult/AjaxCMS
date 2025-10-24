@@ -22,7 +22,7 @@ Think of it as a static site generator that runs in real-time, with the flexibil
 🌐 **Single Page App** - Fast navigation with smooth transitions
 📱 **Responsive** - Built with Bootstrap, works on all devices
 🎯 **Blog Support** - Built-in blog functionality with pagination
-🔄 **Resource Sharing** - Share JavaScript and themes across all sites
+🔄 **Resource Sharing** - Share JavaScript, themes, and images across all sites
 ⚡ **Fast Setup** - Get running in minutes, not hours
 
 ## Quick Start
@@ -33,7 +33,7 @@ npm install
 
 # 2. Create your first site
 mkdir -p sites/mysite.com
-cp -r index.html pages/ images/ sites/mysite.com/
+cp -r index.html pages/ sites/mysite.com/
 
 # 3. Start the server
 npm start
@@ -89,7 +89,7 @@ Unlike traditional CMSs (WordPress, Drupal) or static generators (Jekyll, Hugo):
 - ✅ Changes appear immediately
 - ✅ Multi-site built-in from day one
 - ✅ Dynamic content from static files
-- ✅ Shared resources across sites
+- ✅ Shared resources (js/, themes/, images/) across sites
 
 ## Directory Structure
 
@@ -99,6 +99,7 @@ AjaxCMS/
 ├── sites-index.html       # Sites directory index
 ├── js/                    # Shared JavaScript (all sites)
 ├── themes/                # Shared themes (all sites)
+├── images/                # Shared images (all sites)
 └── sites/                 # Your sites
     ├── mysite.com/
     │   ├── index.html     # Site config
@@ -156,8 +157,8 @@ Host multiple sites from one installation:
 mkdir -p sites/portfolio.com sites/blog.com
 
 # Copy templates
-cp -r index.html pages/ images/ sites/portfolio.com/
-cp -r index.html pages/ images/ sites/blog.com/
+cp -r index.html pages/ sites/portfolio.com/
+cp -r index.html pages/ sites/blog.com/
 
 # Add descriptions
 echo "My portfolio site" > sites/portfolio.com/description.md

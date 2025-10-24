@@ -13,13 +13,13 @@ npm install
 
 # 2. Create your first site
 mkdir -p sites/mysite.com
-cp -r index.html pages/ images/ sites/mysite.com/
+cp -r index.html pages/ sites/mysite.com/
 
 # 3. Start the server
 npm start
 ```
 
-**Note:** You don't need to copy `js/` or `themes/` folders - sites automatically use the shared versions from the main directory. You can override them by creating local copies if needed.
+**Note:** You don't need to copy `js/`, `themes/`, or `images/` folders - sites automatically use the shared versions from the main directory. You can override them by creating local copies if needed.
 
 Visit `http://localhost:3000` to see the sites index, then click on your site!
 
@@ -39,20 +39,20 @@ npm install
 # Create sites directory
 mkdir -p ./sites
 
-# Create your first site (minimal setup - js/ and themes/ are shared)
+# Create your first site (minimal setup - js/, themes/, and images/ are shared)
 mkdir -p ./sites/mysite.com
-cp -r index.html pages/ images/ ./sites/mysite.com/
+cp -r index.html pages/ ./sites/mysite.com/
 
 # Create additional sites
 mkdir -p ./sites/blog.local
-cp -r index.html pages/ images/ ./sites/blog.local/
+cp -r index.html pages/ ./sites/blog.local/
 
 # Add descriptions (optional)
 echo "My personal portfolio and blog" > ./sites/mysite.com/description.md
 echo "My coding blog and tutorials" > ./sites/blog.local/description.md
 ```
 
-**Note:** The `js/` and `themes/` folders are automatically shared from the main directory, so you don't need to copy them for each site.
+**Note:** The `js/`, `themes/`, and `images/` folders are automatically shared from the main directory, so you don't need to copy them for each site.
 
 ### Step 3: Start the Server
 
@@ -89,11 +89,11 @@ Then access via: `http://mysite.com:3000`
 
 ## Shared Resources
 
-AjaxCMS uses a **fallback system** for `js/` and `themes/` folders:
+AjaxCMS uses a **fallback system** for `js/`, `themes/`, and `images/` folders:
 
 ### How It Works
 
-- All sites automatically share the `js/` and `themes/` folders from the main AjaxCMS directory
+- All sites automatically share the `js/`, `themes/`, and `images/` folders from the main AjaxCMS directory
 - You don't need to copy these folders to each site
 - Sites can override specific files by creating local copies
 
@@ -113,6 +113,15 @@ cp -r themes/default/* sites/mysite.com/themes/custom/
 mkdir -p sites/mysite.com/js
 cp js/ajaxcms.js sites/mysite.com/js/
 # Now edit sites/mysite.com/js/ajaxcms.js with site-specific changes
+```
+
+### Example: Site-Specific Images
+
+```bash
+# Override specific images for one site
+mkdir -p sites/mysite.com/images
+cp images/logo.png sites/mysite.com/images/
+# Now edit sites/mysite.com/images/logo.png with site-specific image
 ```
 
 ### Directory Priority
