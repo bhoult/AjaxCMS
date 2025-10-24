@@ -78,17 +78,17 @@ cp -r themes/starter/* sites/mysite.com/themes/custom/
 - `pages/` - Site-specific content
 - `description.md` - Site description
 
-## Environment Variables
+## Local Development Options
 
 ```bash
+# Auto-reload when files change
+npm run dev
+
 # Change port (default: 3000)
 PORT=8080 npm start
 
 # Change sites directory (default: ./sites)
 SITES_DIR=/path/to/sites npm start
-
-# Development mode with auto-reload
-npm run dev
 ```
 
 ## Production Deployment
@@ -141,21 +141,18 @@ sudo journalctl -u ajaxcms -f
 - Redirect HTTP to HTTPS
 - Auto-renew certificates before expiration
 
-**To disable SSL** (development only), edit `ajaxcms.service`:
-```ini
-Environment=ENABLE_SSL=false
-```
+**Note:** SSL requires domain names pointing to your server. For local testing without domains, use `npm start` instead of systemd.
 
 ### Using PM2 (Alternative)
 
 ```bash
 npm install -g pm2
 
-# Without SSL (development)
-pm2 start server.js --name ajaxcms
+# Start with SSL (requires domain names)
+ENABLE_SSL=true MAINTAINER_EMAIL=admin@example.com pm2 start server.js --name ajaxcms
 
-# With SSL (production)
-pm2 start server.js --name ajaxcms -- ENABLE_SSL=true MAINTAINER_EMAIL=admin@example.com
+# Or without SSL (local testing only)
+pm2 start server.js --name ajaxcms
 
 pm2 save
 pm2 startup
