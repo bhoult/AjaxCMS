@@ -42,12 +42,12 @@ function drawFrame(frame) {
 }
 
 function addLayer(imagename,speed,offset) {
-	
-	var l = $("<div id='layer"+i+"' style='width:110%; height:110%; position:absolute; bottom:0px; background-repeat:repeat-x; background-size:cover;'></div>");
-	l.css('background-image', 'url('+imagename+')'); 
+	var layerIndex = layers.length;
+	var l = $("<div id='layer"+layerIndex+"' style='width:110%; height:110%; position:absolute; bottom:0px; background-repeat:repeat-x; background-size:cover;'></div>");
+	l.css('background-image', 'url('+imagename+')');
 	$('#background-div').prepend(l);
 	layers.push(new layer(l,speed,offset));
-	
+
 }
 
 ////////////////////////////////////////////////////////////////////

@@ -42,14 +42,14 @@ function drawFrame(frame) {
 }
 
 function addLayer(imagename,offset) {
-	
-	var l = $("<div id='layer"+i+"' style='width:100%; height:"+50+"%; position:absolute; bottom:"+0+"px; background-repeat:repeat-x; background-size:cover;'></div>");
-	l.css('background-image', 'url('+imagename+')'); 
+	var layerIndex = layers.length;
+	var l = $("<div id='layer"+layerIndex+"' style='width:100%; height:"+50+"%; position:absolute; bottom:"+0+"px; background-repeat:repeat-x; background-size:cover;'></div>");
+	l.css('background-image', 'url('+imagename+')');
 	$('#background-div').prepend(l);
 	layers.push(new layer(l,offset));
-	
+
 	$('#background-div').prepend("<div style='width:100%; height:100%; position:absolute; background-color:rgba(200,200,255,0.2);'></div>")
-	
+
 	// Add bottom block to cover background below scrolling images;
 	//layer.append()
 }
