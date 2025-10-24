@@ -332,36 +332,79 @@ pm2 save
 pm2 startup
 ```
 
-### Using systemd
+### Using systemd (Recommended for Linux)
 
-For systems using systemd, create `/etc/systemd/system/ajaxcms.service`:
+AjaxCMS includes a systemd service file for automatic startup on boot.
 
-```ini
-[Unit]
-Description=AjaxCMS Multi-Site Server
-After=network.target
-
-[Service]
-Type=simple
-User=www-data
-WorkingDirectory=/path/to/AjaxCMS
-Environment=NODE_ENV=production
-Environment=PORT=3000
-Environment=SITES_DIR=./sites
-ExecStart=/usr/bin/node server.js
-Restart=on-failure
-
-[Install]
-WantedBy=multi-user.target
-```
-
-Then enable and start the service:
+**Step 1: Deploy AjaxCMS to production location**
 
 ```bash
+# Clone or copy AjaxCMS to production location
+sudo mkdir -p /var/www/AjaxCMS
+sudo cp -r /path/to/AjaxCMS/* /var/www/AjaxCMS/
+
+# Install dependencies
+cd /var/www/AjaxCMS
+sudo npm install --production
+
+# Create sites directory if needed
+sudo mkdir -p /var/www/AjaxCMS/sites
+```
+
+**Step 2: Configure the service file**
+
+Edit `ajaxcms.service` if you need to customize:
+- `User` and `Group` (default: www-data)
+- `WorkingDirectory` (default: /var/www/AjaxCMS)
+- `PORT` (default: 3000)
+- `SITES_DIR` (default: ./sites)
+
+**Step 3: Install the service**
+
+```bash
+# Copy service file to systemd
+sudo cp /var/www/AjaxCMS/ajaxcms.service /etc/systemd/system/
+
+# Set proper ownership
+sudo chown -R www-data:www-data /var/www/AjaxCMS
+
+# Reload systemd to recognize new service
+sudo systemctl daemon-reload
+
+# Enable service to start on boot
 sudo systemctl enable ajaxcms
+
+# Start the service now
 sudo systemctl start ajaxcms
+
+# Check service status
 sudo systemctl status ajaxcms
 ```
+
+**Step 4: Manage the service**
+
+```bash
+# View logs
+sudo journalctl -u ajaxcms -f
+
+# Stop the service
+sudo systemctl stop ajaxcms
+
+# Restart the service
+sudo systemctl restart ajaxcms
+
+# Disable auto-start on boot
+sudo systemctl disable ajaxcms
+```
+
+**Troubleshooting systemd service:**
+
+If the service fails to start:
+1. Check logs: `sudo journalctl -u ajaxcms -n 50`
+2. Verify Node.js path: `which node` (update `ExecStart` in service file if needed)
+3. Check file permissions: `ls -la /var/www/AjaxCMS`
+4. Verify www-data user exists: `id www-data`
+5. Test manually: `cd /var/www/AjaxCMS && sudo -u www-data node server.js`
 
 ### Reverse Proxy (nginx)
 
