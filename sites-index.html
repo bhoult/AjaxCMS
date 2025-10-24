@@ -59,8 +59,27 @@
             display: flex;
             align-items: center;
             margin-bottom: 15px;
-            padding-bottom: 10px;
+            padding: 10px;
             border-bottom: 2px solid #667eea;
+            cursor: pointer;
+            user-select: none;
+            border-radius: 8px;
+            transition: background 0.2s ease;
+        }
+
+        .folder-header:hover {
+            background: #f8f9ff;
+        }
+
+        .folder-toggle {
+            font-size: 1.2em;
+            margin-right: 10px;
+            transition: transform 0.3s ease;
+            color: #667eea;
+        }
+
+        .folder.collapsed .folder-toggle {
+            transform: rotate(-90deg);
         }
 
         .folder-icon {
@@ -73,14 +92,28 @@
             font-size: 1.3em;
             font-weight: 600;
             color: #667eea;
+            flex: 1;
         }
 
         .folder-root .folder-name {
             color: #764ba2;
         }
 
+        .folder-count {
+            font-size: 0.9em;
+            color: #999;
+            margin-left: 10px;
+        }
+
         .sites-list {
             margin-left: 20px;
+            transition: max-height 0.3s ease, opacity 0.3s ease;
+            overflow: hidden;
+        }
+
+        .folder.collapsed .sites-list {
+            max-height: 0;
+            opacity: 0;
         }
 
         .site-item {
@@ -90,12 +123,17 @@
             border-radius: 8px;
             background: #fafafa;
             transition: all 0.2s ease;
+            cursor: pointer;
+            text-decoration: none;
+            display: block;
+            color: inherit;
         }
 
         .site-item:hover {
             background: #f8f9ff;
             border-color: #667eea;
             box-shadow: 0 2px 4px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
         }
 
         .site-header {
@@ -117,14 +155,6 @@
             font-size: 0.9em;
         }
 
-        .site-url a {
-            color: #667eea;
-            text-decoration: none;
-        }
-
-        .site-url a:hover {
-            text-decoration: underline;
-        }
 
         .site-description {
             color: #333;
@@ -279,6 +309,7 @@
                     const folderSites = folders[folderPath];
                     const folderName = folderPath || 'Root';
                     const isRoot = folderPath === '';
+                    const siteCount = folderSites.length;
 
                     const sitesHtml = folderSites.map(site => {
                         const sitePath = `/${site.path}/`;
@@ -290,21 +321,23 @@
                         }
 
                         return `
-                            <div class="site-item">
+                            <a href="${sitePath}" class="site-item">
                                 <div class="site-header">
                                     <div class="site-name">${site.name}</div>
-                                    <div class="site-url"><a href="${sitePath}">${sitePath}</a></div>
+                                    <div class="site-url">${sitePath}</div>
                                 </div>
                                 <div class="site-description">${descriptionHtml}</div>
-                            </div>
+                            </a>
                         `;
                     }).join('');
 
                     return `
-                        <div class="folder ${isRoot ? 'folder-root' : ''}">
+                        <div class="folder ${isRoot ? 'folder-root' : ''}" data-folder="${folderPath}">
                             <div class="folder-header">
+                                <span class="folder-toggle">▼</span>
                                 <span class="folder-icon">${isRoot ? '🏠' : '📁'}</span>
                                 <span class="folder-name">${folderName}</span>
+                                <span class="folder-count">(${siteCount} site${siteCount !== 1 ? 's' : ''})</span>
                             </div>
                             <div class="sites-list">
                                 ${sitesHtml}
@@ -318,6 +351,14 @@
                         ${foldersHtml}
                     </div>
                 `;
+
+                // Add click handlers for folder collapse/expand
+                document.querySelectorAll('.folder-header').forEach(header => {
+                    header.addEventListener('click', (e) => {
+                        const folder = header.closest('.folder');
+                        folder.classList.toggle('collapsed');
+                    });
+                });
 
             } catch (error) {
                 console.error('Error loading sites:', error);
