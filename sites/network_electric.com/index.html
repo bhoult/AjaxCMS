@@ -9,7 +9,7 @@
 		<script>
 			var default_background = "network_electric";
 			var ajaxcms_google_analytics = 'UA-84079705-1';
-			var ajaxcms_themes_menu = true;
+			var ajaxcms_themes_menu = false;
 			var ajaxcms_splash_time = 3000;
 		</script>
 		
@@ -39,19 +39,10 @@
 		<!-- fonts.google.com -->
 		<link href="https://fonts.googleapis.com/css?family=Montserrat+Alternates:700" rel="stylesheet">
 		
-		<!--<script src="themes/bubbles/background.js"></script>-->
-		<!--<link href="themes/bubbles/theme.css" type="text/css" rel='stylesheet'>-->
-		
-		<!-- This will allow the user to set themes... remove below and uncomment above to set to fixed theme. -->
+		<!-- Load theme -->
 		<script>
-			theme = param('theme');
-			if (theme) {
-				$.getScript('themes/'+theme+'/background.js');
-				$('<link>').appendTo('head').attr({type : 'text/css', rel : 'stylesheet'}).attr('href', 'themes/'+theme+'/theme.css');
-			} else {
-				$.getScript('themes/'+default_background+'/background.js');  // Default background
-				$('<link>').appendTo('head').attr({type : 'text/css', rel : 'stylesheet'}).attr('href', 'themes/'+default_background+'/theme.css');
-			}
+			$.getScript('themes/'+default_background+'/background.js');
+			$('<link>').appendTo('head').attr({type : 'text/css', rel : 'stylesheet'}).attr('href', 'themes/'+default_background+'/theme.css');
 		</script>
 		
 		<style>
