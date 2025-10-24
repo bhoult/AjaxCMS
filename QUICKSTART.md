@@ -143,21 +143,6 @@ sudo journalctl -u ajaxcms -f
 
 **Note:** SSL requires domain names pointing to your server. For local testing without domains, use `npm start` instead of systemd.
 
-### Using PM2 (Alternative)
-
-```bash
-npm install -g pm2
-
-# Start with SSL (requires domain names)
-ENABLE_SSL=true MAINTAINER_EMAIL=admin@example.com pm2 start server.js --name ajaxcms
-
-# Or without SSL (local testing only)
-pm2 start server.js --name ajaxcms
-
-pm2 save
-pm2 startup
-```
-
 ## File Structure
 
 ```
