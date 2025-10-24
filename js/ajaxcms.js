@@ -139,7 +139,7 @@ function load_pages(url) {
 				current_page = menu_pages[0];
 				// Store the URL of the current page in the history *** for some reason firefox needs this or it will break the splash animation.
 				var new_url = base_url+'?page='+current_page.replace(/^\.\//,'');
-				window.history.pushState({page: new_url},'test',new_url);
+				window.history.replaceState({page: new_url},'test',new_url);
 				loadPage(current_page, false); // Load the first page (home page) on init.
 			}
 		}
