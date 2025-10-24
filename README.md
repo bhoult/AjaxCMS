@@ -171,13 +171,12 @@ Access via:
 
 ## Documentation
 
-- **[QUICKSTART.md](QUICKSTART.md)** - Get started in 5 minutes
-- **[SERVER_README.md](SERVER_README.md)** - Server configuration and deployment
+- **[QUICKSTART.md](QUICKSTART.md)** - Complete setup guide with deployment instructions
 - **[CLAUDE.md](CLAUDE.md)** - Architecture and development guide
 
 ## Production Deployment
 
-Deploy with PM2, systemd, or as a Docker container. Full instructions in [SERVER_README.md](SERVER_README.md).
+Deploy with PM2, systemd, or nginx reverse proxy. Full instructions in [QUICKSTART.md](QUICKSTART.md).
 
 ```bash
 # Using PM2

@@ -21,7 +21,7 @@ Demo and documentation: http://ajaxcms.org
 - Navigate to `http://localhost:3000` to see the sites index
 - Sites are stored in `./sites/` directory
 - Each site can have a `description.md` file to describe it on the index
-- See `SERVER_README.md` for multi-site configuration
+- See `QUICKSTART.md` for multi-site configuration and deployment
 
 **Option 2: Simple File Server**
 - Open `index.html` directly in a browser, OR
