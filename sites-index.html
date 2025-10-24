@@ -258,7 +258,8 @@
 
                 const rows = sites.map(site => {
                     // Create clickable link - use path-based routing for localhost
-                    const sitePath = `/${site.name}/`;
+                    const sitePath = `/${site.path}/`;
+                    const displayPath = site.path.includes('/') ? site.path : site.name;
 
                     // Convert markdown description to HTML
                     let descriptionHtml = '<em>No description</em>';
@@ -268,7 +269,7 @@
 
                     return `
                         <tr>
-                            <td class="site-name">${site.name}</td>
+                            <td class="site-name">${displayPath}</td>
                             <td class="site-url"><a href="${sitePath}">${sitePath}</a></td>
                             <td class="site-description">${descriptionHtml}</td>
                         </tr>

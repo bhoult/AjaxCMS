@@ -83,6 +83,36 @@ Edit `/etc/hosts` (Linux/Mac) or `C:\Windows\System32\drivers\etc\hosts` (Window
 
 Then access via: `http://mysite.com:3000`
 
+### Organizing Sites into Subfolders
+
+Sites can be organized into subfolders for better organization. The URL routing automatically supports nested paths:
+
+```bash
+# Create theme showcase sites in a subfolder
+mkdir -p ./sites/themes
+cp -r sites/bubbles.com ./sites/themes/
+cp -r sites/gears.com ./sites/themes/
+
+# Create production sites in another subfolder
+mkdir -p ./sites/production
+cp -r sites/mysite.com ./sites/production/
+```
+
+**Access nested sites via URL:**
+- `http://localhost:3000/themes/bubbles.com/`
+- `http://localhost:3000/themes/gears.com/`
+- `http://localhost:3000/production/mysite.com/`
+
+The server automatically:
+- Recursively scans all subdirectories for sites (directories with `index.html`)
+- Routes URLs to the correct nested site location
+- Displays all sites (including nested) in the sites index page
+
+**Benefits:**
+- Organize sites by category (themes, production, demos, etc.)
+- Keep related sites grouped together
+- Maintain clean directory structure as you scale
+
 ## Shared Resources
 
 AjaxCMS uses a **fallback system** for `js/`, `themes/`, and `images/` folders:

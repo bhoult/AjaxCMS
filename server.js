@@ -6,34 +6,49 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const SITES_DIR = process.env.SITES_DIR || './sites';
 
-// API endpoint to list all available sites
+// API endpoint to list all available sites (recursively finds sites in subdirectories)
 app.get('/api/sites', async (req, res) => {
   try {
     const sitesPath = path.join(__dirname, SITES_DIR);
-    const items = await fs.readdir(sitesPath, { withFileTypes: true });
-
     const sites = [];
-    for (const item of items) {
-      if (item.isDirectory()) {
-        const sitePath = path.join(sitesPath, item.name);
-        const descriptionPath = path.join(sitePath, 'description.md');
 
-        // Try to read description.md if it exists
-        let description = '';
-        try {
-          description = await fs.readFile(descriptionPath, 'utf-8');
-        } catch (err) {
-          // No description file, leave empty
+    // Recursively find all directories with index.html
+    async function findSites(dir, relativePath = '') {
+      const items = await fs.readdir(dir, { withFileTypes: true });
+
+      for (const item of items) {
+        if (item.isDirectory()) {
+          const itemPath = path.join(dir, item.name);
+          const relPath = relativePath ? path.join(relativePath, item.name) : item.name;
+          const indexPath = path.join(itemPath, 'index.html');
+
+          // Check if this directory has an index.html (is a site)
+          try {
+            await fs.access(indexPath);
+            // This is a site directory
+            const descriptionPath = path.join(itemPath, 'description.md');
+            let description = '';
+            try {
+              description = await fs.readFile(descriptionPath, 'utf-8');
+            } catch (err) {
+              // No description file
+            }
+
+            sites.push({
+              name: item.name,
+              path: relPath,
+              url: `http://localhost:${PORT}/${relPath}/`,
+              description: description
+            });
+          } catch (err) {
+            // No index.html, recurse into subdirectory
+            await findSites(itemPath, relPath);
+          }
         }
-
-        sites.push({
-          name: item.name,
-          url: `http://${item.name}:${PORT}`,
-          description: description
-        });
       }
     }
 
+    await findSites(sitesPath);
     res.json({ sites });
   } catch (err) {
     console.error('Error listing sites:', err);
@@ -46,26 +61,28 @@ app.use((req, res, next) => {
   const hostname = req.hostname;
   const sitesPath = path.join(__dirname, SITES_DIR);
 
-  // Check if accessing via path (e.g., /site1/...)
-  const pathMatch = req.path.match(/^\/([^\/]+)/);
+  // Check if accessing via path (including nested paths like /themes/site1/...)
+  // Try to match progressively longer paths to find a site directory
+  const pathSegments = req.path.split('/').filter(s => s); // Remove empty segments
 
-  // If path starts with a site name, use path-based routing
-  if (pathMatch) {
-    const potentialSite = pathMatch[1];
-    const potentialSitePath = path.join(sitesPath, potentialSite);
+  // Try from longest path to shortest to find a site
+  for (let i = pathSegments.length; i > 0; i--) {
+    const potentialSitePath = pathSegments.slice(0, i).join('/');
+    const fullSitePath = path.join(sitesPath, potentialSitePath);
+    const indexPath = path.join(fullSitePath, 'index.html');
 
-    // Check if this is actually a site directory (synchronously for middleware)
+    // Check if this directory has an index.html (is a site)
     try {
-      const stat = require('fs').statSync(potentialSitePath);
-      if (stat.isDirectory()) {
-        req.siteName = potentialSite;
-        req.sitePath = potentialSitePath;
-        req.sitePrefix = '/' + potentialSite;
+      const stat = require('fs').statSync(indexPath);
+      if (stat.isFile()) {
+        req.siteName = pathSegments[i - 1]; // Last segment is the site name
+        req.sitePath = fullSitePath;
+        req.sitePrefix = '/' + potentialSitePath;
         // DON'T strip the URL - keep it so relative paths work
         return next();
       }
     } catch (err) {
-      // Not a site directory, continue
+      // Not a site, continue checking shorter paths
     }
   }
 
@@ -209,9 +226,9 @@ app.get('/', (req, res) => {
   }
 });
 
-// Serve site root (e.g., /test.com/)
-app.get('/:site/', (req, res, next) => {
-  if (req.siteName && req.sitePath) {
+// Serve site root (handles any nested path like /themes/test.com/)
+app.get('*/', (req, res, next) => {
+  if (req.siteName && req.sitePath && req.path === req.sitePrefix + '/') {
     const filePath = path.join(req.sitePath, 'index.html');
     res.sendFile(filePath, (err) => {
       if (err) {
