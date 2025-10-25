@@ -516,29 +516,46 @@ function loadInsert(fname,insert_location,allow_scripts,callback) {
 	// console.log(fname);
 	$.get(fname,function(insert_contents){
 		var layout_url = lastLayout(fname);
-		$.get( layout_url )
-			.fail(function() {}) // Suppress 404 errors for missing layout files
-			.always(function( layout ) {
-				
-				// Run through markdown if the file ends in .md
-				if (/\.md$/.test(fname)){ insert_contents = marked.parse(insert_contents);	}
-				
-				// If there is a layout then insert the data into the layout
-				if (typeof(layout) != "object") {
-					insert_contents = layout.replace(/{{content}}/gi, function myFunction(x){
-						return insert_contents;
-					});
-				}
-				
-				// Strip the scripts if specified
-				if (!allow_scripts) {insert_contents = removeScripts(insert_contents);}
 
-				// Insert the contents of each file into data -- invalidate insertion patterns in content of replacement file until async is done.
-				data = data.replace(insert_location,insert_contents.replace(/{{/,'@@@@@').replace(/}}/,'#####'))
-				
-				// Run Callback if it exists
-				if (callback && typeof(callback) === "function") {callback();}	
-			});
+		// Check if layout exists before requesting it to avoid 404 errors
+		if ($.inArray(layout_url, layouts) > -1) {
+			// Layout exists, load it
+			$.get( layout_url )
+				.always(function( layout ) {
+
+					// Run through markdown if the file ends in .md
+					if (/\.md$/.test(fname)){ insert_contents = marked.parse(insert_contents);	}
+
+					// If there is a layout then insert the data into the layout
+					if (typeof(layout) != "object") {
+						insert_contents = layout.replace(/{{content}}/gi, function myFunction(x){
+							return insert_contents;
+						});
+					}
+
+					// Strip the scripts if specified
+					if (!allow_scripts) {insert_contents = removeScripts(insert_contents);}
+
+					// Insert the contents of each file into data -- invalidate insertion patterns in content of replacement file until async is done.
+					data = data.replace(insert_location,insert_contents.replace(/{{/,'@@@@@').replace(/}}/,'#####'))
+
+					// Run Callback if it exists
+					if (callback && typeof(callback) === "function") {callback();}
+				});
+		} else {
+			// No layout, use content directly
+			// Run through markdown if the file ends in .md
+			if (/\.md$/.test(fname)){ insert_contents = marked.parse(insert_contents);	}
+
+			// Strip the scripts if specified
+			if (!allow_scripts) {insert_contents = removeScripts(insert_contents);}
+
+			// Insert the contents of each file into data -- invalidate insertion patterns in content of replacement file until async is done.
+			data = data.replace(insert_location,insert_contents.replace(/{{/,'@@@@@').replace(/}}/,'#####'))
+
+			// Run Callback if it exists
+			if (callback && typeof(callback) === "function") {callback();}
+		}
 	});
 };
 
@@ -633,57 +650,101 @@ function loadPage(url,save) {
 
 	$.get( url, function(d) {
 		var layout_url = lastLayout(url);
-		$.get( layout_url )
-			.fail(function() {}) // Suppress 404 errors for missing layout files
-			.always(function( layout ) {
-				
-				// If there is a layout then insert the data into the layout
-				if (typeof(layout) != "object") {
-					data = layout.replace(/{{content}}/gi, function myFunction(x){
-						if (/\.md/.test(url)){ d = marked.parse(d); }
-						return d;
-					});
-				} else {
-					data = d;
-				}
-				
-				// Process any helpers that themselves produce other helpers (like the blog)
-				data = pre_process_page();
-				// Filter content through markdown if the file extension is .md
-				if (/\.md$/.test(url)){ data = marked.parse(data);}
-				// Process any inserts recursively.
-				processInserts( function(){
-					// --- We are now back from the insert processing. ---
-					data = process_page();
 
-					// Render the appropriate page transition effect.
-					switch(load_transition) {
-						case 'basic':
-							loadPageBasic(data,url)
-							break;
-						case 'slide':
-							loadPageSlide(data,url);
-							break;
-						default:
-							loadPageBasic(data,url);
+		// Check if layout exists before requesting it to avoid 404 errors
+		if ($.inArray(layout_url, layouts) > -1) {
+			// Layout exists, load it
+			$.get( layout_url )
+				.always(function( layout ) {
+
+					// If there is a layout then insert the data into the layout
+					if (typeof(layout) != "object") {
+						data = layout.replace(/{{content}}/gi, function myFunction(x){
+							if (/\.md/.test(url)){ d = marked.parse(d); }
+							return d;
+						});
+					} else {
+						data = d;
 					}
-					
-					// Store the URL of the current page in the history 
-					if (save == undefined || save == true) {
-						var old_url = window.location.href
-						var new_url = base_url+'?page='+url.replace(/^\.\//,'');
-						window.history.pushState({page: new_url},'test',new_url);
-					}
-					
-					// Update the body id with the name of the page (for css)
-					ajaxcms_page_id = url.replace(/[\s\/\.]/g,'_')
-					$('body').attr("id", ajaxcms_page_id);
-					
-					//Google Analytics
-					ga('send', 'pageview', location.href)
-					
-				});			
+
+					// Process any helpers that themselves produce other helpers (like the blog)
+					data = pre_process_page();
+					// Filter content through markdown if the file extension is .md
+					if (/\.md$/.test(url)){ data = marked.parse(data);}
+					// Process any inserts recursively.
+					processInserts( function(){
+						// --- We are now back from the insert processing. ---
+						data = process_page();
+
+						// Render the appropriate page transition effect.
+						switch(load_transition) {
+							case 'basic':
+								loadPageBasic(data,url)
+								break;
+							case 'slide':
+								loadPageSlide(data,url);
+								break;
+							default:
+								loadPageBasic(data,url);
+						}
+
+						// Store the URL of the current page in the history
+						if (save == undefined || save == true) {
+							var old_url = window.location.href
+							var new_url = base_url+'?page='+url.replace(/^\.\//,'');
+							window.history.pushState({page: new_url},'test',new_url);
+						}
+
+						// Update the body id with the name of the page (for css)
+						ajaxcms_page_id = url.replace(/[\s\/\.]/g,'_')
+						$('body').attr("id", ajaxcms_page_id);
+
+						//Google Analytics
+						ga('send', 'pageview', location.href)
+
+					});
+				});
+		} else {
+			// No layout, process content directly
+			data = d;
+
+			// Process any helpers that themselves produce other helpers (like the blog)
+			data = pre_process_page();
+			// Filter content through markdown if the file extension is .md
+			if (/\.md$/.test(url)){ data = marked.parse(data);}
+			// Process any inserts recursively.
+			processInserts( function(){
+				// --- We are now back from the insert processing. ---
+				data = process_page();
+
+				// Render the appropriate page transition effect.
+				switch(load_transition) {
+					case 'basic':
+						loadPageBasic(data,url)
+						break;
+					case 'slide':
+						loadPageSlide(data,url);
+						break;
+					default:
+						loadPageBasic(data,url);
+				}
+
+				// Store the URL of the current page in the history
+				if (save == undefined || save == true) {
+					var old_url = window.location.href
+					var new_url = base_url+'?page='+url.replace(/^\.\//,'');
+					window.history.pushState({page: new_url},'test',new_url);
+				}
+
+				// Update the body id with the name of the page (for css)
+				ajaxcms_page_id = url.replace(/[\s\/\.]/g,'_')
+				$('body').attr("id", ajaxcms_page_id);
+
+				//Google Analytics
+				ga('send', 'pageview', location.href)
+
 			});
+		}
 	});
 };
 
