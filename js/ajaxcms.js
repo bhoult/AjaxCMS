@@ -49,7 +49,7 @@ function param(key) {
 		x = params[i].split("=");
 		if (x[0] == key) {return x[1]}
 	}
-	console.log(params);
+	// console.log(params);
 }
 
 // Pages return just the html files (not directories)
@@ -131,7 +131,7 @@ function load_pages(url) {
 
 			// Load the page in the params if specified, first menu page otherwise.
 			p = param('page');
-			console.log("p=" + p);
+			// console.log("p=" + p);
 			if (p) {
 				loadPage('./'+p, true);
 				current_page = p;
@@ -299,10 +299,10 @@ function process_page(sdata) {
 			// Wait a second then start the carousel - use IIFE to capture variables
 			(function(carouselId, speed){
 				setTimeout(function(){
-					console.log("Initializing carousel:", carouselId, "speed:", speed);
+					// console.log("Initializing carousel:", carouselId, "speed:", speed);
 					var carouselElement = document.getElementById(carouselId);
-					console.log("Carousel element found:", carouselElement);
-					console.log("Bootstrap available:", typeof bootstrap !== "undefined");
+					// console.log("Carousel element found:", carouselElement);
+					// console.log("Bootstrap available:", typeof bootstrap !== "undefined");
 					if (carouselElement) {
 						if (typeof bootstrap !== "undefined") {
 							try {
@@ -311,7 +311,7 @@ function process_page(sdata) {
 									wrap: true,
 									touch: true
 								});
-								console.log("Carousel instance created, starting cycle");
+								// console.log("Carousel instance created, starting cycle");
 								carousel.cycle();
 							} catch(e) {
 								console.error("Error creating carousel:", e);
@@ -513,7 +513,7 @@ function lastLayout(filename) {
 
 function loadInsert(fname,insert_location,allow_scripts,callback) {
 	
-	console.log(fname);
+	// console.log(fname);
 	$.get(fname,function(insert_contents){
 		var layout_url = lastLayout(fname);
 		$.get( layout_url )
