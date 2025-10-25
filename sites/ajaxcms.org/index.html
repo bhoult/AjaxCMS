@@ -67,18 +67,39 @@
 			}
 			
 			nav.navbar {
-				margin-bottom:0px;
-				z-index:1;
-				border-radius:0px 0px 10px 10px;
+			margin-bottom:0px;
+			z-index:1;
+			border-radius:0px 0px 10px 10px;
+			background-color: #f8f8f8;
+			border: 1px solid #e7e7e7;
+		}
+
+		/* Make navbar links white text */
+		.navbar-nav .nav-link {
+			color: #ffffff !important;
+			padding: 0.5rem 1rem;
+			line-height: 20px;
+		}
+
+		.navbar-nav .nav-link:hover,
+		.navbar-nav .nav-link:focus {
+			color: #ffffff !important;
+			opacity: 0.8;
+		}
+
+		.navbar-nav .nav-item.active .nav-link {
+			color: #ffffff !important;
+			font-weight: bold;
+		}
+
+		/* Dropdown toggle styling */
+		.navbar-nav .dropdown-toggle {
+			color: #ffffff !important;
 		}
 
 		/* Bootstrap 5 navbar spacing fixes */
 		.navbar-nav .nav-item {
 			margin: 0;
-		}
-
-		.navbar-nav .nav-link {
-			padding: 0.5rem 1rem;
 		}
 
 		.navbar-nav .dropdown-menu {
@@ -88,7 +109,7 @@
 		/* Prevent menu items from shifting when dropdown opens */
 		.navbar-nav .dropdown {
 			position: relative;
-			}
+		}
 			
 			.container {
 				padding:0px;
