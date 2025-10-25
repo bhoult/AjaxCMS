@@ -296,14 +296,32 @@ function process_page(sdata) {
 							"<div class=\"carousel-caption\">"+slide_caption+"</div></div>";
 			}
 			
-			// Wait a second then start the carousel.
-			setTimeout(function(){
-			var carouselElement = document.getElementById("carousel_"+idn);
-			if (carouselElement && typeof bootstrap !== "undefined") {
-				var carousel = new bootstrap.Carousel(carouselElement, { interval: carousel_speed, wrap: true, touch: true });
-				carousel.cycle();
-			}
-			},1000);
+			// Wait a second then start the carousel - use IIFE to capture variables
+			(function(carouselId, speed){
+				setTimeout(function(){
+					console.log("Initializing carousel:", carouselId, "speed:", speed);
+					var carouselElement = document.getElementById(carouselId);
+					console.log("Carousel element found:", carouselElement);
+					console.log("Bootstrap available:", typeof bootstrap !== "undefined");
+					if (carouselElement) {
+						if (typeof bootstrap !== "undefined") {
+							try {
+								var carousel = new bootstrap.Carousel(carouselElement, {
+									interval: speed,
+									wrap: true,
+									touch: true
+								});
+								console.log("Carousel instance created, starting cycle");
+								carousel.cycle();
+							} catch(e) {
+								console.error("Error creating carousel:", e);
+							}
+						} else {
+							console.error("Bootstrap is not defined!");
+						}
+					}
+				}, 1000);
+			})("carousel_"+idn, carousel_speed);
 			
 			// Return the Carousel
 			return 	"<div "+attributes_string+" id=\"carousel_"+idn+"\" class=\"carousel slide\" data-bs-ride=\"true\" data-bs-interval=\""+carousel_speed+"\">" +
