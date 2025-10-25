@@ -282,7 +282,7 @@ function process_page(sdata) {
 			var carousel_indicators = "";
 			var slides = "";
 			for (ii=0; ii < carousel_images.length; ii++) {
-				carousel_indicators += "<li data-target=\"#carousel_"+idn+"\" data-slide-to=\""+ii+"\" class=\""+ (ii==0 ? 'active' : '') +"\"></li>";
+				carousel_indicators += "<button type=\"button\" data-bs-target=\"#carousel_"+idn+"\" data-bs-slide-to=\""+ii+"\" class=\""+ (ii==0 ? 'active' : '') +"\" aria-current=\""+(ii==0 ? 'true' : 'false')+"\" aria-label=\"Slide "+(ii+1)+"\"></button>";
 				
 				var image_parts = carousel_images[ii].split(':');
 				var slide_image;
@@ -298,17 +298,17 @@ function process_page(sdata) {
 			
 			// Wait a second then start the carousel.
 			setTimeout(function(){
-				$("#carousel_"+idn).carousel({interval: carousel_speed});	
+				var carouselElement = document.getElementById("carousel_"+idn); if (carouselElement && typeof bootstrap !== "undefined") { new bootstrap.Carousel(carouselElement, { interval: carousel_speed, ride: "carousel" }); }	
 			},1000);
 			
 			// Return the Carousel
-			return 	"<div "+attributes_string+" id=\"carousel_"+idn+"\" class=\"carousel slide auto\" data-ride=\"carousel\">" +
-					"<ol class=\"carousel-indicators\">"+carousel_indicators+"</ol>" +
-					"<div class=\"carousel-inner\" role=\"listbox\">" + slides + "</div>" +
-					"<a class=\"left carousel-control\" href=\"javascript:void(0);\" data-target=\"#carousel_"+idn+"\" role=\"button\" data-slide=\"prev\">" +
-					"<span class=\"glyphicon glyphicon-chevron-left\" aria-hidden=\"true\"></span><span class=\"sr-only\">Previous</span></a>" +
-					"<a class=\"right carousel-control\" href=\"javascript:void(0);\" data-target=\"#carousel_"+idn+"\" role=\"button\" data-slide=\"next\">" +
-					"<span class=\"glyphicon glyphicon-chevron-right\" aria-hidden=\"true\"></span><span class=\"sr-only\">Next</span></a>" +
+			return 	"<div "+attributes_string+" id=\"carousel_"+idn+"\" class=\"carousel slide\" data-bs-ride=\"carousel\">" +
+					"<div class=\"carousel-indicators\">"+carousel_indicators+"</div>" +
+					"<div class=\"carousel-inner\">" + slides + "</div>" +
+					"<button class=\"carousel-control-prev\" type=\"button\" data-bs-target=\"#carousel_"+idn+"\" data-bs-slide=\"prev\">" +
+					"<span class=\"carousel-control-prev-icon\" aria-hidden=\"true\"></span><span class=\"visually-hidden\">Previous</span></button>" +
+					"<button class=\"carousel-control-next\" type=\"button\" data-bs-target=\"#carousel_"+idn+"\" data-bs-slide=\"next\">" +
+					"<span class=\"carousel-control-next-icon\" aria-hidden=\"true\"></span><span class=\"visually-hidden\">Next</span></button>" +
 					"</div>"
 		}
 		
@@ -693,7 +693,7 @@ function makemenu() {
 	    	if (/\/$/.test(filename)) { 
 	    		// It is a directory
 	    		$('#menu').append(
-	    			'<li class="dropdown '+classname+'"><a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">'
+	    			'<li class="dropdown '+classname+'"><a href="javascript:void(0);" class="dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">'
 	    			+ filename.replace(/\/$/,'')
 	    			+ '<span class="caret"></span></a><ul class="dropdown-menu" id="'+filename+'"></ul></li>'
 	    		);
