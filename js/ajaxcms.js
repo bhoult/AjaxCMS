@@ -298,11 +298,15 @@ function process_page(sdata) {
 			
 			// Wait a second then start the carousel.
 			setTimeout(function(){
-				var carouselElement = document.getElementById("carousel_"+idn); if (carouselElement && typeof bootstrap !== "undefined") { new bootstrap.Carousel(carouselElement, { interval: carousel_speed, ride: "carousel" }); }	
+			var carouselElement = document.getElementById("carousel_"+idn);
+			if (carouselElement && typeof bootstrap !== "undefined") {
+				var carousel = new bootstrap.Carousel(carouselElement, { interval: carousel_speed, wrap: true, touch: true });
+				carousel.cycle();
+			}
 			},1000);
 			
 			// Return the Carousel
-			return 	"<div "+attributes_string+" id=\"carousel_"+idn+"\" class=\"carousel slide\" data-bs-ride=\"carousel\">" +
+			return 	"<div "+attributes_string+" id=\"carousel_"+idn+"\" class=\"carousel slide\" data-bs-ride=\"true\" data-bs-interval=\""+carousel_speed+"\">" +
 					"<div class=\"carousel-indicators\">"+carousel_indicators+"</div>" +
 					"<div class=\"carousel-inner\">" + slides + "</div>" +
 					"<button class=\"carousel-control-prev\" type=\"button\" data-bs-target=\"#carousel_"+idn+"\" data-bs-slide=\"prev\">" +
