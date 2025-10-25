@@ -517,6 +517,7 @@ function loadInsert(fname,insert_location,allow_scripts,callback) {
 	$.get(fname,function(insert_contents){
 		var layout_url = lastLayout(fname);
 		$.get( layout_url )
+			.fail(function() {}) // Suppress 404 errors for missing layout files
 			.always(function( layout ) {
 				
 				// Run through markdown if the file ends in .md
@@ -633,6 +634,7 @@ function loadPage(url,save) {
 	$.get( url, function(d) {
 		var layout_url = lastLayout(url);
 		$.get( layout_url )
+			.fail(function() {}) // Suppress 404 errors for missing layout files
 			.always(function( layout ) {
 				
 				// If there is a layout then insert the data into the layout

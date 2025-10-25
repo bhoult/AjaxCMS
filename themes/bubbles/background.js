@@ -147,7 +147,6 @@ startBackground = function() {
 
 // Ping the tracking server.
 hit_data = {theme: theme, user_agent: navigator.userAgent, resolution_x: window.innerWidth, resolution_y: window.innerHeight, url: document.domain};
-$.ajax({url:"http://ajaxcmshelper.softwyre.com/hit",type:"post",data:{hit_data: hit_data}});
 
 // Start the background animation.
 startBackground();
