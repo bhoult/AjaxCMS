@@ -498,7 +498,7 @@ function loadInsert(fname,insert_location,allow_scripts,callback) {
 			.always(function( layout ) {
 				
 				// Run through markdown if the file ends in .md
-				if (/\.md$/.test(fname)){ insert_contents = marked(insert_contents);	}
+				if (/\.md$/.test(fname)){ insert_contents = marked.parse(insert_contents);	}
 				
 				// If there is a layout then insert the data into the layout
 				if (typeof(layout) != "object") {
@@ -616,7 +616,7 @@ function loadPage(url,save) {
 				// If there is a layout then insert the data into the layout
 				if (typeof(layout) != "object") {
 					data = layout.replace(/{{content}}/gi, function myFunction(x){
-						if (/\.md/.test(url)){ d = marked(d); }
+						if (/\.md/.test(url)){ d = marked.parse(d); }
 						return d;
 					});
 				} else {
@@ -626,7 +626,7 @@ function loadPage(url,save) {
 				// Process any helpers that themselves produce other helpers (like the blog)
 				data = pre_process_page();
 				// Filter content through markdown if the file extension is .md
-				if (/\.md$/.test(url)){ data = marked(data);}
+				if (/\.md$/.test(url)){ data = marked.parse(data);}
 				// Process any inserts recursively.
 				processInserts( function(){
 					// --- We are now back from the insert processing. ---
