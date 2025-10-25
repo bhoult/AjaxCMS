@@ -1,4 +1,5 @@
 <div style="width:40%; height:100%; float:right; ">{{carousel | back-e.jpg | back-b.jpg | back-c.jpg | back-d.jpg | back-a.jpg }}</div>
+
 ## What is this?
 
 AjaxCMS is an open source static file based CMS that runs almost entirely in javascript on the browser.  The server is only used for passing static files for the browser to process and display.  You add content by uploading [HTML](http://www.w3schools.com/html/) or [Markdown](https://guides.github.com/features/mastering-markdown/) files into the "pages" folder.  If you want them in the menu then you upload them to the "pages/menus" folder.  These files are automatically detected and added to the menu, folders of files are turned into drop down menus.  When the menus or links are clicked the content of the file is displayed without doing a page refresh.  This has a number of implications.  

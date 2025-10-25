@@ -715,9 +715,9 @@ function makemenu() {
 	    	if (/\/$/.test(filename)) { 
 	    		// It is a directory
 	    		$('#menu').append(
-	    			'<li class="dropdown '+classname+'"><a href="javascript:void(0);" class="dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">'
+	    			'<li class="nav-item dropdown '+classname+'"><a href="javascript:void(0);" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false">'
 	    			+ filename.replace(/\/$/,'')
-	    			+ '<span class="caret"></span></a><ul class="dropdown-menu" id="'+filename+'"></ul></li>'
+	    			+ '</a><ul class="dropdown-menu" id="'+filename+'"></ul></li>'
 	    		);
 	    	} else {
 	    		// It is a file
@@ -725,7 +725,7 @@ function makemenu() {
 	    		if (parts.length > 1) {
 	    			$('#'+parts[0]+'\\\/').append('<li class="file '+classname+'"><a href="javascript:void(0);" onclick="loadPage(\''+file.replace(/\//g,'\\\/')+'\'); return false;">'+parts[1].replace(/\d+\-/,'')+'</a></li>');
 	    		} else {
-					$('#menu').append('<li class="file '+classname+'"><a href="javascript:void(0);" onclick="loadPage(\''+file.replace(/\//g,'\\\/')+'\'); return false;">'+filename+'</a></li>');
+					$('#menu').append('<li class="nav-item '+classname+'"><a class="nav-link" href="javascript:void(0);" onclick="loadPage(\''+file.replace(/\//g,'\\\/')+'\'); return false;">'+filename+'</a></li>');
 	    		}
 	    	}
     	}
