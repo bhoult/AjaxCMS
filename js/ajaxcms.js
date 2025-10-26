@@ -323,8 +323,16 @@ function process_page(sdata) {
 				}, 1000);
 			})("carousel_"+idn, carousel_speed);
 			
+			// Extract class from attributes and merge with carousel classes
+			var carousel_class = "carousel slide";
+			var class_match = attributes_string.match(/class="([^"]*)"/);
+			if (class_match) {
+				carousel_class = "carousel slide " + class_match[1];
+				attributes_string = attributes_string.replace(/class="[^"]*"\s*/, '');
+			}
+
 			// Return the Carousel
-			return 	"<div "+attributes_string+" id=\"carousel_"+idn+"\" class=\"carousel slide\" data-bs-ride=\"carousel\" data-bs-interval=\""+carousel_speed+"\">" +
+			return 	"<div "+attributes_string+" id=\"carousel_"+idn+"\" class=\""+carousel_class+"\" data-bs-ride=\"carousel\" data-bs-interval=\""+carousel_speed+"\">" +
 					"<div class=\"carousel-indicators\">"+carousel_indicators+"</div>" +
 					"<div class=\"carousel-inner\">" + slides + "</div>" +
 					"<button class=\"carousel-control-prev\" type=\"button\" data-bs-target=\"#carousel_"+idn+"\" data-bs-slide=\"prev\">" +
