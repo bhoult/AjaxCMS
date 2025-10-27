@@ -3,7 +3,7 @@
 
 // Configuration
 var grid_size = 35;
-var component_lifetime = 300; // frames before component fades
+var component_lifetime = 600; // frames before component fades (doubled for longer persistence)
 var fade_duration = 60; // frames to fade in/out
 var line_color = "#333";
 var component_color = "#000";
@@ -443,16 +443,17 @@ function Wire(comp1, comp2) {
     this.age = 0;
     this.seekingDuration = 60 + Math.floor(Math.random() * 60); // 60-120 frames of seeking
 
-    // Decide routing direction once
-    this.routeHorizontalFirst = Math.random() > 0.5;
-
-    // Calculate midpoints once
-    this.midX = (this.x1 + this.x2) / 2;
-    this.midY = (this.y1 + this.y2) / 2;
+    // Route will be determined during seeking, then locked in
+    this.routeHorizontalFirst = null; // Will be set when seeking completes
+    this.midX = null;
+    this.midY = null;
 }
 
 Wire.prototype.draw = function(ctx) {
-    // Seeking phase - flicker as connection is established
+    var routeHorizontalFirst;
+    var midX, midY;
+
+    // Seeking phase - flicker as connection is established with varying routes
     if (this.age < this.seekingDuration) {
         // Randomly skip drawing to create flicker effect
         if (Math.random() < 0.4) {
@@ -461,9 +462,23 @@ Wire.prototype.draw = function(ctx) {
 
         // Vary opacity during seeking
         ctx.globalAlpha = 0.3 + Math.random() * 0.5;
+
+        // Try different routes while seeking
+        routeHorizontalFirst = Math.random() > 0.5;
+        midX = (this.x1 + this.x2) / 2 + (Math.random() - 0.5) * grid_size * 2;
+        midY = (this.y1 + this.y2) / 2 + (Math.random() - 0.5) * grid_size * 2;
     } else {
-        // Stable connection
+        // Stable connection - lock in the route if not already set
+        if (this.routeHorizontalFirst === null) {
+            this.routeHorizontalFirst = Math.random() > 0.5;
+            this.midX = (this.x1 + this.x2) / 2;
+            this.midY = (this.y1 + this.y2) / 2;
+        }
+
         ctx.globalAlpha = 1;
+        routeHorizontalFirst = this.routeHorizontalFirst;
+        midX = this.midX;
+        midY = this.midY;
     }
 
     ctx.strokeStyle = trace_color;
@@ -473,12 +488,12 @@ Wire.prototype.draw = function(ctx) {
     ctx.beginPath();
     ctx.moveTo(this.x1, this.y1);
 
-    if (this.routeHorizontalFirst) {
-        ctx.lineTo(this.midX, this.y1);
-        ctx.lineTo(this.midX, this.y2);
+    if (routeHorizontalFirst) {
+        ctx.lineTo(midX, this.y1);
+        ctx.lineTo(midX, this.y2);
     } else {
-        ctx.lineTo(this.x1, this.midY);
-        ctx.lineTo(this.x2, this.midY);
+        ctx.lineTo(this.x1, midY);
+        ctx.lineTo(this.x2, midY);
     }
 
     ctx.lineTo(this.x2, this.y2);
