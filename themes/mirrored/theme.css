@@ -109,6 +109,7 @@ nav.navbar {
     backdrop-filter: blur(10px);
     border: none !important;
     border-bottom: 2px solid rgba(0, 212, 255, 0.3) !important;
+    border-radius: 0 0 10px 10px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     padding: 0.5rem 1rem !important;
     min-height: 60px;
