@@ -133,9 +133,10 @@ Building.prototype.draw = function(ctx, frame, scrollY) {
 	var x = (this.x + this.scrollOffset) % (page_width + 200);
 	if (x < -200) x += (page_width + 200);
 
-	// Buildings always stay anchored to bottom - no vertical parallax for buildings
-	// Parallax only affects mountains and sky elements
-	var y = page_height - height;
+	// Parallax: move the ground level down as user scrolls, buildings stay attached to ground
+	// Closer buildings (smaller depth) move less, farther buildings move more
+	var ground_parallax = scrollY * scroll_parallax_factor * (this.depth * 0.3);
+	var y = page_height - height + ground_parallax;
 
 	// Draw building body with vertical gradient for depth
 	var gradient = ctx.createLinearGradient(x, y, x, y + height);
@@ -274,12 +275,12 @@ Mountain.prototype.draw = function(ctx, scrollY) {
 	var darkness = Math.max(0, 30 - this.depth * 5);
 	ctx.fillStyle = 'rgb(' + (darkness + blueTint) + ', ' + (darkness + blueTint) + ', ' + (darkness + blueTint * 1.3) + ')';
 
-	// Subtract parallax to move up when scrolling down
-	var parallax_offset = scrollY * scroll_parallax_factor * 0.15 * (1 / (this.depth + 1));
+	// Mountains move down more than buildings (they're farther back)
+	var parallax_offset = scrollY * scroll_parallax_factor * (this.depth + 5) * 0.15;
 
 	ctx.beginPath();
 	ctx.moveTo(-10, page_height);
-	ctx.lineTo(-10, baseY - parallax_offset);
+	ctx.lineTo(-10, baseY + parallax_offset);
 
 	// Draw smooth curve through points
 	for (var i = 0; i < this.points.length; i++) {
@@ -287,7 +288,7 @@ Mountain.prototype.draw = function(ctx, scrollY) {
 		var x = (point.x + this.scrollOffset) % (page_width + 400);
 		if (x < -200) x += (page_width + 400);
 
-		var y = baseY - (point.height * scale) - parallax_offset;
+		var y = baseY - (point.height * scale) + parallax_offset;
 
 		if (i === 0) {
 			ctx.lineTo(x, y);
@@ -296,7 +297,7 @@ Mountain.prototype.draw = function(ctx, scrollY) {
 			var prevPoint = this.points[i - 1];
 			var prevX = (prevPoint.x + this.scrollOffset) % (page_width + 400);
 			if (prevX < -200) prevX += (page_width + 400);
-			var prevY = baseY - (prevPoint.height * scale) - parallax_offset;
+			var prevY = baseY - (prevPoint.height * scale) + parallax_offset;
 
 			var cpX = (prevX + x) / 2;
 			var cpY = (prevY + y) / 2;
@@ -304,7 +305,7 @@ Mountain.prototype.draw = function(ctx, scrollY) {
 		}
 	}
 
-	ctx.lineTo(page_width + 10, baseY - parallax_offset);
+	ctx.lineTo(page_width + 10, baseY + parallax_offset);
 	ctx.lineTo(page_width + 10, page_height);
 	ctx.closePath();
 	ctx.fill();
