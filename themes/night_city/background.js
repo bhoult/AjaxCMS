@@ -125,8 +125,8 @@ Building.prototype.update = function(frame) {
 };
 
 Building.prototype.draw = function(ctx, frame, scrollY) {
-	// Make foreground buildings larger - adjust scale calculation
-	var scale = 1 / (this.depth * 0.4 + 1);
+	// Make all buildings 50% bigger, with foreground relatively larger
+	var scale = 1.5 / (this.depth * 0.4 + 1);
 	var width = this.width * scale;
 	var height = this.height * scale;
 
@@ -148,9 +148,8 @@ Building.prototype.draw = function(ctx, frame, scrollY) {
 		parallax_offset = Math.min(parallax_offset, height * 0.8);
 	}
 
-	// Camera starts 30% lower (buildings appear higher on screen)
-	var cameraLowerOffset = page_height * 0.3;
-	var y = page_height - height - parallax_offset - cameraLowerOffset;
+	// Buildings anchored to bottom of screen
+	var y = page_height - height - parallax_offset;
 
 	// Apply slight transparency to foreground for depth effect (much faster than blur)
 	if (this.depth === 0) {
@@ -294,10 +293,7 @@ Mountain.prototype.update = function(frame) {
 
 Mountain.prototype.draw = function(ctx, scrollY) {
 	var scale = 1 / (this.depth + 2);
-
-	// Camera starts 30% lower (adjust base position)
-	var cameraLowerOffset = page_height * 0.3;
-	var baseY = page_height * 0.7 - cameraLowerOffset;
+	var baseY = page_height * 0.7;
 
 	// Blue atmospheric tint for distance
 	var blueTint = Math.min(80, this.depth * 25);
