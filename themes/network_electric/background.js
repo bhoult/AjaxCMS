@@ -5,13 +5,17 @@ y_velocity = 1;
 padding = 100;    	// How far from the edge does repulsion start.
 magnet = 1;      	// Strength of repulsion greater = less repulsion.
 node_density = 30;  // Less is higher density.
-line_hue = 0;
-hue_spread = 10;
-node_color = "#AAF";
+line_hue = 200;     // Blue hue (180-240 is blue range)
+hue_spread = 20;
+node_color = "#00AAFF"; // Electric blue
 background_color = "#000";
 max_distance = 250;
 max_sparks = 5;
 spark_spread = 7;
+lightning_chance = 0.003; // Probability per frame per node
+lightning_length = 150;   // How far lightning bolts reach
+lightning_segments = 5;   // Number of segments in lightning bolt
+lightning_jitter = 30;    // How jagged the lightning is
 
 ////////////////////////////////////////////////////////////////////
 
@@ -21,25 +25,31 @@ function node(x,y, vx,vy, size, depth) {
   this.velocity = new Victor(vx, vy);
   this.depth = depth;
   this.size = size;
+  this.pulse = Math.random() * Math.PI * 2; // Random starting phase
+  this.pulseSpeed = 0.02 + Math.random() * 0.03; // Random pulse speed
+  this.lightningTimer = 0; // Countdown to next lightning bolt
 
   this.frame = function(n) {
   	// Apply Movement
     this.x += (this.velocity.x);
     this.y += (this.velocity.y);
-    
+
+    // Update pulse
+    this.pulse += this.pulseSpeed;
+
 	// Repel
-    if (this.x < padding) {this.velocity.x -= ((this.x - padding) / padding / magnet)} 
-    if (this.x > (page_width - padding)) {this.velocity.x += ((page_width - padding - this.x) / padding / magnet)} 
-    if (this.y < padding) {this.velocity.y -= ((this.y - padding) / padding / magnet)} 
+    if (this.x < padding) {this.velocity.x -= ((this.x - padding) / padding / magnet)}
+    if (this.x > (page_width - padding)) {this.velocity.x += ((page_width - padding - this.x) / padding / magnet)}
+    if (this.y < padding) {this.velocity.y -= ((this.y - padding) / padding / magnet)}
     if (this.y > (page_height - padding)) {this.velocity.y += ((page_height - padding - this.y) / padding / magnet)}
-    
+
     // Bounce
     //if (this.x > page_width) {this.velocity.x = -this.velocity.x}
     //if (this.x < 0) {this.velocity.x = -this.velocity.x}
     //if (this.y > page_height) {this.velocity.y = -this.velocity.y}
     //if (this.y < 0) {this.velocity.y = -this.velocity.y}
-    
-    
+
+
   }
 }
 
@@ -55,6 +65,47 @@ function rotatePoint(pointX, pointY, originX, originY, angle) {
 // Distance Between Two Points
 function distance(x1,y1,x2,y2) {
 	return Math.sqrt( (x1-x2)*(x1-x2) + (y1-y2)*(y1-y2) );
+}
+
+// Draw a lightning bolt from a node
+function drawLightning(ctx, startX, startY, angle) {
+	var x = startX;
+	var y = startY;
+	var segmentLength = lightning_length / lightning_segments;
+
+	ctx.strokeStyle = "rgba(200, 230, 255, 0.9)"; // White-blue
+	ctx.lineWidth = 2;
+	ctx.shadowBlur = 15;
+	ctx.shadowColor = "#00AAFF";
+
+	ctx.beginPath();
+	ctx.moveTo(x, y);
+
+	// Draw jagged lightning segments
+	for (var i = 0; i < lightning_segments; i++) {
+		var nextX = x + Math.cos(angle) * segmentLength + (Math.random() - 0.5) * lightning_jitter;
+		var nextY = y + Math.sin(angle) * segmentLength + (Math.random() - 0.5) * lightning_jitter;
+
+		ctx.lineTo(nextX, nextY);
+
+		// Occasionally branch
+		if (Math.random() < 0.3 && i < lightning_segments - 1) {
+			var branchAngle = angle + (Math.random() - 0.5) * 1.5;
+			var branchLength = segmentLength * 0.6;
+			ctx.moveTo(nextX, nextY);
+			ctx.lineTo(
+				nextX + Math.cos(branchAngle) * branchLength,
+				nextY + Math.sin(branchAngle) * branchLength
+			);
+			ctx.moveTo(nextX, nextY);
+		}
+
+		x = nextX;
+		y = nextY;
+	}
+
+	ctx.stroke();
+	ctx.shadowBlur = 0; // Reset shadow
 }
 
 // Draw the nodes and other effects
@@ -102,13 +153,41 @@ function drawFrame(ctx, frame) {
 		}
 	}
 	
-	// Draw Nodes
+	// Generate and draw lightning bolts
 	for (n = 0; n < nodes.length; n++) {
-    	ctx.beginPath();
-    	ctx.arc(nodes[n].x,nodes[n].y, 5, 0,2*Math.PI); // circle
-    	ctx.fillStyle = node_color;
+		if (Math.random() < lightning_chance) {
+			// Spawn lightning bolt in random direction
+			var angle = Math.random() * Math.PI * 2;
+			drawLightning(ctx, nodes[n].x, nodes[n].y, angle);
+		}
+	}
+
+	// Draw Nodes with pulsing glow
+	for (n = 0; n < nodes.length; n++) {
+		// Calculate pulse intensity (0.5 to 1.5)
+		var pulseIntensity = 1 + Math.sin(nodes[n].pulse) * 0.5;
+		var nodeSize = 5 * pulseIntensity * 0.7 + 3; // Size varies from 3 to 5.5
+		var glowSize = 10 + pulseIntensity * 10; // Glow varies from 10 to 20
+
+		// Draw glow
+		ctx.shadowBlur = glowSize;
+		ctx.shadowColor = "#00AAFF";
+
+		ctx.beginPath();
+		ctx.arc(nodes[n].x, nodes[n].y, nodeSize, 0, 2*Math.PI);
+		ctx.fillStyle = node_color;
+		ctx.fill();
+
+		// Draw bright center
+		ctx.shadowBlur = 5;
+		ctx.beginPath();
+		ctx.arc(nodes[n].x, nodes[n].y, nodeSize * 0.5, 0, 2*Math.PI);
+		ctx.fillStyle = "#FFFFFF";
 		ctx.fill();
 	}
+
+	// Reset shadow
+	ctx.shadowBlur = 0;
 }
 
 ///////////////////////////////////////////////////////////////////
