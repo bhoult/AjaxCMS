@@ -131,8 +131,8 @@ function drawLightning(ctx, startX, startY, angle) {
 // Draw the nodes and other effects
 function drawFrame(ctx, frame) {
 
-	// Clear the frame.
-	ctx.fillStyle = "rgba(0,0,0,1)";
+	// Partial clear for fading trail effect (lightning glow persists)
+	ctx.fillStyle = "rgba(0,0,0,0.15)";
 	ctx.fillRect(0,0,page_width,page_height);
 	
 	// Update Node Positions
