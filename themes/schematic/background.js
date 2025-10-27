@@ -551,13 +551,8 @@ function drawFrame(ctx, frame) {
         }
     }
     
-    // Draw wires
-    for (var i = wires.length - 1; i >= 0; i--) {
-        // Remove wires if either component is gone
-        if (!components.includes(wires[i].comp1) || !components.includes(wires[i].comp2)) {
-            wires.splice(i, 1);
-            continue;
-        }
+    // Draw wires (permanent - never removed)
+    for (var i = 0; i < wires.length; i++) {
         wires[i].draw(ctx);
     }
     
