@@ -14,6 +14,10 @@ var aliveColor = 'rgba(0, 255, 100, 0.8)';
 var deadColor = 'rgba(0, 0, 0, 0)';
 var gridColor = 'rgba(0, 255, 100, 0.1)';
 
+// Mouse drawing state
+var isDrawing = false;
+var brushSize = 2;  // Size of brush in cells
+
 ////////////////////////////////////////////////////////////////////
 
 // Initialize the grid with random cells
@@ -104,6 +108,81 @@ function drawFrame(ctx, timestamp) {
     drawGrid(ctx);
 }
 
+// Add cells at mouse position
+function addCellsAtMouse(mouseX, mouseY) {
+    // Convert mouse coordinates to grid coordinates
+    let gridX = Math.floor(mouseX / cellSize);
+    let gridY = Math.floor(mouseY / cellSize);
+
+    // Add cells in a brush area
+    for (let i = -brushSize; i <= brushSize; i++) {
+        for (let j = -brushSize; j <= brushSize; j++) {
+            let x = gridX + i;
+            let y = gridY + j;
+
+            // Make sure we're within bounds
+            if (x >= 0 && x < cols && y >= 0 && y < rows) {
+                grid[x][y] = 1;
+            }
+        }
+    }
+}
+
+// Setup mouse event handlers
+function setupMouseHandlers(canvas) {
+    canvas.addEventListener('mousedown', function(e) {
+        isDrawing = true;
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        addCellsAtMouse(mouseX, mouseY);
+    });
+
+    canvas.addEventListener('mouseup', function() {
+        isDrawing = false;
+    });
+
+    canvas.addEventListener('mouseleave', function() {
+        isDrawing = false;
+    });
+
+    canvas.addEventListener('mousemove', function(e) {
+        if (isDrawing) {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            addCellsAtMouse(mouseX, mouseY);
+        }
+    });
+
+    // Touch support for mobile devices
+    canvas.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        isDrawing = true;
+        const rect = canvas.getBoundingClientRect();
+        const touch = e.touches[0];
+        const mouseX = touch.clientX - rect.left;
+        const mouseY = touch.clientY - rect.top;
+        addCellsAtMouse(mouseX, mouseY);
+    });
+
+    canvas.addEventListener('touchend', function(e) {
+        e.preventDefault();
+        isDrawing = false;
+    });
+
+    canvas.addEventListener('touchmove', function(e) {
+        e.preventDefault();
+        if (isDrawing) {
+            const rect = canvas.getBoundingClientRect();
+            const touch = e.touches[0];
+            const mouseX = touch.clientX - rect.left;
+            const mouseY = touch.clientY - rect.top;
+            addCellsAtMouse(mouseX, mouseY);
+        }
+    });
+}
+
 ////////////////////////////////////////////////////////////////////
 startBackground = function() {
     frame = 0;
@@ -122,6 +201,9 @@ startBackground = function() {
 
     // Initialize with random pattern
     initializeGrid();
+
+    // Setup mouse interaction
+    setupMouseHandlers(canvas);
 
     // Animation Loop
     function draw(timestamp) {
