@@ -48,6 +48,12 @@ function drawFrame(frame) {
 						+ layer_bottom  // Base bottom position
 						+ parallax_offset  // Move based on scroll (divided by depth for parallax)
 						+ layers[i-1].offset;  // Raise with individual layer offset
+
+		// Lower the last mountain layer to sit behind other layers better
+		if (i === layers.length) {
+			bottom = bottom - (layer_height * 0.3); // Lower by 30% of screen height
+		}
+
 		layers[i-1].jqo.css("bottom", Math.round(bottom)+"px");
 	}
 }
