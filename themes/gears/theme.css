@@ -142,8 +142,19 @@ h1::before, h2::before, h3::before {
     top: 50%;
     transform: translateY(-50%);
     color: var(--industrial-orange);
-    font-size: 1.5em;
     line-height: 1;
+}
+
+h1::before {
+    font-size: 2.5rem;
+}
+
+h2::before {
+    font-size: 1.8rem;
+}
+
+h3::before {
+    font-size: 1.5rem;
 }
 
 h1::after, h2::after, h3::after {
