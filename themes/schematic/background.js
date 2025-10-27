@@ -4,6 +4,7 @@
 // Configuration
 var grid_size = 35;
 var component_lifetime = 600; // frames before component fades (doubled for longer persistence)
+var wire_lifetime = 1200; // frames before wire fades (twice component lifetime)
 var fade_duration = 60; // frames to fade in/out
 var line_color = "#333";
 var component_color = "#000";
@@ -452,6 +453,7 @@ function Wire(comp1, comp2) {
 Wire.prototype.draw = function(ctx) {
     var routeHorizontalFirst;
     var midX, midY;
+    var alpha = 1;
 
     // Seeking phase - flicker as connection is established with varying routes
     if (this.age < this.seekingDuration) {
@@ -461,7 +463,7 @@ Wire.prototype.draw = function(ctx) {
         }
 
         // Vary opacity during seeking
-        ctx.globalAlpha = 0.3 + Math.random() * 0.5;
+        alpha = 0.3 + Math.random() * 0.5;
 
         // Try different routes while seeking
         routeHorizontalFirst = Math.random() > 0.5;
@@ -475,12 +477,20 @@ Wire.prototype.draw = function(ctx) {
             this.midY = (this.y1 + this.y2) / 2;
         }
 
-        ctx.globalAlpha = 1;
         routeHorizontalFirst = this.routeHorizontalFirst;
         midX = this.midX;
         midY = this.midY;
+
+        // Fade out at end of lifetime
+        if (this.age > wire_lifetime - fade_duration) {
+            var fadeProgress = (wire_lifetime - this.age) / fade_duration;
+            alpha = fadeProgress;
+        } else {
+            alpha = 1;
+        }
     }
 
+    ctx.globalAlpha = alpha;
     ctx.strokeStyle = trace_color;
     ctx.lineWidth = 2;
 
@@ -581,9 +591,13 @@ function drawFrame(ctx, frame) {
         }
     }
     
-    // Draw wires (permanent - never removed)
-    for (var i = 0; i < wires.length; i++) {
+    // Update and draw wires (remove old ones)
+    for (var i = wires.length - 1; i >= 0; i--) {
         wires[i].age++;
+        if (wires[i].age > wire_lifetime) {
+            wires.splice(i, 1);
+            continue;
+        }
         wires[i].draw(ctx);
     }
     
@@ -598,9 +612,9 @@ startBackground = function() {
     components = [];
     wires = [];
     frame = 0;
-    
+
     $('#background').css('background', background_color);
-    
+
     // Set up canvas
     canvas = document.getElementById('background');
     ctx = canvas.getContext("2d");
@@ -608,14 +622,26 @@ startBackground = function() {
     page_height = window.innerHeight;
     ctx.canvas.width = page_width;
     ctx.canvas.height = page_height;
-    
+
+    // Pre-populate with 10 initial components
+    for (var i = 0; i < 10; i++) {
+        var type = component_types[Math.floor(Math.random() * component_types.length)];
+        var x = snapToGrid(grid_size * 2 + Math.random() * (page_width - grid_size * 4));
+        var y = snapToGrid(grid_size * 2 + Math.random() * (page_height - grid_size * 4));
+
+        var comp = new Component(type, x, y);
+        // Give initial components varying ages so they don't all fade at once
+        comp.age = Math.floor(Math.random() * fade_duration);
+        components.push(comp);
+    }
+
     // Animation loop
     function draw() {
         requestAnimationFrame(draw);
         frame++;
         drawFrame(ctx, frame);
     }
-    
+
     draw();
 }
 
