@@ -291,10 +291,10 @@ Mountain.prototype.update = function(frame) {
 Mountain.prototype.draw = function(ctx, scrollY) {
 	var scale = 1 / (this.depth + 2);
 
-	// Start background mountains higher to show more depth initially
-	// Each mountain layer starts progressively higher
-	var depthOffset = this.depth * 50; // Each depth layer starts 50px higher (6 layers total)
-	var baseY = page_height * 0.7 - depthOffset;
+	// Distant mountains positioned lower on screen for proper perspective
+	// Each mountain layer starts progressively lower (further down)
+	var depthOffset = this.depth * 20; // Each depth layer starts 20px lower (6 layers total)
+	var baseY = page_height * 0.7 + depthOffset;
 
 	// Blue atmospheric tint for distance
 	var blueTint = Math.min(80, this.depth * 15);
