@@ -72,34 +72,38 @@ Cloud.prototype.draw = function(ctx) {
 function Building(depth) {
 	this.depth = depth; // 0 = foreground, higher = background
 	this.x = Math.random() * 2000; // Random starting position
-	this.width = 40 + Math.random() * 80;
-	this.height = 100 + Math.random() * 200;
+	this.width = 50 + Math.random() * 90;
+	this.height = 150 + Math.random() * 300;
 	this.color = this.generateColor();
 	this.windows = this.generateWindows();
+	this.roofType = Math.floor(Math.random() * 3); // 0=flat, 1=peaked, 2=stepped
+	this.hasAntenna = Math.random() > 0.7;
 	this.scrollOffset = 0;
 }
 
 Building.prototype.generateColor = function() {
 	// Dark building colors with slight variation
-	var value = 20 + Math.random() * 30;
-	return 'rgb(' + value + ', ' + value + ', ' + (value + 5) + ')';
+	var value = 15 + Math.random() * 25;
+	var blue = Math.random() * 8; // Slight blue tint for variety
+	return 'rgb(' + value + ', ' + value + ', ' + (value + blue) + ')';
 };
 
 Building.prototype.generateWindows = function() {
 	var windows = [];
-	var windowWidth = 4;
-	var windowHeight = 6;
-	var cols = Math.floor(this.width / 12);
-	var rows = Math.floor(this.height / 15);
+	var windowWidth = 3;
+	var windowHeight = 5;
+	var spacing = 10;
+	var cols = Math.floor(this.width / spacing);
+	var rows = Math.floor(this.height / 12);
 
 	for (var row = 0; row < rows; row++) {
 		for (var col = 0; col < cols; col++) {
-			// 70% chance of lit window
-			if (Math.random() > 0.3) {
+			// 65% chance of lit window
+			if (Math.random() > 0.35) {
 				windows.push({
-					x: col * 12 + 4,
-					y: row * 15 + 5,
-					brightness: 0.5 + Math.random() * 0.5,
+					x: col * spacing + 3,
+					y: row * 12 + 4,
+					brightness: 0.4 + Math.random() * 0.6,
 					flickerPhase: Math.random() * Math.PI * 2
 				});
 			}
@@ -123,82 +127,157 @@ Building.prototype.draw = function(ctx, frame, scrollY) {
 	if (x < -200) x += (page_width + 200);
 
 	var parallax_offset = scrollY * scroll_parallax_factor * (1 / (this.depth + 1));
-	var y = page_height - height - parallax_offset;
 
-	// Draw building
-	ctx.fillStyle = this.color;
+	// Anchor to bottom of screen
+	var y = page_height - height + parallax_offset;
+
+	// Draw building body with gradient for depth
+	var gradient = ctx.createLinearGradient(x, y, x + width, y);
+	var baseColor = this.color;
+	var rgb = baseColor.match(/\d+/g);
+	gradient.addColorStop(0, this.color);
+	gradient.addColorStop(1, 'rgb(' + Math.max(0, parseInt(rgb[0]) - 10) + ', ' + Math.max(0, parseInt(rgb[1]) - 10) + ', ' + Math.max(0, parseInt(rgb[2]) - 10) + ')');
+	ctx.fillStyle = gradient;
 	ctx.fillRect(x, y, width, height);
 
-	// Draw windows
+	// Draw roof
+	ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+	if (this.roofType === 1) {
+		// Peaked roof
+		ctx.beginPath();
+		ctx.moveTo(x - 2 * scale, y);
+		ctx.lineTo(x + width / 2, y - 15 * scale);
+		ctx.lineTo(x + width + 2 * scale, y);
+		ctx.closePath();
+		ctx.fill();
+	} else if (this.roofType === 2) {
+		// Stepped roof
+		ctx.fillRect(x + width * 0.2, y - 10 * scale, width * 0.6, 10 * scale);
+	}
+
+	// Draw antenna if building has one
+	if (this.hasAntenna) {
+		ctx.strokeStyle = 'rgba(100, 100, 100, 0.6)';
+		ctx.lineWidth = 1 * scale;
+		ctx.beginPath();
+		ctx.moveTo(x + width / 2, y - (this.roofType === 1 ? 15 * scale : this.roofType === 2 ? 10 * scale : 0));
+		ctx.lineTo(x + width / 2, y - (this.roofType === 1 ? 35 * scale : this.roofType === 2 ? 30 * scale : 20 * scale));
+		ctx.stroke();
+		// Antenna light
+		ctx.fillStyle = 'rgba(255, 100, 100, 0.8)';
+		ctx.beginPath();
+		ctx.arc(x + width / 2, y - (this.roofType === 1 ? 35 * scale : this.roofType === 2 ? 30 * scale : 20 * scale), 2 * scale, 0, Math.PI * 2);
+		ctx.fill();
+	}
+
+	// Draw windows with glow
 	for (var i = 0; i < this.windows.length; i++) {
 		var win = this.windows[i];
 		var flicker = Math.sin(frame * 0.05 + win.flickerPhase) * 0.15 + 0.85;
 		var alpha = win.brightness * flicker;
 
+		var winX = x + win.x * scale;
+		var winY = y + win.y * scale;
+
+		// Window glow
+		ctx.fillStyle = 'rgba(255, 200, 100, ' + (alpha * 0.15) + ')';
+		ctx.fillRect(winX - 1, winY - 1, 5 * scale, 7 * scale);
+
+		// Window
 		ctx.fillStyle = 'rgba(255, 200, 100, ' + alpha + ')';
-		ctx.fillRect(
-			x + win.x * scale,
-			y + win.y * scale,
-			4 * scale,
-			6 * scale
-		);
+		ctx.fillRect(winX, winY, 3 * scale, 5 * scale);
 	}
 
-	// Building outline for depth
-	ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+	// Edge highlight for depth
+	ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
 	ctx.lineWidth = 1;
-	ctx.strokeRect(x, y, width, height);
+	ctx.beginPath();
+	ctx.moveTo(x, y + height);
+	ctx.lineTo(x, y);
+	ctx.stroke();
+
+	// Shadow on right side
+	ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+	ctx.beginPath();
+	ctx.moveTo(x + width, y);
+	ctx.lineTo(x + width, y + height);
+	ctx.stroke();
 };
 
 // Mountain object
 function Mountain(depth) {
 	this.depth = depth;
-	this.peaks = [];
-	this.generatePeaks();
+	this.points = [];
+	this.generateProfile();
 	this.scrollOffset = 0;
 }
 
-Mountain.prototype.generatePeaks = function() {
-	var numPeaks = 8 + Math.floor(Math.random() * 5);
-	for (var i = 0; i < numPeaks; i++) {
-		this.peaks.push({
-			x: (i / numPeaks) * 2000,
-			height: 100 + Math.random() * 150,
-			width: 100 + Math.random() * 100
+Mountain.prototype.generateProfile = function() {
+	// Generate smooth mountain profile using sine waves and noise
+	var numPoints = 100;
+	var wavelength = page_width / 3;
+
+	for (var i = 0; i < numPoints; i++) {
+		var x = (i / numPoints) * (page_width + 400);
+
+		// Multiple sine waves for natural-looking peaks
+		var baseHeight = 80 + Math.sin(i * 0.15) * 40;
+		var height = baseHeight
+			+ Math.sin(i * 0.3) * 30
+			+ Math.sin(i * 0.5) * 20
+			+ Math.sin(i * 0.8) * 15
+			+ (Math.random() - 0.5) * 10; // Add some noise
+
+		this.points.push({
+			x: x,
+			height: Math.max(20, height)
 		});
 	}
 };
 
 Mountain.prototype.update = function(frame) {
-	this.scrollOffset = (frame * layer_scroll_speed * 0.3) / (this.depth + 1);
+	this.scrollOffset = (frame * layer_scroll_speed * 0.2) / (this.depth + 1);
 };
 
 Mountain.prototype.draw = function(ctx, scrollY) {
 	var scale = 1 / (this.depth + 2);
-	var baseY = page_height * 0.7;
+	var baseY = page_height * 0.75;
 
 	// Blue atmospheric tint for distance
-	var blueTint = Math.min(100, this.depth * 20);
-	ctx.fillStyle = 'rgb(' + (40 + blueTint) + ', ' + (45 + blueTint) + ', ' + (60 + blueTint) + ')';
+	var blueTint = Math.min(80, this.depth * 25);
+	var darkness = Math.max(0, 30 - this.depth * 5);
+	ctx.fillStyle = 'rgb(' + (darkness + blueTint) + ', ' + (darkness + blueTint) + ', ' + (darkness + blueTint * 1.3) + ')';
+
+	var parallax_offset = scrollY * scroll_parallax_factor * 0.15 * (1 / (this.depth + 1));
 
 	ctx.beginPath();
 	ctx.moveTo(-10, page_height);
+	ctx.lineTo(-10, baseY + parallax_offset);
 
-	for (var i = 0; i < this.peaks.length; i++) {
-		var peak = this.peaks[i];
-		var x = (peak.x + this.scrollOffset) % (page_width + 400);
+	// Draw smooth curve through points
+	for (var i = 0; i < this.points.length; i++) {
+		var point = this.points[i];
+		var x = (point.x + this.scrollOffset) % (page_width + 400);
 		if (x < -200) x += (page_width + 400);
 
-		var parallax_offset = scrollY * scroll_parallax_factor * 0.2 * (1 / (this.depth + 1));
-		var peakY = baseY - (peak.height * scale) + parallax_offset;
+		var y = baseY - (point.height * scale) + parallax_offset;
 
-		// Draw triangular peak
-		ctx.lineTo(x - peak.width * scale * 0.5, baseY + parallax_offset);
-		ctx.lineTo(x, peakY);
-		ctx.lineTo(x + peak.width * scale * 0.5, baseY + parallax_offset);
+		if (i === 0) {
+			ctx.lineTo(x, y);
+		} else {
+			// Use quadratic curves for smoothness
+			var prevPoint = this.points[i - 1];
+			var prevX = (prevPoint.x + this.scrollOffset) % (page_width + 400);
+			if (prevX < -200) prevX += (page_width + 400);
+			var prevY = baseY - (prevPoint.height * scale) + parallax_offset;
+
+			var cpX = (prevX + x) / 2;
+			var cpY = (prevY + y) / 2;
+			ctx.quadraticCurveTo(prevX, prevY, cpX, cpY);
+		}
 	}
 
-	ctx.lineTo(page_width + 10, baseY);
+	ctx.lineTo(page_width + 10, baseY + parallax_offset);
 	ctx.lineTo(page_width + 10, page_height);
 	ctx.closePath();
 	ctx.fill();
