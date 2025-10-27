@@ -152,10 +152,32 @@
 			
 			#a, #b {
 				width:98%!important;
+				max-width:530px;
 				margin: 0 auto;
 				margin-left: 13px !important;
 			}
-			
+
+			@media (min-width: 768px) {
+				#a, #b {
+					max-width:706px;
+				}
+			}
+			@media (min-width: 992px) {
+				#a, #b {
+					max-width:941px;
+				}
+			}
+			@media (min-width: 1200px) {
+				#a, #b {
+					max-width:1117px;
+				}
+			}
+			@media (min-width: 1400px) {
+				#a, #b {
+					max-width:1294px;
+				}
+			}
+
 			#main>div {
 				padding: 0px 10px 20px 10px;
 			}
