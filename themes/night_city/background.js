@@ -82,10 +82,17 @@ function Building(depth) {
 }
 
 Building.prototype.generateColor = function() {
-	// Dark building colors with slight variation
-	var value = 15 + Math.random() * 25;
-	var blue = Math.random() * 8; // Slight blue tint for variety
-	return 'rgb(' + value + ', ' + value + ', ' + (value + blue) + ')';
+	// Dark building colors - pure grays and dark blues for nighttime
+	var colorType = Math.random();
+	if (colorType < 0.7) {
+		// Most buildings: dark gray
+		var value = 18 + Math.random() * 22;
+		return 'rgb(' + value + ', ' + value + ', ' + value + ')';
+	} else {
+		// Some buildings: very dark blue-gray
+		var value = 15 + Math.random() * 18;
+		return 'rgb(' + value + ', ' + (value + 2) + ', ' + (value + 8) + ')';
+	}
 };
 
 Building.prototype.generateWindows = function() {
@@ -128,20 +135,32 @@ Building.prototype.draw = function(ctx, frame, scrollY) {
 
 	var parallax_offset = scrollY * scroll_parallax_factor * (1 / (this.depth + 1));
 
-	// Anchor to bottom of screen
-	var y = page_height - height + parallax_offset;
+	// Anchor to bottom of screen - subtract parallax to move up when scrolling down
+	var y = page_height - height - parallax_offset;
 
-	// Draw building body with gradient for depth
-	var gradient = ctx.createLinearGradient(x, y, x + width, y);
+	// Draw building body with vertical gradient for depth
+	var gradient = ctx.createLinearGradient(x, y, x, y + height);
 	var baseColor = this.color;
 	var rgb = baseColor.match(/\d+/g);
-	gradient.addColorStop(0, this.color);
-	gradient.addColorStop(1, 'rgb(' + Math.max(0, parseInt(rgb[0]) - 10) + ', ' + Math.max(0, parseInt(rgb[1]) - 10) + ', ' + Math.max(0, parseInt(rgb[2]) - 10) + ')');
+	gradient.addColorStop(0, 'rgb(' + Math.min(255, parseInt(rgb[0]) + 5) + ', ' + Math.min(255, parseInt(rgb[1]) + 5) + ', ' + Math.min(255, parseInt(rgb[2]) + 5) + ')');
+	gradient.addColorStop(1, this.color);
 	ctx.fillStyle = gradient;
 	ctx.fillRect(x, y, width, height);
 
+	// Add subtle vertical lines for architectural detail
+	ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
+	ctx.lineWidth = 1;
+	var numLines = Math.floor(width / 20);
+	for (var line = 1; line < numLines; line++) {
+		var lineX = x + (width / numLines) * line;
+		ctx.beginPath();
+		ctx.moveTo(lineX, y);
+		ctx.lineTo(lineX, y + height);
+		ctx.stroke();
+	}
+
 	// Draw roof
-	ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+	ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
 	if (this.roofType === 1) {
 		// Peaked roof
 		ctx.beginPath();
@@ -153,20 +172,27 @@ Building.prototype.draw = function(ctx, frame, scrollY) {
 	} else if (this.roofType === 2) {
 		// Stepped roof
 		ctx.fillRect(x + width * 0.2, y - 10 * scale, width * 0.6, 10 * scale);
+		ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+		ctx.strokeRect(x + width * 0.2, y - 10 * scale, width * 0.6, 10 * scale);
 	}
 
 	// Draw antenna if building has one
 	if (this.hasAntenna) {
-		ctx.strokeStyle = 'rgba(100, 100, 100, 0.6)';
-		ctx.lineWidth = 1 * scale;
+		ctx.strokeStyle = 'rgba(80, 80, 80, 0.8)';
+		ctx.lineWidth = 2 * scale;
 		ctx.beginPath();
 		ctx.moveTo(x + width / 2, y - (this.roofType === 1 ? 15 * scale : this.roofType === 2 ? 10 * scale : 0));
 		ctx.lineTo(x + width / 2, y - (this.roofType === 1 ? 35 * scale : this.roofType === 2 ? 30 * scale : 20 * scale));
 		ctx.stroke();
-		// Antenna light
-		ctx.fillStyle = 'rgba(255, 100, 100, 0.8)';
+		// Antenna light with glow
+		var antennaY = y - (this.roofType === 1 ? 35 * scale : this.roofType === 2 ? 30 * scale : 20 * scale);
+		ctx.fillStyle = 'rgba(255, 100, 100, 0.3)';
 		ctx.beginPath();
-		ctx.arc(x + width / 2, y - (this.roofType === 1 ? 35 * scale : this.roofType === 2 ? 30 * scale : 20 * scale), 2 * scale, 0, Math.PI * 2);
+		ctx.arc(x + width / 2, antennaY, 4 * scale, 0, Math.PI * 2);
+		ctx.fill();
+		ctx.fillStyle = 'rgba(255, 100, 100, 0.9)';
+		ctx.beginPath();
+		ctx.arc(x + width / 2, antennaY, 2 * scale, 0, Math.PI * 2);
 		ctx.fill();
 	}
 
@@ -180,27 +206,28 @@ Building.prototype.draw = function(ctx, frame, scrollY) {
 		var winY = y + win.y * scale;
 
 		// Window glow
-		ctx.fillStyle = 'rgba(255, 200, 100, ' + (alpha * 0.15) + ')';
-		ctx.fillRect(winX - 1, winY - 1, 5 * scale, 7 * scale);
+		ctx.fillStyle = 'rgba(255, 200, 100, ' + (alpha * 0.2) + ')';
+		ctx.fillRect(winX - 1 * scale, winY - 1 * scale, 5 * scale, 7 * scale);
 
 		// Window
 		ctx.fillStyle = 'rgba(255, 200, 100, ' + alpha + ')';
 		ctx.fillRect(winX, winY, 3 * scale, 5 * scale);
 	}
 
-	// Edge highlight for depth
-	ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
-	ctx.lineWidth = 1;
+	// Subtle edge highlights and shadows for 3D effect
+	ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+	ctx.lineWidth = 2;
 	ctx.beginPath();
-	ctx.moveTo(x, y + height);
-	ctx.lineTo(x, y);
+	ctx.moveTo(x + 1, y + height);
+	ctx.lineTo(x + 1, y);
 	ctx.stroke();
 
-	// Shadow on right side
-	ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+	// Shadow on right edge
+	ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)';
+	ctx.lineWidth = 2;
 	ctx.beginPath();
-	ctx.moveTo(x + width, y);
-	ctx.lineTo(x + width, y + height);
+	ctx.moveTo(x + width - 1, y);
+	ctx.lineTo(x + width - 1, y + height);
 	ctx.stroke();
 };
 
@@ -248,11 +275,12 @@ Mountain.prototype.draw = function(ctx, scrollY) {
 	var darkness = Math.max(0, 30 - this.depth * 5);
 	ctx.fillStyle = 'rgb(' + (darkness + blueTint) + ', ' + (darkness + blueTint) + ', ' + (darkness + blueTint * 1.3) + ')';
 
+	// Subtract parallax to move up when scrolling down
 	var parallax_offset = scrollY * scroll_parallax_factor * 0.15 * (1 / (this.depth + 1));
 
 	ctx.beginPath();
 	ctx.moveTo(-10, page_height);
-	ctx.lineTo(-10, baseY + parallax_offset);
+	ctx.lineTo(-10, baseY - parallax_offset);
 
 	// Draw smooth curve through points
 	for (var i = 0; i < this.points.length; i++) {
@@ -260,7 +288,7 @@ Mountain.prototype.draw = function(ctx, scrollY) {
 		var x = (point.x + this.scrollOffset) % (page_width + 400);
 		if (x < -200) x += (page_width + 400);
 
-		var y = baseY - (point.height * scale) + parallax_offset;
+		var y = baseY - (point.height * scale) - parallax_offset;
 
 		if (i === 0) {
 			ctx.lineTo(x, y);
@@ -269,7 +297,7 @@ Mountain.prototype.draw = function(ctx, scrollY) {
 			var prevPoint = this.points[i - 1];
 			var prevX = (prevPoint.x + this.scrollOffset) % (page_width + 400);
 			if (prevX < -200) prevX += (page_width + 400);
-			var prevY = baseY - (prevPoint.height * scale) + parallax_offset;
+			var prevY = baseY - (prevPoint.height * scale) - parallax_offset;
 
 			var cpX = (prevX + x) / 2;
 			var cpY = (prevY + y) / 2;
@@ -277,7 +305,7 @@ Mountain.prototype.draw = function(ctx, scrollY) {
 		}
 	}
 
-	ctx.lineTo(page_width + 10, baseY + parallax_offset);
+	ctx.lineTo(page_width + 10, baseY - parallax_offset);
 	ctx.lineTo(page_width + 10, page_height);
 	ctx.closePath();
 	ctx.fill();
