@@ -12,10 +12,11 @@ background_color = "#000";
 max_distance = 250;
 max_sparks = 5;
 spark_spread = 7;
-lightning_chance = 0.003; // Probability per frame per node
+lightning_chance = 0.01; // Probability per frame per node (increased frequency)
 lightning_length = 150;   // How far lightning bolts reach
 lightning_segments = 5;   // Number of segments in lightning bolt
 lightning_jitter = 30;    // How jagged the lightning is
+red_line_chance = 0.15;   // Probability that a line will be red instead of blue
 
 ////////////////////////////////////////////////////////////////////
 
@@ -73,6 +74,10 @@ function drawLightning(ctx, startX, startY, angle) {
 	var y = startY;
 	var segmentLength = lightning_length / lightning_segments;
 
+	// Randomly decide how many forks (0-4)
+	var numForks = Math.floor(Math.random() * 5);
+	var forksCreated = 0;
+
 	ctx.strokeStyle = "rgba(200, 230, 255, 0.9)"; // White-blue
 	ctx.lineWidth = 2;
 	ctx.shadowBlur = 15;
@@ -88,15 +93,30 @@ function drawLightning(ctx, startX, startY, angle) {
 
 		ctx.lineTo(nextX, nextY);
 
-		// Occasionally branch
-		if (Math.random() < 0.3 && i < lightning_segments - 1) {
-			var branchAngle = angle + (Math.random() - 0.5) * 1.5;
-			var branchLength = segmentLength * 0.6;
-			ctx.moveTo(nextX, nextY);
-			ctx.lineTo(
-				nextX + Math.cos(branchAngle) * branchLength,
-				nextY + Math.sin(branchAngle) * branchLength
-			);
+		// Create forks at random segments (up to numForks)
+		if (forksCreated < numForks && i < lightning_segments - 1) {
+			// Random chance of forking at this segment
+			if (Math.random() < 0.5) {
+				var numBranches = Math.floor(Math.random() * 2) + 1; // 1-2 branches per fork
+				for (var b = 0; b < numBranches; b++) {
+					var branchAngle = angle + (Math.random() - 0.5) * 2.0;
+					var branchLength = segmentLength * (0.5 + Math.random() * 0.4); // Random length
+					var branchSegments = Math.floor(Math.random() * 2) + 2; // 2-3 segments
+
+					// Draw branch
+					var branchX = nextX;
+					var branchY = nextY;
+					for (var s = 0; s < branchSegments; s++) {
+						var branchNextX = branchX + Math.cos(branchAngle) * branchLength + (Math.random() - 0.5) * lightning_jitter * 0.7;
+						var branchNextY = branchY + Math.sin(branchAngle) * branchLength + (Math.random() - 0.5) * lightning_jitter * 0.7;
+						ctx.moveTo(branchX, branchY);
+						ctx.lineTo(branchNextX, branchNextY);
+						branchX = branchNextX;
+						branchY = branchNextY;
+					}
+				}
+				forksCreated++;
+			}
 			ctx.moveTo(nextX, nextY);
 		}
 
@@ -132,14 +152,18 @@ function drawFrame(ctx, frame) {
 			if (dist < max_distance) {
 				var xcent = (nodes[b].x + nodes[a].x)/2;
 				var ycent = (nodes[b].y + nodes[a].y)/2;
-				
+
 				var num_sparks = Math.round(max_distance / dist);
 				if (num_sparks > max_sparks) {num_sparks = max_sparks}
+
+				// Randomly choose red or blue for this connection
+				var use_red = Math.random() < red_line_chance;
+				var base_hue = use_red ? 0 : line_hue; // 0 = red, 200 = blue
 
 				for(i=0; i<num_sparks;i++) {
 					line_saturation = 1;
 					line_lightness = 1-(dist/max_distance);
-					line_color = "hsla("+Math.round(line_hue + rand(hue_spread*2) - hue_spread)+","+(line_saturation*100)+"%,"+Math.round(line_lightness*100)+"%,0.5)";
+					line_color = "hsla("+Math.round(base_hue + rand(hue_spread*2) - hue_spread)+","+(line_saturation*100)+"%,"+Math.round(line_lightness*100)+"%,0.5)";
 					//debugger
 					ctx.strokeStyle = line_color;
 					ctx.beginPath();
