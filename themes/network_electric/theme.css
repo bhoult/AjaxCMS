@@ -118,17 +118,23 @@ nav.navbar {
         0 5px 20px rgba(0, 255, 255, 0.5),
         inset 0 -2px 10px rgba(0, 255, 255, 0.2);
     backdrop-filter: blur(10px);
+    padding: 0.25rem 1rem !important;
+    min-height: 40px;
 }
 
 .navbar-brand {
     color: var(--electric-cyan) !important;
     text-shadow: 0 0 10px var(--electric-cyan);
     font-weight: 700;
+    font-size: 1.5rem;
+    position: static !important;
 }
 
 .navbar-brand img {
     border: none !important;
     box-shadow: none !important;
+    position: static !important;
+    top: 0 !important;
 }
 
 .navbar-nav .nav-link {
@@ -136,6 +142,8 @@ nav.navbar {
     text-shadow: 0 0 5px var(--electric-cyan);
     transition: all 0.3s ease;
     position: relative;
+    padding: 0.5rem 0.75rem !important;
+    line-height: 1.2;
 }
 
 .navbar-nav .nav-link:hover,
