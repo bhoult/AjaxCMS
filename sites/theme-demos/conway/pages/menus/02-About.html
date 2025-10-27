@@ -1,0 +1,41 @@
+<h1>About Conway's Game of Life</h1>
+
+<h2>History</h2>
+
+<p>The Game of Life was invented by British mathematician John Horton Conway in 1970. Despite being called a "game," it has no players - it's a zero-player game, meaning its evolution is determined by its initial state, requiring no further input.</p>
+
+<h2>Mathematical Significance</h2>
+
+<p>Conway's Game of Life is Turing complete, which means it can simulate any computation that can be performed by a computer. This simple cellular automaton has profound implications for:</p>
+
+<ul>
+    <li>Computer Science and computational theory</li>
+    <li>Biology and population dynamics</li>
+    <li>Physics and pattern formation</li>
+    <li>Philosophy of emergence and complexity</li>
+</ul>
+
+<h2>Famous Patterns</h2>
+
+<p>Over the years, enthusiasts have discovered many fascinating patterns:</p>
+
+<ul>
+    <li><strong>Still Lifes:</strong> Patterns that don't change (e.g., block, beehive, loaf)</li>
+    <li><strong>Oscillators:</strong> Patterns that repeat after a fixed number of generations (e.g., blinker, toad, pulsar)</li>
+    <li><strong>Spaceships:</strong> Patterns that translate themselves across the grid (e.g., glider, lightweight spaceship)</li>
+    <li><strong>Methuselahs:</strong> Small patterns that take many generations to stabilize</li>
+    <li><strong>Guns:</strong> Patterns that periodically emit spaceships</li>
+</ul>
+
+<h2>This Implementation</h2>
+
+<p>This AjaxCMS theme implements Conway's Game of Life using HTML5 Canvas and JavaScript. The animation runs at approximately 10 generations per second, with cells displayed as glowing green squares on a black background.</p>
+
+<p>The implementation features:</p>
+
+<ul>
+    <li>Configurable cell size and update speed</li>
+    <li>Toroidal topology (edges wrap around)</li>
+    <li>Random initial state with 30% cell density</li>
+    <li>Smooth canvas rendering with fade effects</li>
+</ul>
