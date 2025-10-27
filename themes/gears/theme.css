@@ -111,36 +111,39 @@ body #background {
 }
 
 /* ===== Typography - Industrial/Technical ===== */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&display=swap');
+
 body {
-    font-family: 'Roboto Mono', 'Courier New', monospace;
-    font-size: 14px;
+    font-family: 'Rajdhani', 'Arial', sans-serif;
+    font-size: 16px;
     line-height: 1.6;
     color: var(--steel-dark);
     letter-spacing: 0.3px;
+    font-weight: 600;
 }
 
 h1, h2, h3, h4, h5, h6 {
-    font-family: 'Roboto', 'Arial', sans-serif;
-    font-weight: 700;
-    letter-spacing: 1px;
+    font-family: 'Orbitron', 'Arial', sans-serif;
+    font-weight: 900;
+    letter-spacing: 2px;
     text-transform: uppercase;
     color: var(--steel-dark);
     position: relative;
     margin-top: 1.5rem;
     margin-bottom: 1rem;
-    padding-left: 20px;
+    padding-left: 35px;
 }
 
-/* Technical dimension line effect on headings */
+/* Gear icon before headings */
 h1::before, h2::before, h3::before {
-    content: '';
+    content: '⚙';
     position: absolute;
     left: 0;
     top: 50%;
-    width: 10px;
-    height: 2px;
-    background: var(--industrial-orange);
     transform: translateY(-50%);
+    color: var(--industrial-orange);
+    font-size: 1.5em;
+    line-height: 1;
 }
 
 h1::after, h2::after, h3::after {
@@ -191,7 +194,7 @@ h6 { font-size: 1rem; }
 
 p {
     margin-bottom: 1rem;
-    font-family: 'Roboto', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     letter-spacing: 0.2px;
 }
 
@@ -260,7 +263,7 @@ a:focus {
 }
 
 .navbar-brand {
-    font-family: 'Roboto', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-weight: 900;
     color: #ecf0f1 !important;
     font-size: 1.4rem;
@@ -278,7 +281,7 @@ a:focus {
 
 .navbar-nav .nav-link {
     color: #bdc3c7 !important;
-    font-family: 'Roboto', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -337,7 +340,7 @@ a:focus {
 .dropdown-item,
 .dropdown-menu a {
     color: #bdc3c7 !important;
-    font-family: 'Roboto', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-weight: 600;
     text-transform: uppercase;
     font-size: 0.85rem;
@@ -360,7 +363,7 @@ a:focus {
 
 /* ===== Buttons - Industrial Controls ===== */
 .btn {
-    font-family: 'Roboto', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -542,7 +545,7 @@ a:focus {
 .table {
     color: var(--steel-dark);
     border: 2px solid var(--steel-light);
-    font-family: 'Roboto Mono', monospace;
+    font-family: 'Share Tech Mono', monospace;
 }
 
 .table thead th {
@@ -585,7 +588,7 @@ a:focus {
     color: var(--steel-dark);
     border-radius: 0;
     transition: all 0.2s ease;
-    font-family: 'Roboto Mono', monospace;
+    font-family: 'Share Tech Mono', monospace;
     padding: 0.6rem 0.75rem;
 }
 
@@ -629,7 +632,7 @@ a:focus {
     border-left: 5px solid;
     box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.1);
     font-weight: 600;
-    font-family: 'Roboto', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
 }
 
 .alert-primary {
@@ -674,7 +677,7 @@ a:focus {
     border-radius: 0;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    font-family: 'Roboto Mono', monospace;
+    font-family: 'Share Tech Mono', monospace;
     font-size: 0.7rem;
 }
 
@@ -815,7 +818,7 @@ code {
     color: var(--industrial-orange);
     padding: 0.2em 0.5em;
     border-radius: 0;
-    font-family: 'Roboto Mono', monospace;
+    font-family: 'Share Tech Mono', monospace;
     border: 1px solid var(--steel-light);
     font-weight: 700;
 }
