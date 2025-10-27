@@ -51,7 +51,7 @@ function drawFrame(frame) {
 
 		// Lower the last mountain layer to sit behind other layers better
 		if (i === layers.length) {
-			bottom = bottom - (layer_height * 0.3); // Lower by 30% of screen height
+			bottom = bottom - (layer_height * 0.1); // Lower by 10% of screen height
 		}
 
 		layers[i-1].jqo.css("bottom", Math.round(bottom)+"px");
