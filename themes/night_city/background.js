@@ -150,13 +150,13 @@ Building.prototype.draw = function(ctx, frame, scrollY) {
 
 	var y = page_height - height - parallax_offset;
 
-	// Apply blur to foreground layers for depth of field effect
+	// Apply slight transparency to foreground for depth effect (much faster than blur)
 	if (this.depth === 0) {
-		ctx.filter = 'blur(2px)';
+		ctx.globalAlpha = 0.85;
 	} else if (this.depth === 1) {
-		ctx.filter = 'blur(1px)';
+		ctx.globalAlpha = 0.95;
 	} else {
-		ctx.filter = 'none';
+		ctx.globalAlpha = 1.0;
 	}
 
 	// Draw building body with vertical gradient for depth
@@ -251,8 +251,8 @@ Building.prototype.draw = function(ctx, frame, scrollY) {
 	ctx.lineTo(x + width - 1, y + height);
 	ctx.stroke();
 
-	// Reset filter for next building
-	ctx.filter = 'none';
+	// Reset alpha for next building
+	ctx.globalAlpha = 1.0;
 };
 
 // Mountain object
