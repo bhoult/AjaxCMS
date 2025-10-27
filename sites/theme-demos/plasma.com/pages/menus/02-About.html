@@ -1,0 +1,74 @@
+<h1>About Plasma Effects</h1>
+
+<h2>History</h2>
+
+<p>Plasma effects emerged in the late 1980s and early 1990s as part of the demoscene - an underground computer art culture focused on creating impressive real-time graphics and audio within tight resource constraints. These effects became iconic examples of mathematical beauty in computer graphics.</p>
+
+<h2>How It Works</h2>
+
+<p>The plasma effect is generated through a technique called "fractional Brownian motion" combined with trigonometric functions:</p>
+
+<h3>The Math Behind the Magic</h3>
+
+<ul>
+    <li><strong>Base Functions:</strong> Multiple sine and cosine waves are layered together</li>
+    <li><strong>Spatial Variation:</strong> Each pixel's position (x, y) affects the wave calculations</li>
+    <li><strong>Temporal Evolution:</strong> A time parameter continuously shifts the wave phases</li>
+    <li><strong>Wave Interference:</strong> Overlapping waves create complex patterns through constructive and destructive interference</li>
+</ul>
+
+<h3>Color Cycling Technique</h3>
+
+<p>The grayscale wave values are transformed into vibrant colors using:</p>
+
+<ul>
+    <li>RGB channels mapped to offset sine waves</li>
+    <li>Phase shifting to create smooth color transitions</li>
+    <li>Continuous cycling through the color spectrum</li>
+    <li>Harmonic relationships between color channels</li>
+</ul>
+
+<h2>Demoscene Legacy</h2>
+
+<p>Plasma effects became legendary in the demoscene for several reasons:</p>
+
+<ul>
+    <li><strong>Visual Impact:</strong> Stunning animations from simple mathematical formulas</li>
+    <li><strong>Real-time Performance:</strong> Could run smoothly even on limited hardware</li>
+    <li><strong>Infinite Variation:</strong> Never-ending patterns without repetition</li>
+    <li><strong>Educational Value:</strong> Taught programmers about wave functions and color theory</li>
+</ul>
+
+<h2>This Implementation</h2>
+
+<p>This AjaxCMS theme implements the plasma effect using HTML5 Canvas and JavaScript. The animation features:</p>
+
+<ul>
+    <li>Configurable pixel size for performance tuning (4px default)</li>
+    <li>Adjustable animation speed</li>
+    <li>Multi-frequency wave combination for complexity</li>
+    <li>Smooth color cycling with RGB phase offsets</li>
+    <li>Optimized rendering using fillRect blocks</li>
+</ul>
+
+<h3>Performance Optimization</h3>
+
+<p>To maintain 60fps on modern displays, the implementation uses:</p>
+
+<ul>
+    <li><strong>Block Rendering:</strong> Drawing in 4x4 pixel blocks instead of individual pixels</li>
+    <li><strong>Efficient Color Calculation:</strong> Pre-normalized wave values</li>
+    <li><strong>RequestAnimationFrame:</strong> Synchronized with display refresh rate</li>
+    <li><strong>Canvas Dimensions Matching:</strong> Prevents scaling overhead</li>
+</ul>
+
+<h2>Customization</h2>
+
+<p>The plasma effect can be customized by adjusting:</p>
+
+<ul>
+    <li><code>plasmaSpeed</code>: Controls animation speed (default: 0.5)</li>
+    <li><code>pixelSize</code>: Balances detail vs performance (default: 4)</li>
+    <li>Wave function frequencies in the <code>plasma()</code> function</li>
+    <li>Color mapping parameters in the <code>getColor()</code> function</li>
+</ul>

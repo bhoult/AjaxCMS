@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+		<meta charset="UTF-8">
+		<title>Plasma Fractal - AjaxCMS</title>
+
+		<!-- Configuration -->
+		<script>
+			var default_background = "plasma";
+			var ajaxcms_google_analytics = 'UA-84079705-1';
+			var ajaxcms_splash_time = 3000;
+		</script>
+		
+		<!-- jQuery -->
+		<script src="js/jquery.min.js"></script>
+		<script src="js/jquery-ui.min.js"></script>
+		<link href="css/jquery-ui.min.css" rel="stylesheet">
+
+		<!-- Bootstrap -->
+		<link href="css/bootstrap.min.css" rel="stylesheet">
+		<script src="js/bootstrap.bundle.min.js"></script>
+
+		<!-- Markdown parser -->
+		<script src="js/marked.min.js"></script>
+		
+		<!-- Polyfills -->
+		<script src="js/array.generics.min.js"></script>
+		
+		<!-- Background Animation -->
+		<script src="js/victor.js"></script>
+		<script src="js/canvasstuff.js"></script>
+		<script src="js/jquery-mobile-swipe.js"></script>
+		<script src="js/segment.js"></script>
+		
+		<!-- CMS Javascript -->
+		<script src="js/ajaxcms.js"></script>
+		
+		<!-- fonts.google.com -->
+		<link href="https://fonts.googleapis.com/css?family=Montserrat+Alternates:700" rel="stylesheet">
+		
+		<!-- Load theme -->
+		<script>
+			theme = default_background;
+			$.getScript('themes/'+default_background+'/background.js');
+			$('<link>').appendTo('head').attr({type : 'text/css', rel : 'stylesheet'}).attr('href', 'themes/'+default_background+'/theme.css');
+		</script>
+		
+		<style>
+			body {
+				overflow-x: hidden;
+				padding-bottom: 100px;
+				margin: 0;
+			}
+
+			#background {
+			  position:fixed;
+			  z-index:0;
+			  top:0;
+			  left:0;
+			  background: #000;
+			  /* Width and height set via JavaScript to prevent scaling */
+			}
+			#background-div {
+			  position:fixed;
+			  z-index:0;
+			  width:100%;
+			  height:100%;
+			  overflow:hidden;
+			  pointer-events:none;
+			}
+
+			nav.navbar {
+				margin-bottom:0px;
+				z-index:1;
+				border-radius:0px 0px 10px 10px;
+				pointer-events:auto;
+			}
+
+			.container {
+				padding:0px;
+				padding-bottom:100px;
+				border-radius:4px 4px 0px 0px;
+				color:white;
+			}
+
+			#a, #b {
+				position:absolute;
+				top: 0px;
+				width:100%;
+				z-index:0;
+				background-color:rgba(20, 0, 30, 0.92);
+				border-radius:0px 0px 8px 8px;
+				color:#ffffff;
+				margin-bottom:50px;
+				padding-bottom:100px;
+				pointer-events:none;
+			}
+
+			#a *, #b * {
+				pointer-events:auto;
+			}
+			
+			#main {
+				width:98%!important;
+				margin: 0 auto;
+			}
+			
+			#main>div {
+				padding: 0px 10px 20px 10px;
+			}
+			
+			#main img {
+				margin:10px;
+			}
+			#main .carousel img {
+				margin:0px;
+			}
+			img.thumb {
+				width:20px;
+			}
+			img.icon {
+				width:70px;
+			}
+			img.small {
+				width:300px;
+			}
+			img.medium {
+				width:600px;
+			}
+			img.large {
+				width:900px;
+			}
+			img.left {
+				float:left;
+			}
+			img.right {
+				float:right;
+			}
+			
+			.carousel {
+				padding:0px;
+			}
+			
+			ul.filelist li {
+				list-style-type:none;
+			}
+			ul.filelist li a.folder:hover {
+				text-decoration:none;
+			}
+			
+			footer {
+				position:fixed;
+				left:0px;
+				bottom:0px;
+				width:100%;
+				background:rgba(20, 0, 30, 0.95);
+				color:#ff66ff;
+				text-align:center;
+				padding:5px;
+				font-size:2vw;
+				border-top: 1px solid rgba(255, 100, 255, 0.3);
+				pointer-events:auto;
+			}
+			footer a {color:#ff66ff;}
+			footer a:hover {color:#ffaaff; text-shadow: 0 0 8px rgba(255, 102, 255, 0.6);}
+
+			
+			.blog .blog_entry {
+				border:1px solid black;
+				border-radius:10px;
+				margin:10px;
+				padding:5px;
+				background-color:rgba(255,255,255,0.8);
+				position:relative;
+				cursor: pointer; 
+			}
+			.blog .blog_entry h1 {
+				margin-top:0px;
+				font-size:150%;
+			}
+			.blog .blog_entry time {
+				position:absolute;
+				top:5px;
+				right:5px;
+			}
+			
+			
+			@media (min-width: 544px) {  }
+			@media (min-width: 768px) { footer {font-size:14px;} }
+			@media (min-width: 992px) {  }
+			@media (min-width: 1200px) {  }
+			
+		</style>
+	</head>
+	
+	<body>
+		<canvas id="background"></canvas>
+		<div id="background-div"></div>
+		<div class="container" style="display:none;">
+			<header>
+			</header>
+			
+			<!-- Static navbar -->
+		<nav class="navbar navbar-expand-lg navbar-light bg-light">
+			<div class="container-fluid">
+			    <a class="navbar-brand" href="javascript:void(0);" style="width:160px; height:1px; overflow:visible;"><img src='images/ajaxcms.svg' style="position:absolute; top:0px; z-index:2; width:160px; border:none;"></a>
+			    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+			      <span class="navbar-toggler-icon"></span>
+			    </button>
+			  <div class="collapse navbar-collapse" id="navbar">
+			    <ul id='menu' class="navbar-nav me-auto mb-2 mb-lg-0">
+			    	<!-- Pages get inserted here to make menu -->
+			    </ul>
+			  </div><!--/.navbar-collapse -->
+			</div><!--/.container-fluid -->
+		</nav>
+			
+			<main id="main" style="position:relative; width:100%;">
+				<!-- Content gets inserted here, a and b are for making page style transitions. -->
+				<div id='a' style=""></div>
+				<div id='b' style="display:none;"></div>
+			</main>
+			
+			<footer>
+				<div>
+					&#9400; AjaxCMS 2016 All Rights Reserved. Email: <a href="mailto:brandon.hoult@softwyre.com">brandon.hoult@softwyre.com</a> for more information. Powered by AjaxCMS (GPL v3) 
+				</div>
+			</footer>
+		</div>
+		
+		<!-- Google Analytics -->
+		<script>
+		  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+		
+		  ga('create', ajaxcms_google_analytics, 'auto');
+		  //ga('send', 'pageview');
+		</script>
+	</body>
+
+</html>
