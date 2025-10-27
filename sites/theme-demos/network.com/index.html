@@ -68,11 +68,8 @@
 			}
 			
 		nav.navbar {
-			width: 98%;
 			margin-top:0px;
 			margin-bottom:0px;
-			margin-left:auto;
-			margin-right:auto;
 			z-index:1;
 			border-radius:0px 0px 10px 10px;
 			background-color: #f8f8f8;
@@ -159,8 +156,30 @@
 			}
 			
 			#a, #b {
-				width:98%!important;
+				width:100%!important;
+				max-width:540px;
 				margin: 0 auto;
+			}
+
+			@media (min-width: 768px) {
+				#a, #b {
+					max-width:720px;
+				}
+			}
+			@media (min-width: 992px) {
+				#a, #b {
+					max-width:960px;
+				}
+			}
+			@media (min-width: 1200px) {
+				#a, #b {
+					max-width:1140px;
+				}
+			}
+			@media (min-width: 1400px) {
+				#a, #b {
+					max-width:1320px;
+				}
 			}
 			
 			#main>div {
