@@ -82,16 +82,20 @@ function Building(depth) {
 }
 
 Building.prototype.generateColor = function() {
-	// Dark building colors - pure grays and dark blues for nighttime
+	// Realistic nighttime building colors - dark grays, blues, and browns
 	var colorType = Math.random();
-	if (colorType < 0.7) {
-		// Most buildings: dark gray
-		var value = 18 + Math.random() * 22;
+	if (colorType < 0.5) {
+		// Pure dark gray buildings
+		var value = 25 + Math.floor(Math.random() * 25);
 		return 'rgb(' + value + ', ' + value + ', ' + value + ')';
+	} else if (colorType < 0.8) {
+		// Dark blue-gray buildings
+		var value = 20 + Math.floor(Math.random() * 20);
+		return 'rgb(' + value + ', ' + (value + 5) + ', ' + (value + 12) + ')';
 	} else {
-		// Some buildings: very dark blue-gray
-		var value = 15 + Math.random() * 18;
-		return 'rgb(' + value + ', ' + (value + 2) + ', ' + (value + 8) + ')';
+		// Dark brown/tan buildings
+		var value = 25 + Math.floor(Math.random() * 20);
+		return 'rgb(' + (value + 8) + ', ' + (value + 3) + ', ' + value + ')';
 	}
 };
 
@@ -150,15 +154,6 @@ Building.prototype.draw = function(ctx, frame, scrollY) {
 
 	// Buildings anchored to bottom of screen
 	var y = page_height - height - parallax_offset;
-
-	// Apply slight transparency to foreground for depth effect (much faster than blur)
-	if (this.depth === 0) {
-		ctx.globalAlpha = 0.85;
-	} else if (this.depth === 1) {
-		ctx.globalAlpha = 0.95;
-	} else {
-		ctx.globalAlpha = 1.0;
-	}
 
 	// Draw building body with vertical gradient for depth
 	var gradient = ctx.createLinearGradient(x, y, x, y + height);
@@ -251,9 +246,6 @@ Building.prototype.draw = function(ctx, frame, scrollY) {
 	ctx.moveTo(x + width - 1, y);
 	ctx.lineTo(x + width - 1, y + height);
 	ctx.stroke();
-
-	// Reset alpha for next building
-	ctx.globalAlpha = 1.0;
 };
 
 // Mountain object
@@ -310,29 +302,50 @@ Mountain.prototype.draw = function(ctx, scrollY) {
 
 	ctx.beginPath();
 	ctx.moveTo(-10, page_height);
-	ctx.lineTo(-10, baseY - parallax_offset);
 
-	// Draw smooth curve through points
+	var firstPointDrawn = false;
+	var lastX = -10;
+	var lastY = baseY - parallax_offset;
+
+	// Draw smooth curve through points, handling wrapping properly
 	for (var i = 0; i < this.points.length; i++) {
 		var point = this.points[i];
-		var x = (point.x + this.scrollOffset) % (page_width + 400);
-		if (x < -200) x += (page_width + 400);
+		var rawX = point.x + this.scrollOffset;
 
+		// Simple modulo wrapping
+		while (rawX < -200) rawX += (page_width + 400);
+		while (rawX > page_width + 200) rawX -= (page_width + 400);
+
+		var x = rawX;
 		var y = baseY - (point.height * scale) - parallax_offset;
 
-		if (i === 0) {
-			ctx.lineTo(x, y);
-		} else {
-			// Use quadratic curves for smoothness
-			var prevPoint = this.points[i - 1];
-			var prevX = (prevPoint.x + this.scrollOffset) % (page_width + 400);
-			if (prevX < -200) prevX += (page_width + 400);
-			var prevY = baseY - (prevPoint.height * scale) - parallax_offset;
+		// Check if there's a wrap discontinuity (large jump)
+		if (Math.abs(x - lastX) > page_width / 2) {
+			// Wrapping occurred, close path and start new one
+			ctx.lineTo(lastX < page_width / 2 ? -10 : page_width + 10, lastY);
+			ctx.lineTo(lastX < page_width / 2 ? -10 : page_width + 10, page_height);
+			ctx.closePath();
+			ctx.fill();
 
-			var cpX = (prevX + x) / 2;
-			var cpY = (prevY + y) / 2;
-			ctx.quadraticCurveTo(prevX, prevY, cpX, cpY);
+			// Start new path
+			ctx.beginPath();
+			ctx.moveTo(x < page_width / 2 ? -10 : page_width + 10, page_height);
+			ctx.lineTo(x, y);
+			firstPointDrawn = true;
+		} else {
+			// Normal drawing
+			if (!firstPointDrawn) {
+				ctx.lineTo(x, y);
+				firstPointDrawn = true;
+			} else {
+				var cpX = (lastX + x) / 2;
+				var cpY = (lastY + y) / 2;
+				ctx.quadraticCurveTo(lastX, lastY, cpX, cpY);
+			}
 		}
+
+		lastX = x;
+		lastY = y;
 	}
 
 	ctx.lineTo(page_width + 10, baseY - parallax_offset);
