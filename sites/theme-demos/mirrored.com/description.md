@@ -1,1 +1,1 @@
-Mirrored symmetry theme - elegant reflective patterns and movements.
+Perfect quadrant symmetry with animated nodes reflecting across all four corners. Physics-based motion, color-cycling gradients, and glassmorphism design for modern elegance.
