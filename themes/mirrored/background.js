@@ -1,9 +1,10 @@
 /* (c) 2016 Softwyre Inc / Brandon Hoult. for More Invformation email: brandon.hoult@softwyre.com */
 
 velocity = 8;
-padding = 400;    	// How far from the edge does repulsion start.
+padding = 200;    	// How far from the edge does repulsion starts (reduced for more edge visibility)
 magnet = 10;      	// Strength of repulsion greater = less repulsion.
 attraction = 0.02; 	// Gentle attraction between nodes
+horizontal_bias = 0.015; // Push nodes toward horizontal edges
 colorspeed = 175; 	// Greater is slower
 num_nodes = 8;    	// Number of nodes to animate (increased for complexity)
 saturation = 1;		// Color saturation range 0-1
@@ -39,6 +40,14 @@ function node(x,y, vx,vy, size, depth) {
     if (this.x > (page_width - padding)) {this.velocity.x += ((page_width - padding - this.x) / padding / magnet)}
     if (this.y < padding) {this.velocity.y -= ((this.y - padding) / padding / magnet)}
     if (this.y > (page_height - padding)) {this.velocity.y += ((page_height - padding - this.y) / padding / magnet)}
+
+    // Horizontal spreading bias - push nodes toward left/right edges
+    var centerX = page_width / 2;
+    var distFromCenter = this.x - centerX;
+    if (Math.abs(distFromCenter) < page_width * 0.4) { // Within center 80%
+      // Push away from center horizontally
+      this.velocity.x += (distFromCenter > 0 ? horizontal_bias : -horizontal_bias);
+    }
 
     // Gentle attraction to other nodes
     for (var i = 0; i < nodes.length; i++) {
@@ -206,11 +215,23 @@ startBackground = function() {
 
 	canvas_size = ctx.canvas.width * ctx.canvas.height;
 
-	// Make new nodes with varied speeds
+	// Make new nodes with varied speeds and horizontal bias
 	for (var i=0; i<num_nodes; i++) {
 		var v = new Victor(rand(10)-5,rand(10)-5);
 		v = vectorNormal(v).multiply(new Victor(rand(velocity)+1,rand(velocity)+1));
-		nodes.push(new node(rand(page_width-(padding*2))+padding,rand(page_height-(padding*2))+padding, v.x,v.y, 250,1));
+
+		// Bias initial placement toward left/right edges (50% left third, 50% right third)
+		var x_pos;
+		if (Math.random() < 0.5) {
+			// Left third of screen
+			x_pos = padding + Math.random() * (page_width / 3);
+		} else {
+			// Right third of screen
+			x_pos = page_width - padding - Math.random() * (page_width / 3);
+		}
+		var y_pos = rand(page_height-(padding*2))+padding;
+
+		nodes.push(new node(x_pos, y_pos, v.x, v.y, 250, 1));
 	}
 
 	// Animation Loop
