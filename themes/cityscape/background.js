@@ -2,10 +2,10 @@
 
 page_width = window.innerWidth;
 page_height = window.innerHeight;
-  
+
 layer_height = page_height;	// Height of layers in pixels
-rise_factor = 15; 			// Amount of rise with mouse move... higher is less
-layer_scroll_speed = -2;	// Speed of horizontal scroll.
+layer_scroll_speed = -2;	// Speed of horizontal scroll
+scroll_parallax_factor = 0.3; // Parallax intensity based on scroll (0-1)
 
 ////////////////////////////////////////////////////////////////////
 
@@ -19,24 +19,29 @@ function layer(jqo, offset) {
 }
 
 function drawFrame(frame) {
-	if (cursorY === undefined) {cursorY = 0}
+	// Get current scroll position
+	var scrollY = window.pageYOffset || document.documentElement.scrollTop || 0;
+
 	var layer_bottom = -layer_height/2;
     var layer_distance_spread = layer_height / 2.6;
-		
+
 	for (var i = 1; i<=layers.length; i++) {
 		// Scroll Horizontally
 		var position = (frame + layers[i-1].position) * layer_scroll_speed / i;
 		layers[i-1].jqo.css("background-position", Math.round(position)+"px");
-		
+
 		// Height of successive layers
-	    var height = (layer_height) / i; 
+	    var height = (layer_height) / i;
 		layers[i-1].jqo.css("height", Math.round(height)+"px");
-		
-		// Layer spread 
+
+		// Layer spread based on scroll position
+		// Layers move up at different rates as you scroll down (parallax effect)
+		var parallax_offset = scrollY * scroll_parallax_factor * (1 / i); // Deeper layers move slower
+
 		var bottom = 	( Math.sqrt(i-1) * layer_distance_spread )   // Base distance from bottom derived from layer number
-						* ( (page_height - (cursorY/3)) / page_height ) // Spread with cursor move
-						+ ( layer_bottom + (cursorY / (1000*rise_factor/layer_height)) )  // Raise with cursor move
-						+ layers[i-1].offset;  // Raise with individual layer offset 
+						+ layer_bottom  // Base bottom position
+						+ parallax_offset  // Move based on scroll (divided by depth for parallax)
+						+ layers[i-1].offset;  // Raise with individual layer offset
 		layers[i-1].jqo.css("bottom", Math.round(bottom)+"px");
 	}
 }
