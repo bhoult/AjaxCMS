@@ -36,14 +36,14 @@
 		<!-- CMS Javascript -->
 		<script src="js/ajaxcms.js"></script>
 		
-		<!-- fonts.google.com -->
-		<link href="https://fonts.googleapis.com/css?family=Montserrat+Alternates:700" rel="stylesheet">
-		
+		<!-- fonts.google.com - Network theme fonts -->
+		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+
 		<!-- Load theme -->
 		<script>
 			theme = default_background;
 			$.getScript('themes/'+default_background+'/background.js');
-			$('<link>').appendTo('head').attr({type : 'text/css', rel : 'stylesheet'}).attr('href', 'themes/'+default_background+'/theme.css');
+			$('<link>').appendTo('head').attr({type : 'text/css', rel : 'stylesheet'}).attr('href', 'themes/'+default_background+'/theme.css?v=' + Date.now());
 		</script>
 		
 		<style>
