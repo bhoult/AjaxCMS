@@ -126,6 +126,11 @@ nav.navbar {
     font-weight: 700;
 }
 
+.navbar-brand img {
+    border: none !important;
+    box-shadow: none !important;
+}
+
 .navbar-nav .nav-link {
     color: var(--electric-cyan) !important;
     text-shadow: 0 0 5px var(--electric-cyan);
