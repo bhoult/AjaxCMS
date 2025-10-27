@@ -1,28 +1,57 @@
 ## Cityscape Theme
 
-Welcome to the Cityscape theme demonstration site for AjaxCMS. This theme features unique animated backgrounds that create a distinctive aesthetic perfect for portfolios and creative websites.
+Welcome to the Cityscape theme for AjaxCMS. This theme transforms your site into a dynamic metropolitan experience with multi-layered parallax scrolling cityscapes. Watch as building silhouettes, blurred foregrounds, and mountain ranges scroll at different speeds, creating stunning depth and urban atmosphere.
 
 ### About This Theme
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+The Cityscape theme brings sophisticated urban aesthetics to your AjaxCMS site with a parallax-scrolling cityscape animation featuring seven distinct layers. From blurred foreground buildings to distant mountain silhouettes, each layer scrolls at a different speed creating authentic depth perception. The animation responds to cursor position, raising and spreading the layers as you move your mouse, making the cityscape feel alive and interactive.
 
-Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+Built with a modern architectural color scheme featuring deep slate backgrounds, amber accent lighting reminiscent of city windows at night, and clean urban typography, the Cityscape theme delivers a professional metropolitan aesthetic. Urbanist font provides bold architectural headings while Inter delivers crisp, modern body text perfect for urban design.
 
-### Features
+### Key Features
 
-Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.
+The Cityscape theme creates an immersive urban experience:
 
-- **Animated Background**: Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit
-- **Responsive Design**: Sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt
-- **Smooth Transitions**: Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet
-- **Customizable Colors**: Consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt
+- **Multi-Layer Parallax Scrolling**: Seven layers including blurred city buildings, sharp silhouettes, and mountain backgrounds scroll independently
+- **Depth-Based Speed**: Foreground layers scroll faster than distant layers, creating realistic perspective and depth
+- **Interactive Parallax**: Mouse movement raises and spreads the city layers, creating dynamic 3D-like depth effects
+- **Continuous Animation**: Layers scroll horizontally at -2px per frame, creating perpetual urban motion
+- **Urban Typography**: Urbanist (architectural, bold) for headings and Inter (clean, modern) for body text
+- **Amber City Lights**: Golden amber accents (#f59e0b) evoke glowing city windows and street lamps at dusk
+- **Glassmorphism Containers**: Semi-transparent panels with backdrop blur float above the cityscape
+- **Responsive Depth**: Animation adapts to window size, maintaining proper proportions and depth
 
-### Technical Details
+### Design Elements
 
-At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident.
+Every element embraces the urban architectural aesthetic. Content containers feature dark slate backgrounds with amber-bordered glassmorphism, creating the appearance of windows overlooking the city. Headings display vertical amber accent bars on the left, mimicking architectural column details. Buttons use gradient amber-to-orange fills with expanding hover effects.
 
-Similique sunt in culpa qui officia deserunt mollitia animi, id est laborum et dolorum fuga. Et harum quidem rerum facilis est et expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod maxime placeat facere possimus.
+The color palette centers on deep slate (#1a1f2e) and charcoal (#2d3748) backgrounds with vibrant amber (#f59e0b) for accents and warm orange (#ff6b35) for highlights. Light gray text (#e2e8f0) provides excellent readability against dark backgrounds. The navbar features a subtle pulsing glow animation, evoking the rhythmic lighting of urban nights.
 
-### Get Started
+### Technical Excellence
 
-Omnis voluptas assumenda est, omnis dolor repellendus. Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet ut et voluptates repudiandae sint et molestiae non recusandae. Itaque earum rerum hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus maiores alias consequatur aut perferendis doloribus asperiores repellat.
+Built for Bootstrap 5 compatibility, the Cityscape theme uses jQuery for smooth layer manipulation with requestAnimationFrame for 60fps animation. Each layer is an absolutely positioned div with repeated background images that scroll via CSS background-position updates. Layer heights and bottom positions calculate dynamically based on screen size and cursor position.
+
+Typography leverages Google Fonts with Urbanist providing architectural sans-serif headings (weights 400-800) and Inter delivering modern body text (weights 400-600). The theme includes mathematical depth calculations for layer spreading, cursor-responsive positioning, and automatic window resize handling.
+
+### Perfect For
+
+This theme excels for: architecture firms, urban planning agencies, real estate companies, city guides, metropolitan blogs, construction companies, infrastructure projects, municipal websites, urban development portfolios, smart city initiatives, or any project requiring sophisticated urban aesthetics.
+
+The parallax cityscape creates immediate urban atmosphere while remaining professional and clean. It's particularly effective for showcasing buildings, developments, city services, or urban-focused content. The interactive depth effect engages visitors without overwhelming the content.
+
+### Live Animation
+
+The background continuously scrolls seven city and mountain layers from right to left. Each layer moves at a speed inversely proportional to its depth (front layers faster, back layers slower). As you move your cursor vertically, the city raises up and the layers spread apart, revealing more sky and creating dramatic depth. The mathematical spread calculation uses square roots to create natural-looking perspective as layers recede into the distance.
+
+### Layer Composition
+
+From front to back, the animation consists of:
+1. Blurred close-up city buildings (fastest scroll)
+2. Blurred mid-distance city
+3. Sharp detailed city buildings
+4. Sharp secondary city layer
+5. Repeated sharp city buildings
+6. Mountain silhouettes
+7. Distant mountain range (slowest scroll, offset -50px down)
+
+Each layer repeats horizontally creating an endless urban landscape that never runs out of buildings to scroll past.

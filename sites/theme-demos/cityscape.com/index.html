@@ -36,14 +36,14 @@
 		<!-- CMS Javascript -->
 		<script src="js/ajaxcms.js"></script>
 		
-		<!-- fonts.google.com -->
-		<link href="https://fonts.googleapis.com/css?family=Montserrat+Alternates:700" rel="stylesheet">
-		
+		<!-- fonts.google.com - Cityscape theme fonts -->
+		<link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
 		<!-- Load theme -->
 		<script>
 			theme = default_background;
 			$.getScript('themes/'+default_background+'/background.js');
-			$('<link>').appendTo('head').attr({type : 'text/css', rel : 'stylesheet'}).attr('href', 'themes/'+default_background+'/theme.css');
+			$('<link>').appendTo('head').attr({type : 'text/css', rel : 'stylesheet'}).attr('href', 'themes/'+default_background+'/theme.css?v=' + Date.now());
 		</script>
 		
 		<style>
@@ -67,52 +67,10 @@
 			  overflow:hidden;
 			}
 			
+		/* Navbar styling handled by theme.css */
 		nav.navbar {
 			margin-bottom:0px;
 			z-index:1;
-			border-radius:0px 0px 10px 10px;
-			background-color: #f8f8f8;
-			border: 1px solid #e7e7e7;
-		}
-
-		/* Make navbar links white text */
-		.navbar-nav .nav-link {
-			color: #ffffff !important;
-			padding: 15px 1rem;
-			line-height: 20px;
-			display: flex;
-			align-items: center;
-			height: 50px;
-		}
-
-		.navbar-nav .nav-link:hover,
-		.navbar-nav .nav-link:focus {
-			color: #ffffff !important;
-			background-color: rgba(0, 0, 0, 0.1);
-		}
-
-		.navbar-nav .nav-item.active .nav-link {
-			color: #ffffff !important;
-			font-weight: bold;
-		}
-
-		/* Dropdown toggle styling */
-		.navbar-nav .dropdown-toggle {
-			color: #ffffff !important;
-		}
-
-		/* Bootstrap 5 navbar spacing fixes */
-		.navbar-nav .nav-item {
-			margin: 0;
-		}
-
-		.navbar-nav .dropdown-menu {
-			position: absolute;
-		}
-
-		/* Prevent menu items from shifting when dropdown opens */
-		.navbar-nav .dropdown {
-			position: relative;
 		}
 		/* Carousel indicator styling - consistent for all states */
 		.carousel-indicators button {
@@ -130,29 +88,47 @@
 		}
 
 
-			
+			/* Container and content styling handled by theme.css */
 			.container {
 				padding:0px;
 				padding-bottom:100px;
-				border-radius:4px 4px 0px 0px;
-				color:black;
 			}
-			
+
 			#a, #b {
-				position:absolute; 
+				position:absolute;
 				top: 0px;
 				width:100%;
 				z-index:0;
-				background-color:rgba(200,200,255,0.9);
-				border-radius:0px 0px 8px 8px;
-				color:black;
 				margin-bottom:50px;
 				padding-bottom:100px;
 			}
-			
+
 			#a, #b {
 				width:98%!important;
+				max-width:530px;
 				margin: 0 auto;
+				margin-left: 13px !important;
+			}
+
+			@media (min-width: 768px) {
+				#a, #b {
+					max-width:706px;
+				}
+			}
+			@media (min-width: 992px) {
+				#a, #b {
+					max-width:941px;
+				}
+			}
+			@media (min-width: 1200px) {
+				#a, #b {
+					max-width:1117px;
+				}
+			}
+			@media (min-width: 1400px) {
+				#a, #b {
+					max-width:1294px;
+				}
 			}
 			
 			#main>div {
