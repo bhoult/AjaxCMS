@@ -2,15 +2,15 @@
 /* Dynamically generates animated electrical schematics */
 
 // Configuration
-var grid_size = 40;
+var grid_size = 35;
 var component_lifetime = 300; // frames before component fades
 var fade_duration = 60; // frames to fade in/out
 var line_color = "#333";
 var component_color = "#000";
 var trace_color = "#2a5";
 var background_color = "#f5f5f0";
-var new_component_chance = 0.02; // probability per frame
-var max_components = 15;
+var new_component_chance = 0.06; // probability per frame (increased for more density)
+var max_components = 35; // increased for more components on screen
 
 // Component types
 var component_types = ['resistor', 'capacitor', 'ic', 'transistor', 'diode', 'ground', 'vcc'];
