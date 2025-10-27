@@ -4,7 +4,7 @@ page_width = window.innerWidth;
 page_height = window.innerHeight;
 
 // Animation configuration
-scroll_parallax_factor = 0.3;
+scroll_parallax_factor = 0.2; // Reduced for more subtle parallax
 layer_scroll_speed = -0.5;
 
 // Nighttime elements
@@ -133,10 +133,11 @@ Building.prototype.draw = function(ctx, frame, scrollY) {
 	var x = (this.x + this.scrollOffset) % (page_width + 200);
 	if (x < -200) x += (page_width + 200);
 
-	// Parallax: move the ground level down as user scrolls, buildings stay attached to ground
-	// Closer buildings (smaller depth) move less, farther buildings move more
-	var ground_parallax = scrollY * scroll_parallax_factor * (this.depth * 0.3);
-	var y = page_height - height + ground_parallax;
+	// Start buildings higher (base position at 60% of screen height instead of bottom)
+	// Parallax effect is more subtle to keep all layers visible
+	var baseGroundLevel = page_height * 0.6;
+	var ground_parallax = scrollY * scroll_parallax_factor * (this.depth * 0.15);
+	var y = baseGroundLevel - height + ground_parallax;
 
 	// Draw building body with vertical gradient for depth
 	var gradient = ctx.createLinearGradient(x, y, x, y + height);
@@ -268,15 +269,15 @@ Mountain.prototype.update = function(frame) {
 
 Mountain.prototype.draw = function(ctx, scrollY) {
 	var scale = 1 / (this.depth + 2);
-	var baseY = page_height * 0.75;
+	var baseY = page_height * 0.65; // Position mountains closer to building base
 
 	// Blue atmospheric tint for distance
 	var blueTint = Math.min(80, this.depth * 25);
 	var darkness = Math.max(0, 30 - this.depth * 5);
 	ctx.fillStyle = 'rgb(' + (darkness + blueTint) + ', ' + (darkness + blueTint) + ', ' + (darkness + blueTint * 1.3) + ')';
 
-	// Mountains move down more than buildings (they're farther back)
-	var parallax_offset = scrollY * scroll_parallax_factor * (this.depth + 5) * 0.15;
+	// Mountains move down more than buildings (they're farther back) but reduced intensity
+	var parallax_offset = scrollY * scroll_parallax_factor * (this.depth + 3) * 0.1;
 
 	ctx.beginPath();
 	ctx.moveTo(-10, page_height);
