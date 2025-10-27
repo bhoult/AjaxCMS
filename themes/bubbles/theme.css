@@ -69,7 +69,8 @@ h6 { font-size: 1.1rem; }
 
 /* ===== Container and Content Spacing ===== */
 .container {
-    padding: 1rem !important;
+    padding: 0 1rem !important;
+    padding-bottom: 100px !important;
 }
 
 p {
