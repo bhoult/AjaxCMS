@@ -125,7 +125,8 @@ Building.prototype.update = function(frame) {
 };
 
 Building.prototype.draw = function(ctx, frame, scrollY) {
-	var scale = 1 / (this.depth * 0.5 + 1);
+	// Make foreground buildings larger - adjust scale calculation
+	var scale = 1 / (this.depth * 0.4 + 1);
 	var width = this.width * scale;
 	var height = this.height * scale;
 
@@ -141,7 +142,22 @@ Building.prototype.draw = function(ctx, frame, scrollY) {
 	// Flip the sign and reduce intensity
 	var parallax_offset = -scrollY * scroll_parallax_factor * depthFromCenter * 0.15;
 
+	// Clamp parallax so foreground buildings' bottoms never become visible
+	if (this.depth === 0) {
+		// For foreground, limit upward movement to 80% of building height
+		parallax_offset = Math.min(parallax_offset, height * 0.8);
+	}
+
 	var y = page_height - height - parallax_offset;
+
+	// Apply blur to foreground layers for depth of field effect
+	if (this.depth === 0) {
+		ctx.filter = 'blur(2px)';
+	} else if (this.depth === 1) {
+		ctx.filter = 'blur(1px)';
+	} else {
+		ctx.filter = 'none';
+	}
 
 	// Draw building body with vertical gradient for depth
 	var gradient = ctx.createLinearGradient(x, y, x, y + height);
@@ -234,6 +250,9 @@ Building.prototype.draw = function(ctx, frame, scrollY) {
 	ctx.moveTo(x + width - 1, y);
 	ctx.lineTo(x + width - 1, y + height);
 	ctx.stroke();
+
+	// Reset filter for next building
+	ctx.filter = 'none';
 };
 
 // Mountain object
