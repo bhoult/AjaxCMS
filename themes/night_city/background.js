@@ -129,15 +129,13 @@ Building.prototype.draw = function(ctx, frame, scrollY) {
 	var width = this.width * scale;
 	var height = this.height * scale;
 
-	// Calculate position with parallax
+	// Calculate position with horizontal parallax
 	var x = (this.x + this.scrollOffset) % (page_width + 200);
 	if (x < -200) x += (page_width + 200);
 
-	// Buildings anchored to bottom of screen
-	// Parallax: foreground (depth 0) moves MORE, background (depth 4) moves LESS
-	// Formula: divide by (depth + 1) so depth 0 = full effect, depth 4 = 1/5 effect
-	var parallax_offset = scrollY * scroll_parallax_factor / (this.depth + 1);
-	var y = page_height - height - parallax_offset;
+	// Buildings always stay grounded at bottom - NO vertical parallax
+	// Depth is created through horizontal scrolling speed differences only
+	var y = page_height - height;
 
 	// Draw building body with vertical gradient for depth
 	var gradient = ctx.createLinearGradient(x, y, x, y + height);
@@ -269,16 +267,16 @@ Mountain.prototype.update = function(frame) {
 
 Mountain.prototype.draw = function(ctx, scrollY) {
 	var scale = 1 / (this.depth + 2);
-	var baseY = page_height * 0.75;
+	var baseY = page_height * 0.7;
 
 	// Blue atmospheric tint for distance
 	var blueTint = Math.min(80, this.depth * 25);
 	var darkness = Math.max(0, 30 - this.depth * 5);
 	ctx.fillStyle = 'rgb(' + (darkness + blueTint) + ', ' + (darkness + blueTint) + ', ' + (darkness + blueTint * 1.3) + ')';
 
-	// Mountains are far back so move very little (large divisor)
-	// Deeper mountains move even less
-	var parallax_offset = scrollY * scroll_parallax_factor / (this.depth + 6);
+	// Very subtle vertical parallax for mountains only (they're far background)
+	// When scrolling down, mountains move up slightly revealing more sky
+	var parallax_offset = scrollY * 0.05;
 
 	ctx.beginPath();
 	ctx.moveTo(-10, page_height);
