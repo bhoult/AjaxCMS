@@ -126,7 +126,7 @@ a:focus {
                 0 4px 16px rgba(79, 172, 254, 0.2);
     border: 2px solid rgba(255, 255, 255, 0.3) !important;
     padding: 0.5rem 1rem !important;
-    border-radius: 0 0 25px 25px !important;
+    border-radius: 0 0 15px 15px !important;
     position: relative;
     overflow: visible;
 }
@@ -139,7 +139,7 @@ a:focus {
     right: -2px;
     bottom: -2px;
     background: linear-gradient(45deg, var(--bubble-pink), var(--bubble-purple), var(--bubble-blue), var(--bubble-teal));
-    border-radius: 0 0 25px 25px;
+    border-radius: 0 0 15px 15px;
     z-index: -1;
     opacity: 0;
     transition: opacity 0.3s ease;
