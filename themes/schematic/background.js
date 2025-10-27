@@ -440,6 +440,8 @@ function Wire(comp1, comp2) {
     this.y1 = comp1.y;
     this.x2 = comp2.x;
     this.y2 = comp2.y;
+    this.age = 0;
+    this.seekingDuration = 60 + Math.floor(Math.random() * 60); // 60-120 frames of seeking
 
     // Decide routing direction once
     this.routeHorizontalFirst = Math.random() > 0.5;
@@ -450,7 +452,20 @@ function Wire(comp1, comp2) {
 }
 
 Wire.prototype.draw = function(ctx) {
-    ctx.globalAlpha = 1;
+    // Seeking phase - flicker as connection is established
+    if (this.age < this.seekingDuration) {
+        // Randomly skip drawing to create flicker effect
+        if (Math.random() < 0.4) {
+            return; // Skip this frame
+        }
+
+        // Vary opacity during seeking
+        ctx.globalAlpha = 0.3 + Math.random() * 0.5;
+    } else {
+        // Stable connection
+        ctx.globalAlpha = 1;
+    }
+
     ctx.strokeStyle = trace_color;
     ctx.lineWidth = 2;
 
@@ -553,6 +568,7 @@ function drawFrame(ctx, frame) {
     
     // Draw wires (permanent - never removed)
     for (var i = 0; i < wires.length; i++) {
+        wires[i].age++;
         wires[i].draw(ctx);
     }
     
