@@ -152,8 +152,12 @@ Building.prototype.draw = function(ctx, frame, scrollY) {
 		parallax_offset = Math.min(parallax_offset, height * 0.8);
 	}
 
-	// Buildings anchored to bottom of screen
-	var y = page_height - height - parallax_offset;
+	// Start background layers higher to show more depth initially
+	// More distant layers (higher depth) positioned higher up
+	var depthOffset = this.depth * 80; // Each depth layer starts 80px higher
+
+	// Buildings anchored to bottom of screen with depth offset
+	var y = page_height - height - parallax_offset - depthOffset;
 
 	// Draw building body with vertical gradient for depth
 	var gradient = ctx.createLinearGradient(x, y, x, y + height);
@@ -285,7 +289,11 @@ Mountain.prototype.update = function(frame) {
 
 Mountain.prototype.draw = function(ctx, scrollY) {
 	var scale = 1 / (this.depth + 2);
-	var baseY = page_height * 0.7;
+
+	// Start background mountains higher to show more depth initially
+	// Each mountain layer starts progressively higher
+	var depthOffset = this.depth * 100; // Each depth layer starts 100px higher
+	var baseY = page_height * 0.7 - depthOffset;
 
 	// Blue atmospheric tint for distance
 	var blueTint = Math.min(80, this.depth * 25);
