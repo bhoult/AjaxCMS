@@ -50,14 +50,16 @@
 			body {
 				overflow-x: hidden;
 				padding-bottom: 100px;
+				margin: 0;
 			}
 			
 			#background {
 			  position:fixed;
-			  z-index:-1;
-			  width:100%;
-			  height:100%;
+			  z-index:0;
+			  top:0;
+			  left:0;
 			  background: linear-gradient(#FFF, #225);
+			  /* Width and height set via JavaScript to prevent scaling */
 			}
 			#background-div {
 			  position:fixed;
@@ -65,12 +67,14 @@
 			  width:100%;
 			  height:100%;
 			  overflow:hidden;
+			  pointer-events:none;
 			}
 			
 			nav.navbar {
 				margin-bottom:0px;
 				z-index:1;
 				border-radius:0px 0px 10px 10px;
+				pointer-events:auto;
 			}
 			
 			.container {
@@ -90,6 +94,11 @@
 				color:#00ff66;
 				margin-bottom:50px;
 				padding-bottom:100px;
+				pointer-events:none;
+			}
+
+			#a *, #b * {
+				pointer-events:auto;
 			}
 			
 			#main {
@@ -151,6 +160,7 @@
 				padding:5px;
 				font-size:2vw;
 				border-top: 1px solid rgba(0, 255, 102, 0.3);
+				pointer-events:auto;
 			}
 			footer a {color:#00ff66;}
 			footer a:hover {color:#66ffaa; text-shadow: 0 0 5px rgba(0, 255, 102, 0.5);}

@@ -3,7 +3,7 @@
 $('#background').css('background', '#000');
 
 // Configuration
-var cellSize = 10;  // Size of each cell in pixels
+var cellSize = 5;  // Size of each cell in pixels
 var updateSpeed = 100;  // Milliseconds between generations
 var grid = [];
 var cols, rows;
@@ -130,55 +130,50 @@ function addCellsAtMouse(mouseX, mouseY) {
 
 // Setup mouse event handlers
 function setupMouseHandlers(canvas) {
-    canvas.addEventListener('mousedown', function(e) {
-        isDrawing = true;
-        const rect = canvas.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
-        addCellsAtMouse(mouseX, mouseY);
+    // Use document for event listeners to capture all clicks
+    document.addEventListener('mousedown', function(e) {
+        // Only draw if clicking on non-interactive elements
+        if (e.target === canvas || e.target.tagName === 'BODY' || e.target.id === 'background-div') {
+            isDrawing = true;
+            // Canvas is fixed, so use clientX/clientY (viewport coordinates)
+            addCellsAtMouse(e.clientX, e.clientY);
+        }
     });
 
-    canvas.addEventListener('mouseup', function() {
+    document.addEventListener('mouseup', function() {
         isDrawing = false;
     });
 
-    canvas.addEventListener('mouseleave', function() {
+    document.addEventListener('mouseleave', function() {
         isDrawing = false;
     });
 
-    canvas.addEventListener('mousemove', function(e) {
+    document.addEventListener('mousemove', function(e) {
         if (isDrawing) {
-            const rect = canvas.getBoundingClientRect();
-            const mouseX = e.clientX - rect.left;
-            const mouseY = e.clientY - rect.top;
-            addCellsAtMouse(mouseX, mouseY);
+            addCellsAtMouse(e.clientX, e.clientY);
         }
     });
 
     // Touch support for mobile devices
-    canvas.addEventListener('touchstart', function(e) {
-        e.preventDefault();
-        isDrawing = true;
-        const rect = canvas.getBoundingClientRect();
+    document.addEventListener('touchstart', function(e) {
         const touch = e.touches[0];
-        const mouseX = touch.clientX - rect.left;
-        const mouseY = touch.clientY - rect.top;
-        addCellsAtMouse(mouseX, mouseY);
+        if (e.target === canvas || e.target.tagName === 'BODY' || e.target.id === 'background-div') {
+            e.preventDefault();
+            isDrawing = true;
+            addCellsAtMouse(touch.clientX, touch.clientY);
+        }
     });
 
-    canvas.addEventListener('touchend', function(e) {
+    document.addEventListener('touchend', function(e) {
         e.preventDefault();
         isDrawing = false;
     });
 
-    canvas.addEventListener('touchmove', function(e) {
+    document.addEventListener('touchmove', function(e) {
         e.preventDefault();
         if (isDrawing) {
-            const rect = canvas.getBoundingClientRect();
             const touch = e.touches[0];
-            const mouseX = touch.clientX - rect.left;
-            const mouseY = touch.clientY - rect.top;
-            addCellsAtMouse(mouseX, mouseY);
+            addCellsAtMouse(touch.clientX, touch.clientY);
         }
     });
 }
@@ -190,10 +185,16 @@ startBackground = function() {
     // Set up the background canvas
     canvas = document.getElementById('background');
     ctx = canvas.getContext("2d");
+
+    // Get exact dimensions
     page_width = window.innerWidth;
     page_height = window.innerHeight;
-    ctx.canvas.width = page_width;
-    ctx.canvas.height = page_height;
+
+    // Set canvas internal dimensions AND CSS dimensions to match viewport exactly
+    canvas.width = page_width;
+    canvas.height = page_height;
+    canvas.style.setProperty('width', page_width + 'px', 'important');
+    canvas.style.setProperty('height', page_height + 'px', 'important');
 
     // Calculate grid dimensions
     cols = Math.floor(page_width / cellSize);
