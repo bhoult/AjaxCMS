@@ -13,7 +13,7 @@ var new_component_chance = 0.06; // probability per frame (increased for more de
 var max_components = 35; // increased for more components on screen
 
 // Component types
-var component_types = ['resistor', 'capacitor', 'ic', 'transistor', 'diode', 'ground', 'vcc'];
+var component_types = ['resistor', 'capacitor', 'ic', 'transistor', 'diode', 'ground', 'vcc', 'led', 'inductor', 'fuse', 'switch', 'potentiometer', 'crystal', 'opamp', 'battery', 'relay'];
 
 // Component class
 function Component(type, x, y) {
@@ -29,20 +29,46 @@ function Component(type, x, y) {
 Component.prototype.generateValue = function() {
     switch(this.type) {
         case 'resistor':
-            var values = ['1k', '10k', '100k', '1M', '10R', '100R'];
+            var values = ['1k', '10k', '100k', '1M', '10R', '100R', '4k7', '2k2'];
             return values[Math.floor(Math.random() * values.length)];
         case 'capacitor':
-            var values = ['10µF', '100µF', '1µF', '10nF', '100nF', '1nF'];
+            var values = ['10µF', '100µF', '1µF', '10nF', '100nF', '1nF', '22pF'];
             return values[Math.floor(Math.random() * values.length)];
         case 'transistor':
-            var values = ['2N2222', 'BC547', '2N3904', 'TIP31'];
+            var values = ['2N2222', 'BC547', '2N3904', 'TIP31', 'IRF540'];
             return values[Math.floor(Math.random() * values.length)];
         case 'diode':
-            var values = ['1N4148', '1N4007', 'LED'];
+            var values = ['1N4148', '1N4007', '1N5819'];
+            return values[Math.floor(Math.random() * values.length)];
+        case 'led':
+            var values = ['Red', 'Green', 'Blue', 'Yellow'];
+            return values[Math.floor(Math.random() * values.length)];
+        case 'inductor':
+            var values = ['10µH', '100µH', '1mH', '10mH'];
             return values[Math.floor(Math.random() * values.length)];
         case 'ic':
-            var values = ['555', 'LM358', 'LM7805', 'ATmega'];
+            var values = ['555', 'LM358', 'LM7805', 'ATmega', '74HC00'];
             return values[Math.floor(Math.random() * values.length)];
+        case 'fuse':
+            var values = ['1A', '2A', '5A', '500mA'];
+            return values[Math.floor(Math.random() * values.length)];
+        case 'potentiometer':
+            var values = ['10k', '100k', '1M'];
+            return values[Math.floor(Math.random() * values.length)];
+        case 'crystal':
+            var values = ['16MHz', '8MHz', '32kHz'];
+            return values[Math.floor(Math.random() * values.length)];
+        case 'opamp':
+            var values = ['LM741', 'TL071', 'LM358'];
+            return values[Math.floor(Math.random() * values.length)];
+        case 'battery':
+            var values = ['9V', '5V', '3.3V'];
+            return values[Math.floor(Math.random() * values.length)];
+        case 'relay':
+            var values = ['SPDT', 'DPDT', '5V'];
+            return values[Math.floor(Math.random() * values.length)];
+        case 'switch':
+            return 'SW';
         default:
             return '';
     }
@@ -80,6 +106,33 @@ Component.prototype.draw = function(ctx) {
             break;
         case 'vcc':
             this.drawVCC(ctx);
+            break;
+        case 'led':
+            this.drawLED(ctx);
+            break;
+        case 'inductor':
+            this.drawInductor(ctx);
+            break;
+        case 'fuse':
+            this.drawFuse(ctx);
+            break;
+        case 'switch':
+            this.drawSwitch(ctx);
+            break;
+        case 'potentiometer':
+            this.drawPotentiometer(ctx);
+            break;
+        case 'crystal':
+            this.drawCrystal(ctx);
+            break;
+        case 'opamp':
+            this.drawOpAmp(ctx);
+            break;
+        case 'battery':
+            this.drawBattery(ctx);
+            break;
+        case 'relay':
+            this.drawRelay(ctx);
             break;
     }
     
@@ -217,39 +270,205 @@ Component.prototype.drawVCC = function(ctx) {
     ctx.fillText('+5V', -10, -5);
 };
 
-// Wire connection class
+Component.prototype.drawLED = function(ctx) {
+    // Same as diode but with arrows showing light emission
+    ctx.beginPath();
+    ctx.moveTo(-30, 0);
+    ctx.lineTo(-10, 0);
+    ctx.moveTo(-10, -10);
+    ctx.lineTo(-10, 10);
+    ctx.lineTo(10, 0);
+    ctx.lineTo(-10, -10);
+    ctx.moveTo(10, -10);
+    ctx.lineTo(10, 10);
+    ctx.moveTo(10, 0);
+    ctx.lineTo(30, 0);
+    ctx.stroke();
+    // Light arrows
+    ctx.beginPath();
+    ctx.moveTo(5, -15);
+    ctx.lineTo(10, -20);
+    ctx.lineTo(7, -20);
+    ctx.lineTo(8, -17);
+    ctx.moveTo(12, -15);
+    ctx.lineTo(17, -20);
+    ctx.lineTo(14, -20);
+    ctx.lineTo(15, -17);
+    ctx.stroke();
+};
+
+Component.prototype.drawInductor = function(ctx) {
+    // Coiled line
+    ctx.beginPath();
+    ctx.moveTo(-30, 0);
+    ctx.lineTo(-20, 0);
+    for (var i = -3; i <= 3; i++) {
+        ctx.arc(-20 + i * 7 + 3.5, 0, 3.5, Math.PI, 0, false);
+    }
+    ctx.lineTo(30, 0);
+    ctx.stroke();
+};
+
+Component.prototype.drawFuse = function(ctx) {
+    ctx.beginPath();
+    ctx.moveTo(-30, 0);
+    ctx.lineTo(-15, 0);
+    ctx.rect(-15, -8, 30, 16);
+    ctx.moveTo(15, 0);
+    ctx.lineTo(30, 0);
+    ctx.stroke();
+};
+
+Component.prototype.drawSwitch = function(ctx) {
+    ctx.beginPath();
+    ctx.moveTo(-30, 0);
+    ctx.lineTo(-10, 0);
+    ctx.moveTo(-10, 0);
+    ctx.lineTo(5, -12);
+    ctx.moveTo(10, 0);
+    ctx.lineTo(30, 0);
+    ctx.stroke();
+    // Terminals
+    ctx.beginPath();
+    ctx.arc(-10, 0, 2, 0, Math.PI * 2);
+    ctx.arc(10, 0, 2, 0, Math.PI * 2);
+    ctx.fill();
+};
+
+Component.prototype.drawPotentiometer = function(ctx) {
+    // Resistor with arrow
+    ctx.beginPath();
+    ctx.moveTo(-30, 0);
+    ctx.lineTo(-20, 0);
+    ctx.lineTo(-15, -8);
+    ctx.lineTo(-5, 8);
+    ctx.lineTo(5, -8);
+    ctx.lineTo(15, 8);
+    ctx.lineTo(20, 0);
+    ctx.lineTo(30, 0);
+    ctx.stroke();
+    // Arrow
+    ctx.beginPath();
+    ctx.moveTo(0, -20);
+    ctx.lineTo(0, -5);
+    ctx.lineTo(-3, -8);
+    ctx.moveTo(0, -5);
+    ctx.lineTo(3, -8);
+    ctx.stroke();
+};
+
+Component.prototype.drawCrystal = function(ctx) {
+    // Rectangle with vertical lines
+    ctx.beginPath();
+    ctx.moveTo(-30, 0);
+    ctx.lineTo(-15, 0);
+    ctx.moveTo(-10, -12);
+    ctx.lineTo(-10, 12);
+    ctx.rect(-8, -10, 16, 20);
+    ctx.moveTo(10, -12);
+    ctx.lineTo(10, 12);
+    ctx.moveTo(15, 0);
+    ctx.lineTo(30, 0);
+    ctx.stroke();
+};
+
+Component.prototype.drawOpAmp = function(ctx) {
+    // Triangle with inputs
+    ctx.beginPath();
+    ctx.moveTo(-20, -20);
+    ctx.lineTo(-20, 20);
+    ctx.lineTo(20, 0);
+    ctx.lineTo(-20, -20);
+    ctx.stroke();
+    // Inputs
+    ctx.beginPath();
+    ctx.moveTo(-30, -10);
+    ctx.lineTo(-20, -10);
+    ctx.moveTo(-30, 10);
+    ctx.lineTo(-20, 10);
+    ctx.moveTo(20, 0);
+    ctx.lineTo(30, 0);
+    ctx.stroke();
+    // + and - signs
+    ctx.font = '12px monospace';
+    ctx.fillText('+', -16, -6);
+    ctx.fillText('-', -16, 14);
+};
+
+Component.prototype.drawBattery = function(ctx) {
+    ctx.beginPath();
+    ctx.moveTo(-30, 0);
+    ctx.lineTo(-10, 0);
+    ctx.moveTo(-10, -15);
+    ctx.lineTo(-10, 15);
+    ctx.moveTo(-5, -10);
+    ctx.lineTo(-5, 10);
+    ctx.moveTo(0, -15);
+    ctx.lineTo(0, 15);
+    ctx.moveTo(5, -10);
+    ctx.lineTo(5, 10);
+    ctx.moveTo(10, 0);
+    ctx.lineTo(30, 0);
+    ctx.stroke();
+};
+
+Component.prototype.drawRelay = function(ctx) {
+    // Coil
+    ctx.strokeRect(-15, -18, 30, 16);
+    // Contacts
+    ctx.beginPath();
+    ctx.moveTo(-30, 10);
+    ctx.lineTo(-15, 10);
+    ctx.moveTo(-15, 10);
+    ctx.lineTo(-5, 3);
+    ctx.moveTo(0, 10);
+    ctx.lineTo(15, 10);
+    ctx.moveTo(15, 10);
+    ctx.lineTo(30, 10);
+    ctx.stroke();
+    // Terminals
+    ctx.beginPath();
+    ctx.arc(-15, 10, 2, 0, Math.PI * 2);
+    ctx.arc(0, 10, 2, 0, Math.PI * 2);
+    ctx.arc(15, 10, 2, 0, Math.PI * 2);
+    ctx.fill();
+};
+
+// Wire connection class - stores positions for permanent connections
 function Wire(comp1, comp2) {
-    this.comp1 = comp1;
-    this.comp2 = comp2;
-    this.age = 0;
+    this.x1 = comp1.x;
+    this.y1 = comp1.y;
+    this.x2 = comp2.x;
+    this.y2 = comp2.y;
+
+    // Decide routing direction once
+    this.routeHorizontalFirst = Math.random() > 0.5;
+
+    // Calculate midpoints once
+    this.midX = (this.x1 + this.x2) / 2;
+    this.midY = (this.y1 + this.y2) / 2;
 }
 
 Wire.prototype.draw = function(ctx) {
-    var alpha = Math.min(this.comp1.calculateAlpha(), this.comp2.calculateAlpha());
-    if (alpha <= 0) return;
-    
-    ctx.globalAlpha = alpha;
+    ctx.globalAlpha = 1;
     ctx.strokeStyle = trace_color;
     ctx.lineWidth = 2;
-    
-    // Draw orthogonal wire (Manhattan routing)
+
+    // Draw orthogonal wire (Manhattan routing) using stored positions
     ctx.beginPath();
-    ctx.moveTo(this.comp1.x, this.comp1.y);
-    
-    var midX = (this.comp1.x + this.comp2.x) / 2;
-    var midY = (this.comp1.y + this.comp2.y) / 2;
-    
-    if (Math.random() > 0.5) {
-        ctx.lineTo(midX, this.comp1.y);
-        ctx.lineTo(midX, this.comp2.y);
+    ctx.moveTo(this.x1, this.y1);
+
+    if (this.routeHorizontalFirst) {
+        ctx.lineTo(this.midX, this.y1);
+        ctx.lineTo(this.midX, this.y2);
     } else {
-        ctx.lineTo(this.comp1.x, midY);
-        ctx.lineTo(this.comp2.x, midY);
+        ctx.lineTo(this.x1, this.midY);
+        ctx.lineTo(this.x2, this.midY);
     }
-    
-    ctx.lineTo(this.comp2.x, this.comp2.y);
+
+    ctx.lineTo(this.x2, this.y2);
     ctx.stroke();
-    
+
     ctx.globalAlpha = 1;
 };
 
