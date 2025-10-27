@@ -873,6 +873,19 @@ img:hover {
     box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.15);
 }
 
+/* Remove borders from logo and background gears */
+.navbar-brand img,
+#background-div img {
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.navbar-brand img:hover,
+#background-div img:hover {
+    transform: none !important;
+    box-shadow: none !important;
+}
+
 /* ===== Horizontal Rule - Division Line ===== */
 hr {
     border: none;
