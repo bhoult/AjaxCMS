@@ -30,8 +30,8 @@ function drawFrame(frame) {
 		var position = (frame + layers[i-1].position) * layer_scroll_speed / i;
 		layers[i-1].jqo.css("background-position", Math.round(position)+"px");
 
-		// Height of successive layers - add extra height for deeper layers to prevent cropping
-	    var height = (layer_height) / i + (layer_height * 0.5); // Add 50% extra height
+		// Height of successive layers
+	    var height = (layer_height) / i;
 		layers[i-1].jqo.css("height", Math.round(height)+"px");
 
 		// Layer spread based on scroll position
