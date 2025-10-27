@@ -139,8 +139,8 @@ Building.prototype.draw = function(ctx, frame, scrollY) {
 	// Background (depth 3-4) moves DOWN as you scroll down (positive offset)
 	var centerDepth = 2;
 	var depthFromCenter = this.depth - centerDepth;
-	// Flip the sign and reduce intensity
-	var parallax_offset = -scrollY * scroll_parallax_factor * depthFromCenter * 0.15;
+	// Reduced parallax intensity by 50%: 0.15 → 0.075
+	var parallax_offset = -scrollY * scroll_parallax_factor * depthFromCenter * 0.075;
 
 	// Clamp parallax so foreground buildings' bottoms never become visible
 	if (this.depth === 0) {
@@ -148,7 +148,9 @@ Building.prototype.draw = function(ctx, frame, scrollY) {
 		parallax_offset = Math.min(parallax_offset, height * 0.8);
 	}
 
-	var y = page_height - height - parallax_offset;
+	// Camera starts 30% lower (buildings appear higher on screen)
+	var cameraLowerOffset = page_height * 0.3;
+	var y = page_height - height - parallax_offset - cameraLowerOffset;
 
 	// Apply slight transparency to foreground for depth effect (much faster than blur)
 	if (this.depth === 0) {
@@ -292,7 +294,10 @@ Mountain.prototype.update = function(frame) {
 
 Mountain.prototype.draw = function(ctx, scrollY) {
 	var scale = 1 / (this.depth + 2);
-	var baseY = page_height * 0.7;
+
+	// Camera starts 30% lower (adjust base position)
+	var cameraLowerOffset = page_height * 0.3;
+	var baseY = page_height * 0.7 - cameraLowerOffset;
 
 	// Blue atmospheric tint for distance
 	var blueTint = Math.min(80, this.depth * 25);
@@ -304,8 +309,8 @@ Mountain.prototype.draw = function(ctx, scrollY) {
 	var centerDepth = 2;
 	var mountainEquivalentDepth = 5 + this.depth;
 	var depthFromCenter = mountainEquivalentDepth - centerDepth;
-	// Flip sign and reduce intensity
-	var parallax_offset = -scrollY * scroll_parallax_factor * depthFromCenter * 0.15;
+	// Reduced parallax intensity by 50%: 0.15 → 0.075
+	var parallax_offset = -scrollY * scroll_parallax_factor * depthFromCenter * 0.075;
 
 	ctx.beginPath();
 	ctx.moveTo(-10, page_height);
