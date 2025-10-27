@@ -133,9 +133,14 @@ Building.prototype.draw = function(ctx, frame, scrollY) {
 	var x = (this.x + this.scrollOffset) % (page_width + 200);
 	if (x < -200) x += (page_width + 200);
 
-	// Buildings always stay grounded at bottom - NO vertical parallax
-	// Depth is created through horizontal scrolling speed differences only
-	var y = page_height - height;
+	// Center-focused parallax: middle layer (depth 2) stays fixed
+	// Foreground (depth 0-1) moves UP as you scroll down
+	// Background (depth 3-4) moves DOWN as you scroll down
+	var centerDepth = 2;
+	var depthFromCenter = this.depth - centerDepth;
+	var parallax_offset = scrollY * scroll_parallax_factor * depthFromCenter * 0.5;
+
+	var y = page_height - height - parallax_offset;
 
 	// Draw building body with vertical gradient for depth
 	var gradient = ctx.createLinearGradient(x, y, x, y + height);
@@ -274,9 +279,12 @@ Mountain.prototype.draw = function(ctx, scrollY) {
 	var darkness = Math.max(0, 30 - this.depth * 5);
 	ctx.fillStyle = 'rgb(' + (darkness + blueTint) + ', ' + (darkness + blueTint) + ', ' + (darkness + blueTint * 1.3) + ')';
 
-	// Very subtle vertical parallax for mountains only (they're far background)
-	// When scrolling down, mountains move up slightly revealing more sky
-	var parallax_offset = scrollY * 0.05;
+	// Mountains are far background, move DOWN more than background buildings
+	// Center is at building depth 2, mountains are like depth 5-7
+	var centerDepth = 2;
+	var mountainEquivalentDepth = 5 + this.depth;
+	var depthFromCenter = mountainEquivalentDepth - centerDepth;
+	var parallax_offset = scrollY * scroll_parallax_factor * depthFromCenter * 0.5;
 
 	ctx.beginPath();
 	ctx.moveTo(-10, page_height);
