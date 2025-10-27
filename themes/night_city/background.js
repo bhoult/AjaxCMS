@@ -133,10 +133,9 @@ Building.prototype.draw = function(ctx, frame, scrollY) {
 	var x = (this.x + this.scrollOffset) % (page_width + 200);
 	if (x < -200) x += (page_width + 200);
 
-	var parallax_offset = scrollY * scroll_parallax_factor * (1 / (this.depth + 1));
-
-	// Anchor to bottom of screen - subtract parallax to move up when scrolling down
-	var y = page_height - height - parallax_offset;
+	// Buildings always stay anchored to bottom - no vertical parallax for buildings
+	// Parallax only affects mountains and sky elements
+	var y = page_height - height;
 
 	// Draw building body with vertical gradient for depth
 	var gradient = ctx.createLinearGradient(x, y, x, y + height);
