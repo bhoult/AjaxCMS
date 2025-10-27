@@ -4,7 +4,7 @@ page_width = window.innerWidth;
 page_height = window.innerHeight;
 
 // Animation configuration
-scroll_parallax_factor = 0.2; // Reduced for more subtle parallax
+scroll_parallax_factor = 0.4; // Increased for more noticeable parallax
 layer_scroll_speed = -0.5;
 
 // Nighttime elements
@@ -133,11 +133,11 @@ Building.prototype.draw = function(ctx, frame, scrollY) {
 	var x = (this.x + this.scrollOffset) % (page_width + 200);
 	if (x < -200) x += (page_width + 200);
 
-	// Start buildings higher (base position at 60% of screen height instead of bottom)
-	// Parallax effect is more subtle to keep all layers visible
-	var baseGroundLevel = page_height * 0.6;
-	var ground_parallax = scrollY * scroll_parallax_factor * (this.depth * 0.15);
-	var y = baseGroundLevel - height + ground_parallax;
+	// Buildings anchored to bottom of screen
+	// Parallax: foreground (depth 0) moves MORE, background (depth 4) moves LESS
+	// Formula: divide by (depth + 1) so depth 0 = full effect, depth 4 = 1/5 effect
+	var parallax_offset = scrollY * scroll_parallax_factor / (this.depth + 1);
+	var y = page_height - height - parallax_offset;
 
 	// Draw building body with vertical gradient for depth
 	var gradient = ctx.createLinearGradient(x, y, x, y + height);
@@ -269,19 +269,20 @@ Mountain.prototype.update = function(frame) {
 
 Mountain.prototype.draw = function(ctx, scrollY) {
 	var scale = 1 / (this.depth + 2);
-	var baseY = page_height * 0.65; // Position mountains closer to building base
+	var baseY = page_height * 0.75;
 
 	// Blue atmospheric tint for distance
 	var blueTint = Math.min(80, this.depth * 25);
 	var darkness = Math.max(0, 30 - this.depth * 5);
 	ctx.fillStyle = 'rgb(' + (darkness + blueTint) + ', ' + (darkness + blueTint) + ', ' + (darkness + blueTint * 1.3) + ')';
 
-	// Mountains move down more than buildings (they're farther back) but reduced intensity
-	var parallax_offset = scrollY * scroll_parallax_factor * (this.depth + 3) * 0.1;
+	// Mountains are far back so move very little (large divisor)
+	// Deeper mountains move even less
+	var parallax_offset = scrollY * scroll_parallax_factor / (this.depth + 6);
 
 	ctx.beginPath();
 	ctx.moveTo(-10, page_height);
-	ctx.lineTo(-10, baseY + parallax_offset);
+	ctx.lineTo(-10, baseY - parallax_offset);
 
 	// Draw smooth curve through points
 	for (var i = 0; i < this.points.length; i++) {
@@ -289,7 +290,7 @@ Mountain.prototype.draw = function(ctx, scrollY) {
 		var x = (point.x + this.scrollOffset) % (page_width + 400);
 		if (x < -200) x += (page_width + 400);
 
-		var y = baseY - (point.height * scale) + parallax_offset;
+		var y = baseY - (point.height * scale) - parallax_offset;
 
 		if (i === 0) {
 			ctx.lineTo(x, y);
@@ -298,7 +299,7 @@ Mountain.prototype.draw = function(ctx, scrollY) {
 			var prevPoint = this.points[i - 1];
 			var prevX = (prevPoint.x + this.scrollOffset) % (page_width + 400);
 			if (prevX < -200) prevX += (page_width + 400);
-			var prevY = baseY - (prevPoint.height * scale) + parallax_offset;
+			var prevY = baseY - (prevPoint.height * scale) - parallax_offset;
 
 			var cpX = (prevX + x) / 2;
 			var cpY = (prevY + y) / 2;
@@ -306,7 +307,7 @@ Mountain.prototype.draw = function(ctx, scrollY) {
 		}
 	}
 
-	ctx.lineTo(page_width + 10, baseY + parallax_offset);
+	ctx.lineTo(page_width + 10, baseY - parallax_offset);
 	ctx.lineTo(page_width + 10, page_height);
 	ctx.closePath();
 	ctx.fill();
