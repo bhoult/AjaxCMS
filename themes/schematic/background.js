@@ -80,7 +80,6 @@ Component.prototype.draw = function(ctx) {
     ctx.save();
     ctx.translate(this.x, this.y);
     ctx.rotate(this.rotation * Math.PI / 180);
-    ctx.scale(2, 2); // Double the component size
     ctx.globalAlpha = alpha;
 
     ctx.strokeStyle = component_color;
