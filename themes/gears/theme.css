@@ -111,21 +111,21 @@ body #background {
 }
 
 /* ===== Typography - Industrial/Technical ===== */
-@import url('https://fonts.googleapis.com/css2?family=Russo+One&family=IBM+Plex+Sans:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Teko:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap');
 
 body {
-    font-family: 'IBM Plex Sans', 'Arial', sans-serif;
-    font-size: 16px;
+    font-family: 'Teko', 'Arial', sans-serif;
+    font-size: 18px;
     line-height: 1.6;
     color: var(--steel-dark);
-    letter-spacing: 0.2px;
+    letter-spacing: 0.5px;
     font-weight: 400;
 }
 
 h1, h2, h3, h4, h5, h6 {
-    font-family: 'Russo One', 'Arial', sans-serif;
+    font-family: 'Black Ops One', 'Arial', sans-serif;
     font-weight: 400;
-    letter-spacing: 2px;
+    letter-spacing: 3px;
     text-transform: uppercase;
     color: var(--steel-dark);
     position: relative;
@@ -205,7 +205,7 @@ h6 { font-size: 1rem; }
 
 p {
     margin-bottom: 1rem;
-    font-family: 'IBM Plex Sans', sans-serif;
+    font-family: 'Teko', sans-serif;
     letter-spacing: 0.2px;
 }
 
@@ -274,7 +274,7 @@ a:focus {
 }
 
 .navbar-brand {
-    font-family: 'IBM Plex Sans', sans-serif;
+    font-family: 'Teko', sans-serif;
     font-weight: 900;
     color: #ecf0f1 !important;
     font-size: 1.4rem;
@@ -292,7 +292,7 @@ a:focus {
 
 .navbar-nav .nav-link {
     color: #bdc3c7 !important;
-    font-family: 'IBM Plex Sans', sans-serif;
+    font-family: 'Teko', sans-serif;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -351,7 +351,7 @@ a:focus {
 .dropdown-item,
 .dropdown-menu a {
     color: #bdc3c7 !important;
-    font-family: 'IBM Plex Sans', sans-serif;
+    font-family: 'Teko', sans-serif;
     font-weight: 600;
     text-transform: uppercase;
     font-size: 0.85rem;
@@ -374,7 +374,7 @@ a:focus {
 
 /* ===== Buttons - Industrial Controls ===== */
 .btn {
-    font-family: 'IBM Plex Sans', sans-serif;
+    font-family: 'Teko', sans-serif;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -643,7 +643,7 @@ a:focus {
     border-left: 5px solid;
     box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.1);
     font-weight: 600;
-    font-family: 'IBM Plex Sans', sans-serif;
+    font-family: 'Teko', sans-serif;
 }
 
 .alert-primary {
