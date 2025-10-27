@@ -32,6 +32,12 @@ function drawFrame(frame) {
 
 		// Height of successive layers
 	    var height = (layer_height) / i;
+
+		// Add extra height to the last layer (mountains) to prevent top cropping
+		if (i === layers.length) {
+			height = height * 2.5; // Make the last layer taller so mountains aren't cut off
+		}
+
 		layers[i-1].jqo.css("height", Math.round(height)+"px");
 
 		// Layer spread based on scroll position
