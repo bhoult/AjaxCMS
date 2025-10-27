@@ -129,8 +129,9 @@ Building.prototype.update = function(frame) {
 };
 
 Building.prototype.draw = function(ctx, frame, scrollY) {
-	// Make all buildings 50% bigger, with foreground relatively larger
-	var scale = 1.5 / (this.depth * 0.4 + 1);
+	// Scaling: foreground 10% larger, background 20% smaller than before
+	// depth 0: 1.65, depth 9: 0.46
+	var scale = 1.65 / (this.depth * 0.287 + 1);
 	var width = this.width * scale;
 	var height = this.height * scale;
 
@@ -138,10 +139,10 @@ Building.prototype.draw = function(ctx, frame, scrollY) {
 	var x = (this.x + this.scrollOffset) % (page_width + 200);
 	if (x < -200) x += (page_width + 200);
 
-	// Center-focused parallax: middle layer (depth 2) stays fixed
-	// Foreground (depth 0-1) moves UP as you scroll down (negative offset)
-	// Background (depth 3-4) moves DOWN as you scroll down (positive offset)
-	var centerDepth = 2;
+	// Center-focused parallax: middle layer (depth 4-5) stays fixed
+	// Foreground (depth 0-3) moves UP as you scroll down (negative offset)
+	// Background (depth 6-9) moves DOWN as you scroll down (positive offset)
+	var centerDepth = 4.5;
 	var depthFromCenter = this.depth - centerDepth;
 	// Reduced parallax intensity by 50%: 0.15 → 0.075
 	var parallax_offset = -scrollY * scroll_parallax_factor * depthFromCenter * 0.075;
@@ -154,7 +155,7 @@ Building.prototype.draw = function(ctx, frame, scrollY) {
 
 	// Start background layers higher to show more depth initially
 	// More distant layers (higher depth) positioned higher up
-	var depthOffset = this.depth * 80; // Each depth layer starts 80px higher
+	var depthOffset = this.depth * 40; // Each depth layer starts 40px higher (10 layers total)
 
 	// Buildings anchored to bottom of screen with depth offset
 	var y = page_height - height - parallax_offset - depthOffset;
@@ -292,18 +293,18 @@ Mountain.prototype.draw = function(ctx, scrollY) {
 
 	// Start background mountains higher to show more depth initially
 	// Each mountain layer starts progressively higher
-	var depthOffset = this.depth * 100; // Each depth layer starts 100px higher
+	var depthOffset = this.depth * 50; // Each depth layer starts 50px higher (6 layers total)
 	var baseY = page_height * 0.7 - depthOffset;
 
 	// Blue atmospheric tint for distance
-	var blueTint = Math.min(80, this.depth * 25);
-	var darkness = Math.max(0, 30 - this.depth * 5);
+	var blueTint = Math.min(80, this.depth * 15);
+	var darkness = Math.max(0, 30 - this.depth * 3);
 	ctx.fillStyle = 'rgb(' + (darkness + blueTint) + ', ' + (darkness + blueTint) + ', ' + (darkness + blueTint * 1.3) + ')';
 
 	// Mountains are far background, move DOWN more than background buildings
-	// Center is at building depth 2, mountains are like depth 5-7
-	var centerDepth = 2;
-	var mountainEquivalentDepth = 5 + this.depth;
+	// Center is at building depth 4.5, mountains are like depth 10-15
+	var centerDepth = 4.5;
+	var mountainEquivalentDepth = 10 + this.depth;
 	var depthFromCenter = mountainEquivalentDepth - centerDepth;
 	// Reduced parallax intensity by 50%: 0.15 → 0.075
 	var parallax_offset = -scrollY * scroll_parallax_factor * depthFromCenter * 0.075;
@@ -475,13 +476,13 @@ startBackground = function() {
 		clouds.push(new Cloud(1)); // Fast layer
 	}
 
-	// Generate mountains (3 layers)
-	for (var i = 0; i < 3; i++) {
+	// Generate mountains (6 layers)
+	for (var i = 0; i < 6; i++) {
 		mountains.push(new Mountain(i));
 	}
 
-	// Generate buildings (5 depth layers)
-	for (var depth = 0; depth < 5; depth++) {
+	// Generate buildings (10 depth layers)
+	for (var depth = 0; depth < 10; depth++) {
 		var numBuildings = 8 + Math.floor(Math.random() * 4);
 		for (var i = 0; i < numBuildings; i++) {
 			buildings.push(new Building(depth));
