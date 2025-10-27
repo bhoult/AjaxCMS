@@ -62,7 +62,7 @@ h1::after, h2::after {
 }
 
 #a, #b {
-    background: rgba(255, 255, 255, 0.95) !important;
+    background: rgba(255, 255, 255, 0.8) !important;
     border: 2px solid var(--schematic-medium);
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
     padding: 2rem;
