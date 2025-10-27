@@ -293,7 +293,7 @@ Mountain.prototype.draw = function(ctx, scrollY) {
 
 	// Distant mountains positioned lower on screen for proper perspective
 	// Each mountain layer starts progressively lower (further down)
-	var depthOffset = this.depth * 10; // Each depth layer starts 10px lower (6 layers total)
+	var depthOffset = this.depth * 5; // Each depth layer starts 5px lower (6 layers total)
 	var baseY = page_height * 0.7 + depthOffset;
 
 	// Blue atmospheric tint for distance
