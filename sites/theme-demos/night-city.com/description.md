@@ -1,1 +1,1 @@
-Procedurally generated nighttime cityscape with infinite parallax scrolling buildings and mountains. Features glowing moon, twinkling stars, drifting clouds, and flickering window lights for immersive urban atmosphere.
+Procedurally generated nighttime cityscape with 10-layer parallax scrolling buildings and rooftop details. Features enhanced twinkling stars, shooting stars, rare UFOs, glowing moon, pre-rendered blurred clouds, and dynamic window lights for immersive urban atmosphere.
