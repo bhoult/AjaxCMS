@@ -38,7 +38,7 @@ var mouseLastX = 0;
 var mouseLastY = 0;
 
 // Building animation
-var buildingPanSpeed = 0.5;  // Units per frame to pan left
+var buildingPanSpeed = 0.16;  // Units per frame to pan left (68% slower than original)
 
 ////////////////////////////////////////////////////////////////////
 // Initialization
@@ -915,6 +915,178 @@ function updateFlashLight() {
 }
 
 ////////////////////////////////////////////////////////////////////
+// Clouds
+////////////////////////////////////////////////////////////////////
+
+var clouds = [];
+var cloudTextures = [];
+
+// Generate cloud textures (adapted from Night City theme)
+function generateCloudTextures() {
+	cloudTextures = [];
+
+	var shapes = [
+		// Shape 0: Fluffy round cloud
+		function(ctx, cx, cy) {
+			ctx.ellipse(cx, cy, 40, 40, 0, 0, Math.PI * 2);
+			ctx.ellipse(cx + 30, cy - 10, 50, 50, 0, 0, Math.PI * 2);
+			ctx.ellipse(cx + 70, cy, 40, 40, 0, 0, Math.PI * 2);
+			ctx.ellipse(cx + 50, cy + 10, 35, 35, 0, 0, Math.PI * 2);
+		},
+		// Shape 1: Long stretched cloud
+		function(ctx, cx, cy) {
+			ctx.ellipse(cx, cy, 35, 35, 0, 0, Math.PI * 2);
+			ctx.ellipse(cx + 40, cy - 5, 38, 38, 0, 0, Math.PI * 2);
+			ctx.ellipse(cx + 80, cy, 35, 35, 0, 0, Math.PI * 2);
+			ctx.ellipse(cx + 115, cy + 5, 32, 32, 0, 0, Math.PI * 2);
+		},
+		// Shape 2: Compact clustered cloud
+		function(ctx, cx, cy) {
+			ctx.ellipse(cx, cy, 45, 45, 0, 0, Math.PI * 2);
+			ctx.ellipse(cx + 25, cy - 15, 40, 40, 0, 0, Math.PI * 2);
+			ctx.ellipse(cx + 50, cy - 8, 38, 38, 0, 0, Math.PI * 2);
+			ctx.ellipse(cx + 35, cy + 12, 30, 30, 0, 0, Math.PI * 2);
+		},
+		// Shape 3: Wispy cloud
+		function(ctx, cx, cy) {
+			ctx.ellipse(cx, cy, 30, 30, 0, 0, Math.PI * 2);
+			ctx.ellipse(cx + 35, cy + 8, 42, 42, 0, 0, Math.PI * 2);
+			ctx.ellipse(cx + 75, cy + 5, 28, 28, 0, 0, Math.PI * 2);
+			ctx.ellipse(cx + 55, cy - 10, 25, 25, 0, 0, Math.PI * 2);
+		},
+		// Shape 4: Tall puffy cloud
+		function(ctx, cx, cy) {
+			ctx.ellipse(cx, cy, 38, 38, 0, 0, Math.PI * 2);
+			ctx.ellipse(cx + 20, cy - 20, 45, 45, 0, 0, Math.PI * 2);
+			ctx.ellipse(cx + 45, cy - 10, 42, 42, 0, 0, Math.PI * 2);
+			ctx.ellipse(cx + 60, cy + 8, 35, 35, 0, 0, Math.PI * 2);
+			ctx.ellipse(cx + 30, cy + 15, 30, 30, 0, 0, Math.PI * 2);
+		}
+	];
+
+	for (var i = 0; i < shapes.length; i++) {
+		// Create canvas for cloud texture
+		var canvas = document.createElement('canvas');
+		canvas.width = 400;
+		canvas.height = 250;
+		var ctx = canvas.getContext('2d');
+
+		// Draw cloud shape with blur
+		ctx.filter = 'blur(8px)';
+		ctx.fillStyle = 'rgba(200, 210, 230, 1)';
+		ctx.beginPath();
+		shapes[i](ctx, 200, 125);
+		ctx.fill();
+		ctx.filter = 'none';
+
+		// Create Three.js texture from canvas
+		var texture = new THREE.Texture(canvas);
+		texture.needsUpdate = true;
+		cloudTextures.push(texture);
+	}
+
+	console.log('Generated', cloudTextures.length, 'cloud textures');
+}
+
+function Cloud(layer) {
+	this.layer = layer; // 0 = slow/far, 1 = fast/near
+
+	// Position clouds in 3D space - in front of moon (z=-1400) and mountains (z=-1100)
+	// Far clouds at z=-1100, near clouds at z=-950
+	this.z = layer === 0 ? -1100 : -950;
+
+	// Calculate horizontal spawn range based on camera FOV
+	var camZ = 25;
+	var depthFromCamera = Math.abs(this.z - camZ);
+	var fov = 45 * Math.PI / 180;
+	var aspect = window.innerWidth / window.innerHeight;
+	var frustumHalfWidth = depthFromCamera * Math.tan(fov / 2) * aspect;
+
+	// Spawn clouds distributed from off-screen left to across the view
+	// Some start visible, others drift in from the left
+	this.x = -frustumHalfWidth * 2.0 + Math.random() * frustumHalfWidth * 4.0; // Spread from far left to right side
+	this.y = 350 + Math.random() * 200; // Lower in sky (350-550)
+
+	this.speed = layer === 0 ? 0.3 : 0.6; // Slow vs fast movement
+	this.scale = layer === 0 ? 150 : 200; // Far clouds smaller, near clouds larger
+	this.opacity = layer === 0 ? 0.15 : 0.25; // Far clouds more transparent
+	this.shapeType = Math.floor(Math.random() * 5);
+
+	// Create sprite with cloud texture
+	var material = new THREE.SpriteMaterial({
+		map: cloudTextures[this.shapeType],
+		transparent: true,
+		opacity: this.opacity,
+		depthWrite: false,
+		fog: false
+	});
+
+	this.sprite = new THREE.Sprite(material);
+	this.sprite.scale.set(this.scale * 5.76, this.scale * 1.92, 1); // 20% smaller
+	this.sprite.position.set(this.x, this.y, this.z);
+
+	scene.add(this.sprite);
+}
+
+Cloud.prototype.update = function() {
+	// Move cloud slowly to the right
+	this.x += this.speed;
+	this.sprite.position.x = this.x;
+
+	// Wrap around when off screen to the right
+	var camZ = 25;
+	var depthFromCamera = Math.abs(this.z - camZ);
+	var fov = 45 * Math.PI / 180;
+	var aspect = window.innerWidth / window.innerHeight;
+	var frustumHalfWidth = depthFromCamera * Math.tan(fov / 2) * aspect;
+
+	// Account for cloud width - wrap well off-screen
+	var cloudHalfWidth = this.scale * 5.76 / 2;
+	if (this.x - cloudHalfWidth > frustumHalfWidth * 1.2) {
+		// Wrap to left side, well off-screen
+		this.x = -frustumHalfWidth * 2.0 - Math.random() * frustumHalfWidth;
+		this.sprite.position.x = this.x;
+	}
+};
+
+Cloud.prototype.remove = function() {
+	scene.remove(this.sprite);
+	this.sprite.material.dispose();
+	this.sprite = null;
+};
+
+function generateClouds() {
+	// Clear existing clouds
+	for (var i = 0; i < clouds.length; i++) {
+		clouds[i].remove();
+	}
+	clouds = [];
+
+	// Generate cloud textures first
+	if (cloudTextures.length === 0) {
+		generateCloudTextures();
+	}
+
+	// Create 20 clouds total (10 per layer)
+	for (var i = 0; i < 10; i++) {
+		clouds.push(new Cloud(0)); // Slow/far layer
+	}
+	for (var i = 0; i < 10; i++) {
+		clouds.push(new Cloud(1)); // Fast/near layer
+	}
+
+	console.log('Generated', clouds.length, 'clouds');
+}
+
+function updateClouds() {
+	if (overheadView) return; // Don't update in overhead view
+
+	for (var i = 0; i < clouds.length; i++) {
+		clouds[i].update();
+	}
+}
+
+////////////////////////////////////////////////////////////////////
 // Mountains
 ////////////////////////////////////////////////////////////////////
 
@@ -1762,8 +1934,8 @@ function updateCamera(scrollY) {
 		camera.fov = 60;
 		camera.updateProjectionMatrix();
 	} else {
-		// Normal view with scroll
-		var scrollFactor = scrollY / 1000;
+		// Normal view with scroll (20% slower)
+		var scrollFactor = scrollY / 1250;
 
 		// Move camera backward and upward as user scrolls
 		camera.position.z = cameraStartZ + scrollFactor * 50;
@@ -1864,6 +2036,7 @@ function render() {
 	if (!overheadView) {
 		updateStars();
 		updateShootingStars();
+		updateClouds();
 	}
 
 	// Show/hide stars and moon based on view
@@ -1914,6 +2087,7 @@ function generateScene() {
 	createMountains();
 	generateBuildings();
 	createFlashLight(); // Create moving flash light after buildings
+	generateClouds(); // Create clouds in far background
 	createStars();
 	createMoon();
 	createCameraMarker();
