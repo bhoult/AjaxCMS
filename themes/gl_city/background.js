@@ -26,7 +26,16 @@ var normalViewCameraPos = [0, 170, 25];
 
 // Overhead view toggle
 var overheadView = false;
-var overheadHeight = 300;
+var overheadHeight = 800;
+var overheadPanX = 0;
+var overheadPanZ = -580;  // Center of city (depth 0-16, center at depth 8)
+var overheadZoomMin = 200;
+var overheadZoomMax = 2000;
+
+// Mouse state for overhead view controls
+var mouseDown = false;
+var mouseLastX = 0;
+var mouseLastY = 0;
 
 // Building animation
 var buildingPanSpeed = 0.5;  // Units per frame to pan left
@@ -142,7 +151,7 @@ function createGround() {
 
 	var geometry = new THREE.PlaneGeometry(5000, 5000);
 	var material = new THREE.MeshStandardMaterial({
-		color: 0x050508,
+		color: 0x4a5a6a,  // Match mountain color
 		roughness: 0.9,
 		metalness: 0.1
 	});
@@ -780,6 +789,153 @@ function updateBuildingPositions() {
 }
 
 ////////////////////////////////////////////////////////////////////
+// Mountains
+////////////////////////////////////////////////////////////////////
+
+// Simple Perlin noise implementation
+var PerlinNoise = (function() {
+	var permutation = [151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,190,6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,88,237,149,56,87,174,20,125,136,171,168,68,175,74,165,71,134,139,48,27,166,77,146,158,231,83,111,229,122,60,211,133,230,220,105,92,41,55,46,245,40,244,102,143,54,65,25,63,161,1,216,80,73,209,76,132,187,208,89,18,169,200,196,135,130,116,188,159,86,164,100,109,198,173,186,3,64,52,217,226,250,124,123,5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,17,182,189,28,42,223,183,170,213,119,248,152,2,44,154,163,70,221,153,101,155,167,43,172,9,129,22,39,253,19,98,108,110,79,113,224,232,178,185,112,104,218,246,97,228,251,34,242,193,238,210,144,12,191,179,162,241,81,51,145,235,249,14,239,107,49,192,214,31,181,199,106,157,184,84,204,176,115,121,50,45,127,4,150,254,138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180];
+
+	var p = new Array(512);
+	for (var i = 0; i < 256; i++) {
+		p[256 + i] = p[i] = permutation[i];
+	}
+
+	function fade(t) {
+		return t * t * t * (t * (t * 6 - 15) + 10);
+	}
+
+	function lerp(t, a, b) {
+		return a + t * (b - a);
+	}
+
+	function grad(hash, x, y, z) {
+		var h = hash & 15;
+		var u = h < 8 ? x : y;
+		var v = h < 4 ? y : h == 12 || h == 14 ? x : z;
+		return ((h & 1) == 0 ? u : -u) + ((h & 2) == 0 ? v : -v);
+	}
+
+	return {
+		noise: function(x, y, z) {
+			var X = Math.floor(x) & 255;
+			var Y = Math.floor(y) & 255;
+			var Z = Math.floor(z) & 255;
+
+			x -= Math.floor(x);
+			y -= Math.floor(y);
+			z -= Math.floor(z);
+
+			var u = fade(x);
+			var v = fade(y);
+			var w = fade(z);
+
+			var A = p[X] + Y;
+			var AA = p[A] + Z;
+			var AB = p[A + 1] + Z;
+			var B = p[X + 1] + Y;
+			var BA = p[B] + Z;
+			var BB = p[B + 1] + Z;
+
+			return lerp(w, lerp(v, lerp(u, grad(p[AA], x, y, z), grad(p[BA], x - 1, y, z)),
+			                       lerp(u, grad(p[AB], x, y - 1, z), grad(p[BB], x - 1, y - 1, z))),
+			               lerp(v, lerp(u, grad(p[AA + 1], x, y, z - 1), grad(p[BA + 1], x - 1, y, z - 1)),
+			                       lerp(u, grad(p[AB + 1], x, y - 1, z - 1), grad(p[BB + 1], x - 1, y - 1, z - 1))));
+		}
+	};
+})();
+
+var mountains = null;
+
+function createMountains() {
+	// Remove existing mountains if they exist
+	if (mountains) {
+		scene.remove(mountains);
+		mountains.geometry.dispose();
+		mountains.material.dispose();
+		mountains = null;
+	}
+
+	// Mountain parameters - sized to fit camera FOV
+	// Camera at z=25, mountains at z=-2000, distance ~2025
+	// FOV 45°, tanHalfFov ≈ 0.414, typical aspect 1.778
+	// Frustum width at mountain distance ≈ 3000 units
+	var width = 3500;   // Slightly wider than frustum for margin
+	var depth = 800;    // Proportionally reduced
+	var segments = 1200; // Reduced proportionally with size
+	var maxHeight = 375; // 50% taller than 250
+
+	// Randomize perlin noise seeds for unique mountain shapes
+	var seed1 = Math.random() * 1000;
+	var seed2 = Math.random() * 1000;
+	var seed3 = Math.random() * 1000;
+	var seed4 = Math.random() * 1000;
+	var seed5 = Math.random() * 1000;
+
+	// Create plane geometry with high detail
+	var geometry = new THREE.PlaneGeometry(width, depth, segments, segments / 2);
+
+	// Rotate to stand upright
+	geometry.rotateX(-Math.PI / 2);
+
+	// Apply perlin noise to vertices
+	var vertices = geometry.attributes.position.array;
+	for (var i = 0; i < vertices.length; i += 3) {
+		var x = vertices[i];
+		var z = vertices[i + 2];
+
+		// Multiple octaves of noise - balanced frequencies for natural mountains
+		var noise = 0;
+		noise += PerlinNoise.noise(x * 0.002, z * 0.002, seed1) * 1.0;
+		noise += PerlinNoise.noise(x * 0.005, z * 0.005, seed2) * 0.5;
+		noise += PerlinNoise.noise(x * 0.01, z * 0.01, seed3) * 0.25;
+
+		// Scale and bias the noise
+		var height = Math.max(0, noise) * maxHeight;
+
+		// Second pass: subtle high-frequency surface detail
+		// Scale detail by height - less at ground level, more at peaks
+		var heightFactor = height / maxHeight;  // 0 at ground, 1 at max height
+		var surfaceDetail = 0;
+		surfaceDetail += PerlinNoise.noise(x * 0.05, z * 0.05, seed4) * 0.08;
+		surfaceDetail += PerlinNoise.noise(x * 0.1, z * 0.1, seed5) * 0.04;
+		height += surfaceDetail * maxHeight * heightFactor;
+
+		// Gradient fade from front (ground level) to back (full height)
+		// Front edge (higher z, closer to camera) should be 0
+		// Back edge (lower z, farther from camera) should be 1
+		var distFromBack = depth / 2 - z;  // 0 at front, depth at back
+		var fade = Math.max(0, Math.min(1, distFromBack / depth));
+		height *= fade * fade;  // Squared for smoother transition
+
+		vertices[i + 1] = height;
+	}
+
+	// Recompute normals for proper lighting
+	geometry.computeVertexNormals();
+
+	// Create material with gradient coloring
+	var material = new THREE.MeshStandardMaterial({
+		color: 0x4a5a6a,
+		roughness: 0.9,
+		metalness: 0.1,
+		flatShading: false
+	});
+
+	mountains = new THREE.Mesh(geometry, material);
+	// Position so front edge starts where city ends (last buildings at z=-1060)
+	// Mountain depth is 800, so front edge = position.z + 400
+	// For front edge at -1100: position.z = -1500
+	mountains.position.set(0, 50, -1500);
+	mountains.receiveShadow = true;
+	mountains.castShadow = true;
+
+	scene.add(mountains);
+
+	console.log('Mountains created with perlin noise');
+}
+
+////////////////////////////////////////////////////////////////////
 // Stars
 ////////////////////////////////////////////////////////////////////
 
@@ -1150,10 +1306,10 @@ function updateCameraMarker() {
 
 function updateCamera(scrollY) {
 	if (overheadView) {
-		// Overhead view - look down from above
-		camera.position.set(0, overheadHeight, 0);
-		camera.lookAt(0, 0, -500);
-		camera.fov = 90;
+		// Overhead view - look straight down from above at panned location
+		camera.position.set(overheadPanX, overheadHeight, overheadPanZ);
+		camera.lookAt(overheadPanX, 0, overheadPanZ);
+		camera.fov = 60;
 		camera.updateProjectionMatrix();
 	} else {
 		// Normal view with scroll
@@ -1183,6 +1339,56 @@ $(document).keypress(function(e) {
 	if (e.which === 111) {  // 'o' key
 		overheadView = !overheadView;
 		console.log('Overhead view:', overheadView);
+
+		// Hide/show page content in overhead view
+		if (overheadView) {
+			$('.container').hide();
+		} else {
+			$('.container').show();
+		}
+	}
+});
+
+// Mouse controls for overhead view
+$(document).mousedown(function(e) {
+	if (overheadView) {
+		mouseDown = true;
+		mouseLastX = e.clientX;
+		mouseLastY = e.clientY;
+		e.preventDefault();
+	}
+});
+
+$(document).mouseup(function(e) {
+	mouseDown = false;
+});
+
+$(document).mousemove(function(e) {
+	if (overheadView && mouseDown) {
+		var deltaX = e.clientX - mouseLastX;
+		var deltaY = e.clientY - mouseLastY;
+
+		// Pan camera (inverted for natural feel)
+		var panSpeed = overheadHeight / 500;  // Scale with zoom level
+		overheadPanX -= deltaX * panSpeed;
+		overheadPanZ += deltaY * panSpeed;
+
+		mouseLastX = e.clientX;
+		mouseLastY = e.clientY;
+		e.preventDefault();
+	}
+});
+
+// Mouse wheel for zoom in overhead view
+$(document).on('wheel', function(e) {
+	if (overheadView) {
+		var delta = e.originalEvent.deltaY;
+		var zoomSpeed = overheadHeight * 0.001;
+
+		overheadHeight += delta * zoomSpeed;
+		overheadHeight = Math.max(overheadZoomMin, Math.min(overheadZoomMax, overheadHeight));
+
+		e.preventDefault();
 	}
 });
 
@@ -1253,6 +1459,7 @@ function generateScene() {
 
 	createGround();
 	createLighting();
+	createMountains();
 	generateBuildings();
 	createStars();
 	createMoon();
