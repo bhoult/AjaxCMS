@@ -407,8 +407,10 @@ Building.prototype.draw = function(ctx, frame, scrollY) {
 	// Background (depth 6-9) moves DOWN as you scroll down (positive offset)
 	var centerDepth = 4.5;
 	var depthFromCenter = this.depth - centerDepth;
-	// Reduced parallax intensity by 50%: 0.15 → 0.075
-	var parallax_offset = -scrollY * scroll_parallax_factor * depthFromCenter * 0.075;
+
+	// Base parallax on percentage of page height, capped to prevent floating on long pages
+	var scrollRatio = Math.min(scrollY / page_height, 1.5); // Cap at 1.5 page heights
+	var parallax_offset = -scrollRatio * page_height * scroll_parallax_factor * depthFromCenter * 0.075;
 
 	// Clamp parallax so foreground buildings' bottoms never become visible
 	if (this.depth === 0) {
@@ -678,8 +680,10 @@ Mountain.prototype.draw = function(ctx, scrollY) {
 	var centerDepth = 4.5;
 	var mountainEquivalentDepth = 10 + this.depth;
 	var depthFromCenter = mountainEquivalentDepth - centerDepth;
-	// Reduced parallax intensity by 50%: 0.15 → 0.075
-	var parallax_offset = -scrollY * scroll_parallax_factor * depthFromCenter * 0.075;
+
+	// Base parallax on percentage of page height, capped to prevent floating on long pages
+	var scrollRatio = Math.min(scrollY / page_height, 1.5); // Cap at 1.5 page heights
+	var parallax_offset = -scrollRatio * page_height * scroll_parallax_factor * depthFromCenter * 0.075;
 
 	ctx.beginPath();
 	ctx.moveTo(-10, page_height);
