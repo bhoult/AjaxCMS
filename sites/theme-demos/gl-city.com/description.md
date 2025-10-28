@@ -1,0 +1,1 @@
+Full 3D WebGL cityscape with actual 3D geometry and moving camera. Buildings are 3D boxes, mountains are triangular prisms, and the camera travels through the scene as you scroll for authentic parallax.
