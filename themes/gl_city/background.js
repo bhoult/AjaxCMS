@@ -1087,6 +1087,299 @@ function updateClouds() {
 }
 
 ////////////////////////////////////////////////////////////////////
+// UFO
+////////////////////////////////////////////////////////////////////
+
+var ufos = [];
+
+function UFO() {
+	// UFOs fly from left to right or right to left
+	this.direction = Math.random() > 0.5 ? 1 : -1;
+
+	// Calculate spawn position based on camera frustum
+	var camZ = 25;
+	var ufoZ = -400 - Math.random() * 400; // Vary depth: -400 to -800 (different distances from camera)
+	var depthFromCamera = Math.abs(ufoZ - camZ);
+	var fov = 45 * Math.PI / 180;
+	var aspect = window.innerWidth / window.innerHeight;
+	var frustumHalfWidth = depthFromCamera * Math.tan(fov / 2) * aspect;
+
+	this.z = ufoZ;
+	this.startZ = ufoZ; // Remember starting depth
+	this.x = this.direction > 0 ? -frustumHalfWidth * 1.5 : frustumHalfWidth * 1.5;
+	this.y = 150 + Math.random() * 200; // Vary height over city (150-350)
+	this.speed = 2 + Math.random() * 2;
+	this.size = 20 + Math.random() * 15;
+	this.wobble = Math.random() * Math.PI * 2;
+	this.lightPhase = Math.random() * Math.PI * 2;
+	this.depthWave = Math.random() * Math.PI * 2; // For depth oscillation
+	this.depthAmount = 100 + Math.random() * 200; // How much to vary depth (100-300 units)
+
+	// Spotlight beam control
+	this.beamState = 'off'; // 'off', 'turning_on', 'on', 'turning_off'
+	this.beamTimer = 0;
+	this.beamOnDuration = 90 + Math.random() * 90; // 1.5-3 seconds on
+	this.beamOffDuration = 60 + Math.random() * 60; // 1-2 seconds off
+	this.beamIntensity = 0;
+	this.beamMaxIntensity = 3.0;
+
+	// Create UFO group
+	this.group = new THREE.Group();
+
+	// UFO dome (top) - hemisphere
+	var domeGeometry = new THREE.SphereGeometry(this.size * 0.5, 16, 8, 0, Math.PI * 2, 0, Math.PI * 0.5);
+	var domeMaterial = new THREE.MeshStandardMaterial({
+		color: 0x969fa8,
+		metalness: 0.6,
+		roughness: 0.3,
+		transparent: true,
+		opacity: 0.8
+	});
+	var dome = new THREE.Mesh(domeGeometry, domeMaterial);
+	dome.position.y = this.size * 0.2;
+	this.group.add(dome);
+
+	// UFO body (saucer) - flattened cylinder
+	var bodyGeometry = new THREE.CylinderGeometry(this.size, this.size, this.size * 0.3, 32);
+	var bodyMaterial = new THREE.MeshStandardMaterial({
+		color: 0x787882,
+		metalness: 0.7,
+		roughness: 0.2,
+		transparent: true,
+		opacity: 0.9
+	});
+	var body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+	this.group.add(body);
+
+	// Colored blinking lights around the edge
+	this.lights = [];
+	var numLights = 8;
+	for (var i = 0; i < numLights; i++) {
+		var angle = (i / numLights) * Math.PI * 2;
+		var lightX = Math.cos(angle) * this.size * 0.9;
+		var lightZ = Math.sin(angle) * this.size * 0.9;
+
+		var colors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff, 0x00ffff];
+		var lightColor = colors[i % colors.length];
+
+		var lightGeometry = new THREE.SphereGeometry(this.size * 0.12, 8, 8); // Larger lights
+		var lightMaterial = new THREE.MeshStandardMaterial({
+			color: lightColor,
+			emissive: lightColor,
+			emissiveIntensity: 1.0,
+			metalness: 0,
+			roughness: 0.5,
+			transparent: true,
+			opacity: 1.0
+		});
+		var light = new THREE.Mesh(lightGeometry, lightMaterial);
+		light.position.set(lightX, 0, lightZ);
+		this.group.add(light);
+		this.lights.push({mesh: light, baseColor: lightColor});
+	}
+
+	// Glow sprite underneath
+	var glowCanvas = document.createElement('canvas');
+	glowCanvas.width = 128;
+	glowCanvas.height = 128;
+	var glowCtx = glowCanvas.getContext('2d');
+	var gradient = glowCtx.createRadialGradient(64, 64, 0, 64, 64, 64);
+	gradient.addColorStop(0, 'rgba(100, 200, 255, 0.5)');
+	gradient.addColorStop(1, 'rgba(100, 200, 255, 0)');
+	glowCtx.fillStyle = gradient;
+	glowCtx.fillRect(0, 0, 128, 128);
+
+	var glowTexture = new THREE.Texture(glowCanvas);
+	glowTexture.needsUpdate = true;
+	var glowMaterial = new THREE.SpriteMaterial({
+		map: glowTexture,
+		transparent: true,
+		opacity: 0.6,
+		depthWrite: false
+	});
+	this.glowSprite = new THREE.Sprite(glowMaterial);
+	this.glowSprite.scale.set(this.size * 3, this.size * 3, 1);
+	this.glowSprite.position.y = -this.size * 0.5;
+	this.group.add(this.glowSprite);
+
+	// Spotlight beam from bottom - narrower angle, extends to ground
+	var beamDistance = Math.abs(this.y); // Distance to ground
+	this.spotlight = new THREE.SpotLight(0xaaccff, 0, beamDistance * 1.5, Math.PI / 12, 0.3, 2);
+	this.spotlight.position.set(0, -this.size * 0.2, 0);
+	this.spotlight.target.position.set(0, -beamDistance, 0);
+	this.spotlight.castShadow = false;
+	this.group.add(this.spotlight);
+	this.group.add(this.spotlight.target);
+
+	// Point light at beam origin to illuminate surrounding buildings
+	this.beamPointLight = new THREE.PointLight(0xaaccff, 0, 600, 2);
+	this.beamPointLight.position.set(0, -this.size * 0.2, 0);
+	this.group.add(this.beamPointLight);
+
+	// Visible beam as 2D triangle sprite - won't block light
+	var groundDist = Math.abs(this.y) + this.size * 0.2; // Distance from spotlight to ground
+	var beamWidth = Math.tan(Math.PI / 12) * groundDist * 2; // Width at ground based on angle
+
+	// Create canvas with triangle gradient
+	var beamCanvas = document.createElement('canvas');
+	beamCanvas.width = 256;
+	beamCanvas.height = 512;
+	var beamCtx = beamCanvas.getContext('2d');
+
+	// Draw triangle with gradient
+	var gradient = beamCtx.createLinearGradient(128, 0, 128, 512);
+	gradient.addColorStop(0, 'rgba(170, 204, 255, 0.3)');
+	gradient.addColorStop(1, 'rgba(170, 204, 255, 0.05)');
+
+	beamCtx.fillStyle = gradient;
+	beamCtx.beginPath();
+	beamCtx.moveTo(128, 0); // Top center (narrow)
+	beamCtx.lineTo(0, 512); // Bottom left (wide)
+	beamCtx.lineTo(256, 512); // Bottom right (wide)
+	beamCtx.closePath();
+	beamCtx.fill();
+
+	var beamTexture = new THREE.Texture(beamCanvas);
+	beamTexture.needsUpdate = true;
+	var beamMaterial = new THREE.SpriteMaterial({
+		map: beamTexture,
+		transparent: true,
+		opacity: 0,
+		depthWrite: false
+	});
+
+	this.beamSprite = new THREE.Sprite(beamMaterial);
+	this.beamSprite.scale.set(beamWidth, groundDist, 1);
+	this.beamSprite.position.set(0, -groundDist / 2 - this.size * 0.2, -1); // Behind point light
+	this.group.add(this.beamSprite);
+
+	// Position the group
+	this.group.position.set(this.x, this.y, this.z);
+	scene.add(this.group);
+}
+
+UFO.prototype.update = function() {
+	// Move horizontally
+	this.x += this.speed * this.direction;
+	this.group.position.x = this.x;
+
+	// Move in depth (closer/farther) as it travels horizontally
+	this.depthWave += 0.02;
+	var depthOffset = Math.sin(this.depthWave) * this.depthAmount;
+	this.z = this.startZ + depthOffset;
+	this.group.position.z = this.z;
+
+	// Wobble vertically
+	this.wobble += 0.05;
+	var wobbleY = Math.sin(this.wobble) * 3;
+	this.group.position.y = this.y + wobbleY;
+
+	// Animate flashing lights - dramatic on/off flashing
+	this.lightPhase += 0.2; // Faster flashing
+	for (var i = 0; i < this.lights.length; i++) {
+		var phase = this.lightPhase + (i / this.lights.length) * Math.PI * 2;
+		var brightness = Math.sin(phase);
+
+		// Sharp on/off flashing - only visible when brightness > 0
+		if (brightness > 0.3) {
+			this.lights[i].mesh.material.opacity = 1.0;
+			this.lights[i].mesh.material.emissive = new THREE.Color(this.lights[i].baseColor);
+			this.lights[i].mesh.material.emissiveIntensity = brightness;
+		} else {
+			this.lights[i].mesh.material.opacity = 0.1;
+			this.lights[i].mesh.material.emissive = new THREE.Color(0x000000);
+		}
+	}
+
+	// Animate spotlight beam
+	this.beamTimer++;
+
+	switch (this.beamState) {
+		case 'off':
+			if (this.beamTimer > this.beamOffDuration) {
+				this.beamState = 'turning_on';
+				this.beamTimer = 0;
+			}
+			break;
+
+		case 'turning_on':
+			this.beamIntensity += 0.1;
+			if (this.beamIntensity >= this.beamMaxIntensity) {
+				this.beamIntensity = this.beamMaxIntensity;
+				this.beamState = 'on';
+				this.beamTimer = 0;
+			}
+			break;
+
+		case 'on':
+			if (this.beamTimer > this.beamOnDuration) {
+				this.beamState = 'turning_off';
+				this.beamTimer = 0;
+			}
+			break;
+
+		case 'turning_off':
+			this.beamIntensity -= 0.1;
+			if (this.beamIntensity <= 0) {
+				this.beamIntensity = 0;
+				this.beamState = 'off';
+				this.beamTimer = 0;
+			}
+			break;
+	}
+
+	// Update spotlight, point light, and beam sprite visibility
+	this.spotlight.intensity = this.beamIntensity;
+	this.beamPointLight.intensity = this.beamIntensity * 4; // Twice as bright (was 2x, now 4x)
+	this.beamSprite.material.opacity = this.beamIntensity * 0.3; // Semi-transparent beam sprite
+};
+
+UFO.prototype.isAlive = function() {
+	var camZ = 25;
+	var depthFromCamera = Math.abs(this.z - camZ);
+	var fov = 45 * Math.PI / 180;
+	var aspect = window.innerWidth / window.innerHeight;
+	var frustumHalfWidth = depthFromCamera * Math.tan(fov / 2) * aspect;
+
+	if (this.direction > 0) {
+		return this.x < frustumHalfWidth * 1.5;
+	} else {
+		return this.x > -frustumHalfWidth * 1.5;
+	}
+};
+
+UFO.prototype.remove = function() {
+	scene.remove(this.group);
+	this.group.traverse(function(child) {
+		if (child.geometry) child.geometry.dispose();
+		if (child.material) {
+			if (child.material.map) child.material.map.dispose();
+			child.material.dispose();
+		}
+	});
+	this.group = null;
+};
+
+function updateUFOs() {
+	if (overheadView) return; // Don't update in overhead view
+
+	// Spawn new UFO occasionally (roughly every 1-2 minutes)
+	if (Math.random() < 0.0002) {
+		ufos.push(new UFO());
+		console.log('UFO spawned! Total UFOs:', ufos.length);
+	}
+
+	// Update and remove dead UFOs
+	for (var i = ufos.length - 1; i >= 0; i--) {
+		ufos[i].update();
+		if (!ufos[i].isAlive()) {
+			ufos[i].remove();
+			ufos.splice(i, 1);
+		}
+	}
+}
+
+////////////////////////////////////////////////////////////////////
 // Mountains
 ////////////////////////////////////////////////////////////////////
 
@@ -2037,6 +2330,7 @@ function render() {
 		updateStars();
 		updateShootingStars();
 		updateClouds();
+		updateUFOs();
 	}
 
 	// Show/hide stars and moon based on view
