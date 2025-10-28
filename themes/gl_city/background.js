@@ -1472,9 +1472,20 @@ function generateScene() {
 // Make page tall enough to scroll
 function setupPageHeight() {
 	// Add a spacer div to make the page scrollable
+	// Since content divs (#a, #b) are absolutely positioned, they don't expand the page
 	var spacer = document.createElement('div');
 	spacer.id = 'scroll-spacer';
-	spacer.style.height = '3000px';
+
+	// Wait for content to load, then size spacer to match
+	setTimeout(function() {
+		var contentHeight = Math.max(
+			$('#a').outerHeight(true) || 0,
+			$('#b').outerHeight(true) || 0
+		);
+		// Add small margin at bottom
+		spacer.style.height = (contentHeight + 100) + 'px';
+	}, 1000);
+
 	spacer.style.pointerEvents = 'none';
 	document.body.appendChild(spacer);
 }
