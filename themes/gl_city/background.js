@@ -116,8 +116,8 @@ function createLighting() {
 	moonLight.castShadow = true;
 
 	// Configure shadow properties for quality
-	moonLight.shadow.mapSize.width = 2048;
-	moonLight.shadow.mapSize.height = 2048;
+	moonLight.shadow.mapSize.width = 4096;
+	moonLight.shadow.mapSize.height = 4096;
 	moonLight.shadow.camera.near = 100;
 	moonLight.shadow.camera.far = 2500;
 	moonLight.shadow.bias = -0.001;
@@ -160,6 +160,32 @@ function createGround() {
 // Buildings
 ////////////////////////////////////////////////////////////////////
 
+// Shared texture pools to avoid recreating textures for every building
+var windowTexturePool = [];
+var sidesBumpTexturePool = [];
+var roofBumpTexturePool = [];
+
+// Initialize texture pools
+function initializeTexturePools() {
+	// Create 20 window texture variations
+	for (var i = 0; i < 20; i++) {
+		windowTexturePool.push(createWindowTexture());
+	}
+
+	// Create 10 sides bump texture variations
+	for (var i = 0; i < 10; i++) {
+		sidesBumpTexturePool.push(createSidesBumpTexture());
+	}
+
+	// Create 10 roof bump texture variations
+	for (var i = 0; i < 10; i++) {
+		roofBumpTexturePool.push(createRoofBumpTexture());
+	}
+
+	console.log('Texture pools initialized:', windowTexturePool.length, 'window textures,',
+	            sidesBumpTexturePool.length, 'sides bumps,', roofBumpTexturePool.length, 'roof bumps');
+}
+
 function Building(depth) {
 	this.depth = depth;
 	this.z = -depth * 60 - 100;
@@ -180,35 +206,482 @@ function Building(depth) {
 	var value = 25 + Math.floor(Math.random() * 25);
 	this.color = new THREE.Color().setRGB(value / 255, value / 255, (value + 12) / 255);
 
-	// Create mesh
+	// Pick random textures from shared pools (no need to create new ones)
+	this.windowTextures = [
+		windowTexturePool[Math.floor(Math.random() * windowTexturePool.length)],
+		windowTexturePool[Math.floor(Math.random() * windowTexturePool.length)],
+		windowTexturePool[Math.floor(Math.random() * windowTexturePool.length)],
+		windowTexturePool[Math.floor(Math.random() * windowTexturePool.length)]
+	];
+	this.currentTextureIndex = 0;
+	this.textureChangeTimer = Math.random() * 120; // Random start offset
+
+	// Pick random bump textures from shared pools
+	this.sidesBumpTexture = sidesBumpTexturePool[Math.floor(Math.random() * sidesBumpTexturePool.length)];
+	this.roofBumpTexture = roofBumpTexturePool[Math.floor(Math.random() * roofBumpTexturePool.length)];
+
+	// Create mesh with multiple materials - one for sides (with windows), one for top/bottom (no windows)
 	var geometry = new THREE.BoxGeometry(this.width, this.height, this.depth_size);
-	var material = new THREE.MeshStandardMaterial({
+
+	// Material with windows for sides - use first texture
+	var sidesMaterial = new THREE.MeshStandardMaterial({
 		color: this.color,
 		roughness: 0.8,
-		metalness: 0.2
+		metalness: 0.2,
+		map: this.windowTextures[0],
+		emissiveMap: this.windowTextures[0],
+		emissive: 0xffcc66,
+		emissiveIntensity: 0.8,
+		bumpMap: this.sidesBumpTexture,
+		bumpScale: 2.0
 	});
 
-	this.mesh = new THREE.Mesh(geometry, material);
+	// Store reference to sides material for texture updates
+	this.sidesMaterial = sidesMaterial;
+
+	// Material without windows for top and bottom - different bump texture
+	var topBottomMaterial = new THREE.MeshStandardMaterial({
+		color: this.color,
+		roughness: 0.9,
+		metalness: 0.1,
+		bumpMap: this.roofBumpTexture,
+		bumpScale: 1.5
+	});
+
+	// BoxGeometry face order: right, left, top, bottom, front, back
+	var materials = [
+		sidesMaterial,     // right
+		sidesMaterial,     // left
+		topBottomMaterial, // top (roof)
+		topBottomMaterial, // bottom
+		sidesMaterial,     // front
+		sidesMaterial      // back
+	];
+
+	this.mesh = new THREE.Mesh(geometry, materials);
 	this.mesh.position.set(this.x, this.height / 2, this.z);  // Position on ground
 	this.mesh.castShadow = true;  // Buildings cast shadows
 	this.mesh.receiveShadow = true;  // Buildings receive shadows from other buildings
 
 	scene.add(this.mesh);
+
+	// Add rooftop elements
+	this.rooftopElements = [];
+	this.addRooftopElements();
+}
+
+// Standalone texture creation functions (used by texture pools)
+function createWindowTexture() {
+	// Create a canvas for the window texture
+	var canvas = document.createElement('canvas');
+	canvas.width = 128;
+	canvas.height = 256;
+	var ctx = canvas.getContext('2d');
+
+	// Fill with black (will be multiplied with building color)
+	ctx.fillStyle = '#000000';
+	ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+	// Window grid parameters
+	var cols = 4;
+	var rows = 6 + Math.floor(Math.random() * 12);  // 6-18 rows for variety (no longer building-specific)
+
+	var roofMargin = 0.02;  // Small margin at top (2%)
+	var bottomMargin = 0.05; // 5% at bottom for ground floor
+	var windowWidth = 8;     // Narrower windows
+	var windowHeight = 6;    // Much shorter windows
+	var spacingX = canvas.width / cols;
+	var windowAreaHeight = canvas.height * (1 - roofMargin - bottomMargin);
+	var spacingY = windowAreaHeight / rows;
+	var startY = canvas.height * roofMargin;  // Start near top
+
+	// Draw windows with varying brightness
+	for (var ix = 0; ix < cols; ix++) {
+		for (var iy = 0; iy < rows; iy++) {
+			// Randomly skip some windows (50% chance)
+			if (Math.random() < 0.5) continue;
+
+			var x = ix * spacingX + (spacingX - windowWidth) / 2;
+			var y = startY + iy * spacingY + (spacingY - windowHeight) / 2;
+
+			// Make sure window doesn't extend into roof
+			if (y < canvas.height * roofMargin) continue;
+			if (y + windowHeight > canvas.height * (1 - bottomMargin)) continue;
+
+			// Random brightness variation - from dim to very bright
+			var brightness = 0.3 + Math.random() * 0.7; // 0.3 to 1.0
+			var r = Math.floor(255 * brightness);
+			var g = Math.floor(204 * brightness);
+			var b = Math.floor(102 * brightness);
+			ctx.fillStyle = 'rgb(' + r + ',' + g + ',' + b + ')';
+
+			ctx.fillRect(x, y, windowWidth, windowHeight);
+		}
+	}
+
+	var texture = new THREE.Texture(canvas);
+	texture.needsUpdate = true;
+	texture.wrapS = THREE.RepeatWrapping;
+	texture.wrapT = THREE.RepeatWrapping;
+	return texture;
+}
+
+function createSidesBumpTexture() {
+	// Create a canvas for the bump map
+	var canvas = document.createElement('canvas');
+	canvas.width = 256;
+	canvas.height = 512;
+	var ctx = canvas.getContext('2d');
+
+	// Fill with darker gray (recessed surface)
+	ctx.fillStyle = '#606060';
+	ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+	// Add panel grid pattern for architectural detail
+	var panelCols = 4;
+	var panelRows = 8 + Math.floor(Math.random() * 12);  // 8-20 rows for variety
+
+	var panelWidth = canvas.width / panelCols;
+	var panelHeight = canvas.height / panelRows;
+
+	// Draw recessed panel edges (darker lines)
+	ctx.strokeStyle = '#303030';
+	ctx.lineWidth = 4;
+
+	for (var ix = 0; ix <= panelCols; ix++) {
+		ctx.beginPath();
+		ctx.moveTo(ix * panelWidth, 0);
+		ctx.lineTo(ix * panelWidth, canvas.height);
+		ctx.stroke();
+	}
+
+	for (var iy = 0; iy <= panelRows; iy++) {
+		ctx.beginPath();
+		ctx.moveTo(0, iy * panelHeight);
+		ctx.lineTo(canvas.width, iy * panelHeight);
+		ctx.stroke();
+	}
+
+	// Draw raised panel centers (lighter)
+	ctx.fillStyle = '#a0a0a0';
+	var inset = 6;
+	for (var ix = 0; ix < panelCols; ix++) {
+		for (var iy = 0; iy < panelRows; iy++) {
+			ctx.fillRect(
+				ix * panelWidth + inset,
+				iy * panelHeight + inset,
+				panelWidth - inset * 2,
+				panelHeight - inset * 2
+			);
+		}
+	}
+
+	// Add stronger noise for concrete/metal texture
+	var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+	var data = imageData.data;
+	for (var i = 0; i < data.length; i += 4) {
+		var noise = (Math.random() - 0.5) * 40;
+		data[i] = Math.max(0, Math.min(255, data[i] + noise));
+		data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + noise));
+		data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + noise));
+	}
+	ctx.putImageData(imageData, 0, 0);
+
+	var texture = new THREE.Texture(canvas);
+	texture.needsUpdate = true;
+	texture.wrapS = THREE.RepeatWrapping;
+	texture.wrapT = THREE.RepeatWrapping;
+	return texture;
+}
+
+function createRoofBumpTexture() {
+	// Create a canvas for the roof bump map
+	var canvas = document.createElement('canvas');
+	canvas.width = 256;
+	canvas.height = 256;
+	var ctx = canvas.getContext('2d');
+
+	// Fill with medium gray base
+	ctx.fillStyle = '#707070';
+	ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+	// Create rooftop equipment/HVAC unit pattern
+	var numUnits = 2 + Math.floor(Math.random() * 3); // 2-4 units
+	for (var i = 0; i < numUnits; i++) {
+		var unitX = Math.random() * (canvas.width - 60) + 20;
+		var unitY = Math.random() * (canvas.height - 60) + 20;
+		var unitW = 30 + Math.random() * 40;
+		var unitH = 30 + Math.random() * 40;
+
+		// Draw raised unit (lighter)
+		ctx.fillStyle = '#a0a0a0';
+		ctx.fillRect(unitX, unitY, unitW, unitH);
+
+		// Draw shadow edge (darker)
+		ctx.fillStyle = '#404040';
+		ctx.fillRect(unitX + unitW, unitY + 2, 3, unitH);
+		ctx.fillRect(unitX + 2, unitY + unitH, unitW, 3);
+	}
+
+	// Add gravel/concrete texture with noise
+	var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+	var data = imageData.data;
+	for (var i = 0; i < data.length; i += 4) {
+		var noise = (Math.random() - 0.5) * 50;
+		data[i] = Math.max(0, Math.min(255, data[i] + noise));
+		data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + noise));
+		data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + noise));
+	}
+	ctx.putImageData(imageData, 0, 0);
+
+	var texture = new THREE.Texture(canvas);
+	texture.needsUpdate = true;
+	texture.wrapS = THREE.RepeatWrapping;
+	texture.wrapT = THREE.RepeatWrapping;
+	return texture;
+}
+
+Building.prototype.addRooftopElements = function() {
+	// Add rooftop elements to 31.25% of buildings (25% increased by 25%)
+	if (Math.random() > 0.3125) return;
+
+	// Roof is at the top of the building in local coordinates (building mesh center is at origin)
+	var roofY = this.height / 2;
+
+	// Only 1 element per building
+	var type = Math.random();
+	var element;
+
+	// Random position on roof (relative to building center)
+	var offsetX = (Math.random() - 0.5) * this.width * 0.6;
+	var offsetZ = (Math.random() - 0.5) * this.depth_size * 0.6;
+
+	if (type < 0.425) {
+		// HVAC Unit (42.5% of rooftop elements)
+		element = this.createHVACUnit();
+		element.position.set(offsetX, roofY, offsetZ);
+	} else if (type < 0.8) {
+		// Water Tower (37.5% of rooftop elements)
+		element = this.createWaterTower();
+		element.position.set(offsetX, roofY, offsetZ);
+	} else if (type < 0.95) {
+		// Antenna (15% - tripled from 5%)
+		element = this.createAntenna();
+		element.position.set(offsetX, roofY, offsetZ);
+	} else {
+		// Billboard (5% - rare)
+		element = this.createBillboard();
+		element.position.set(offsetX, roofY, offsetZ);
+	}
+
+	// Add as child of building mesh so it moves automatically
+	this.mesh.add(element);
+	this.rooftopElements.push(element);
+}
+
+Building.prototype.createHVACUnit = function() {
+	var group = new THREE.Group();
+
+	// Main unit box
+	var width = 4 + Math.random() * 4;
+	var height = 3 + Math.random() * 2;
+	var depth = 4 + Math.random() * 4;
+
+	var geometry = new THREE.BoxGeometry(width, height, depth);
+	var material = new THREE.MeshStandardMaterial({
+		color: 0x505050,
+		roughness: 0.7,
+		metalness: 0.3
+	});
+
+	var mesh = new THREE.Mesh(geometry, material);
+	mesh.position.y = height / 2; // Raise so bottom sits at y=0
+	mesh.castShadow = true;
+	mesh.receiveShadow = true;
+	group.add(mesh);
+
+	// Vents on top
+	var ventGeometry = new THREE.BoxGeometry(width * 0.8, 0.5, depth * 0.8);
+	var ventMaterial = new THREE.MeshStandardMaterial({
+		color: 0x303030,
+		roughness: 0.8
+	});
+	var vent = new THREE.Mesh(ventGeometry, ventMaterial);
+	vent.position.y = height + 0.25;
+	vent.castShadow = true;
+	group.add(vent);
+
+	return group;
+}
+
+Building.prototype.createWaterTower = function() {
+	var group = new THREE.Group();
+
+	// Tank (cylinder)
+	var radius = 3 + Math.random() * 2;
+	var tankHeight = 4 + Math.random() * 2;
+	var legHeight = 6 + Math.random() * 4;
+
+	var tankGeometry = new THREE.CylinderGeometry(radius, radius, tankHeight, 12);
+	var tankMaterial = new THREE.MeshStandardMaterial({
+		color: 0x606060,
+		roughness: 0.6,
+		metalness: 0.4
+	});
+
+	var tank = new THREE.Mesh(tankGeometry, tankMaterial);
+	tank.position.y = legHeight + tankHeight / 2; // Tank sits on top of legs
+	tank.castShadow = true;
+	tank.receiveShadow = true;
+	group.add(tank);
+
+	// Support legs (4 cylinders)
+	var legGeometry = new THREE.CylinderGeometry(0.3, 0.3, legHeight, 6);
+	var legMaterial = new THREE.MeshStandardMaterial({
+		color: 0x404040,
+		roughness: 0.8,
+		metalness: 0.5
+	});
+
+	for (var i = 0; i < 4; i++) {
+		var angle = (i / 4) * Math.PI * 2;
+		var leg = new THREE.Mesh(legGeometry, legMaterial);
+		leg.position.set(
+			Math.cos(angle) * (radius * 0.7),
+			legHeight / 2, // Legs sit on ground
+			Math.sin(angle) * (radius * 0.7)
+		);
+		leg.castShadow = true;
+		group.add(leg);
+	}
+
+	return group;
+}
+
+Building.prototype.createAntenna = function() {
+	var group = new THREE.Group();
+
+	// Main pole
+	var height = 15 + Math.random() * 20;
+	var poleGeometry = new THREE.CylinderGeometry(0.2, 0.3, height, 6);
+	var poleMaterial = new THREE.MeshStandardMaterial({
+		color: 0x707070,
+		roughness: 0.5,
+		metalness: 0.6
+	});
+
+	var pole = new THREE.Mesh(poleGeometry, poleMaterial);
+	pole.position.y = height / 2; // Pole base at y=0
+	pole.castShadow = true;
+	group.add(pole);
+
+	// Blinking light on top
+	var lightGeometry = new THREE.SphereGeometry(0.5, 8, 8);
+	var lightMaterial = new THREE.MeshBasicMaterial({
+		color: 0xff0000,
+		emissive: 0xff0000,
+		emissiveIntensity: 1.0
+	});
+
+	var light = new THREE.Mesh(lightGeometry, lightMaterial);
+	light.position.y = height + 0.5; // Light at top of pole
+	group.add(light);
+
+	return group;
+}
+
+Building.prototype.createBillboard = function() {
+	var group = new THREE.Group();
+
+	// Support structure
+	var supportHeight = 8;
+	var supportGeometry = new THREE.BoxGeometry(0.5, supportHeight, 0.5);
+	var supportMaterial = new THREE.MeshStandardMaterial({
+		color: 0x404040,
+		roughness: 0.8
+	});
+
+	var support1 = new THREE.Mesh(supportGeometry, supportMaterial);
+	support1.position.set(-4, supportHeight / 2, 0); // Support base at y=0
+	support1.castShadow = true;
+	group.add(support1);
+
+	var support2 = new THREE.Mesh(supportGeometry, supportMaterial);
+	support2.position.set(4, supportHeight / 2, 0); // Support base at y=0
+	support2.castShadow = true;
+	group.add(support2);
+
+	// Billboard panel
+	var panelWidth = 10;
+	var panelHeight = 6;
+	var panelGeometry = new THREE.PlaneGeometry(panelWidth, panelHeight);
+	var panelMaterial = new THREE.MeshStandardMaterial({
+		color: 0x2244ff,
+		emissive: 0x1133aa,
+		emissiveIntensity: 0.5,
+		side: THREE.DoubleSide
+	});
+
+	var panel = new THREE.Mesh(panelGeometry, panelMaterial);
+	panel.position.set(0, supportHeight - panelHeight / 2 + 1, 0); // Panel at top of supports
+	panel.castShadow = true;
+	panel.receiveShadow = true;
+	group.add(panel);
+
+	return group;
 }
 
 Building.prototype.remove = function() {
+	// Don't dispose textures - they're shared from pools!
+
+	// Dispose rooftop elements (they're children of mesh, so no need to remove from scene)
+	if (this.rooftopElements) {
+		for (var i = 0; i < this.rooftopElements.length; i++) {
+			var element = this.rooftopElements[i];
+			// Dispose geometries and materials in the group
+			element.traverse(function(child) {
+				if (child.geometry) child.geometry.dispose();
+				if (child.material) child.material.dispose();
+			});
+		}
+		this.rooftopElements = [];
+	}
+
+	// Remove building mesh and dispose resources (but not textures!)
 	if (this.mesh) {
 		scene.remove(this.mesh);
 		this.mesh.geometry.dispose();
-		this.mesh.material.dispose();
+
+		// Dispose materials (material is an array)
+		if (Array.isArray(this.mesh.material)) {
+			for (var i = 0; i < this.mesh.material.length; i++) {
+				this.mesh.material[i].dispose();
+			}
+		} else {
+			this.mesh.material.dispose();
+		}
 	}
 };
 
 Building.prototype.update = function() {
-	// Move building left
+	// Move building left (rooftop elements move automatically as children)
 	this.x -= buildingPanSpeed;
 	if (this.mesh) {
 		this.mesh.position.x = this.x;
+	}
+
+	// Animate window textures - swap textures periodically (slower - every 10-30 seconds)
+	this.textureChangeTimer++;
+	if (this.textureChangeTimer > 600 + Math.random() * 1200) { // Change every 10-30 seconds
+		this.textureChangeTimer = 0;
+		this.currentTextureIndex = (this.currentTextureIndex + 1) % this.windowTextures.length;
+
+		// Update material textures
+		if (this.sidesMaterial) {
+			this.sidesMaterial.map = this.windowTextures[this.currentTextureIndex];
+			this.sidesMaterial.emissiveMap = this.windowTextures[this.currentTextureIndex];
+			this.sidesMaterial.needsUpdate = true;
+		}
 	}
 };
 
@@ -310,6 +783,34 @@ function updateBuildingPositions() {
 // Stars
 ////////////////////////////////////////////////////////////////////
 
+function createStarTexture() {
+	// Create a circular gradient texture for stars - similar to moon glow
+	var canvas = document.createElement('canvas');
+	canvas.width = 64;
+	canvas.height = 64;
+	var ctx = canvas.getContext('2d');
+
+	var centerX = 32;
+	var centerY = 32;
+	var gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, 32);
+
+	// Pure white center with glow - similar to moon glow technique
+	gradient.addColorStop(0, 'rgba(255, 255, 255, 1.0)');      // Pure white center
+	gradient.addColorStop(0.1, 'rgba(255, 255, 255, 1.0)');    // Solid white core
+	gradient.addColorStop(0.3, 'rgba(240, 240, 250, 0.9)');    // Very bright glow
+	gradient.addColorStop(0.5, 'rgba(200, 200, 230, 0.7)');    // Bright glow
+	gradient.addColorStop(0.7, 'rgba(150, 150, 200, 0.5)');    // Medium glow
+	gradient.addColorStop(0.85, 'rgba(100, 100, 150, 0.3)');   // Dim glow
+	gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');              // Transparent edge
+
+	ctx.fillStyle = gradient;
+	ctx.fillRect(0, 0, 64, 64);
+
+	var texture = new THREE.Texture(canvas);
+	texture.needsUpdate = true;
+	return texture;
+}
+
 function createStars() {
 	// Remove existing stars if they exist
 	if (stars) {
@@ -331,7 +832,7 @@ function createStars() {
 		var z = -Math.random() * 300 - 1500;
 
 		starPositions.push(x, y, z);
-		starSizes.push(2.0 + Math.random() * 3.0);  // Larger stars (2-5 instead of 0.75-2)
+		starSizes.push(6.0 + Math.random() * 9.0);  // Base sizes 6-15
 		starColors.push(1, 1, 1);  // White
 	}
 
@@ -339,14 +840,36 @@ function createStars() {
 	starGeometry.setAttribute('size', new THREE.Float32BufferAttribute(starSizes, 1));
 	starGeometry.setAttribute('color', new THREE.Float32BufferAttribute(starColors, 3));
 
-	// Create star material with custom shader for twinkling - brighter
-	var starMaterial = new THREE.PointsMaterial({
-		size: 5,  // Larger base size
-		sizeAttenuation: true,
+	// Create circular star texture
+	var starTexture = createStarTexture();
+
+	// Create custom shader material for per-vertex size animation
+	var starMaterial = new THREE.ShaderMaterial({
+		uniforms: {
+			pointTexture: { value: starTexture }
+		},
+		vertexShader: `
+			attribute float size;
+			attribute vec3 color;
+			varying vec3 vColor;
+			void main() {
+				vColor = color;
+				vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+				gl_PointSize = size * (300.0 / -mvPosition.z);
+				gl_Position = projectionMatrix * mvPosition;
+			}
+		`,
+		fragmentShader: `
+			uniform sampler2D pointTexture;
+			varying vec3 vColor;
+			void main() {
+				vec4 texColor = texture2D(pointTexture, gl_PointCoord);
+				gl_FragColor = vec4(vColor, 1.0) * texColor * 2.0;
+			}
+		`,
 		transparent: true,
-		opacity: 1.0,
-		vertexColors: true,
-		blending: THREE.AdditiveBlending
+		blending: THREE.AdditiveBlending,
+		depthWrite: false
 	});
 
 	stars = new THREE.Points(starGeometry, starMaterial);
@@ -361,13 +884,26 @@ function updateStars() {
 
 	var positions = stars.geometry.attributes.position.array;
 	var sizes = stars.geometry.attributes.size.array;
+	var colors = stars.geometry.attributes.color.array;
 
 	for (var i = 0; i < sizes.length; i++) {
-		var twinkle = Math.sin(frame * 0.01 + i) * 0.495 + 0.505;  // 0.01 to 1.0
-		sizes[i] = (2.0 + (i % 125) / 40) * twinkle;  // Larger base size with twinkle
+		// Twinkle varies from 0.01 to 2.0 (1% to 200%) - dramatic size variation
+		var twinkle = Math.sin(frame * 0.04 + i * 0.5) * 0.995 + 1.005;
+
+		// Base size calculation
+		var baseSize = 6.0 + (i % 125) / 13.5;  // 6-15 range
+		sizes[i] = baseSize * twinkle;
+
+		// Color intensity should stay more subtle (0.3 to 1.0)
+		var colorTwinkle = Math.sin(frame * 0.04 + i * 0.5) * 0.35 + 0.65;
+		var colorIndex = i * 3;
+		colors[colorIndex] = colorTwinkle;      // R
+		colors[colorIndex + 1] = colorTwinkle;  // G
+		colors[colorIndex + 2] = colorTwinkle;  // B
 	}
 
 	stars.geometry.attributes.size.needsUpdate = true;
+	stars.geometry.attributes.color.needsUpdate = true;
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -709,6 +1245,11 @@ $(window).resize(function() {
 
 function generateScene() {
 	console.log('Generating 3D scene with Three.js...');
+
+	// Initialize texture pools once (before creating any buildings)
+	if (windowTexturePool.length === 0) {
+		initializeTexturePools();
+	}
 
 	createGround();
 	createLighting();
