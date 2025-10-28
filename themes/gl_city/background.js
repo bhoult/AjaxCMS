@@ -18,11 +18,11 @@ var cameraMarker = null;
 var cameraFrustum = null;
 
 // Camera tracking
-var cameraStartY = 170;
+var cameraStartY = 130; // Lowered from 170
 var cameraStartZ = 25;
-var cameraTargetStartY = 170;
+var cameraTargetStartY = 130; // Lowered from 170
 var cameraTargetStartZ = -100;
-var normalViewCameraPos = [0, 170, 25];
+var normalViewCameraPos = [0, 130, 25]; // Updated to match new start Y
 
 // Overhead view toggle
 var overheadView = false;
@@ -788,6 +788,133 @@ function updateBuildingPositions() {
 }
 
 ////////////////////////////////////////////////////////////////////
+// Moving Flash Light (Single light that moves and flashes)
+////////////////////////////////////////////////////////////////////
+
+var flashLight = null;
+var flashLightState = 'off'; // States: 'off', 'flashing_on', 'flashing_off', 'moving'
+var flashLightTimer = 0;
+
+function createFlashLight() {
+	if (flashLight) {
+		scene.remove(flashLight);
+	}
+
+	// Very bright white point light - 8x brighter and larger range (doubled again)
+	flashLight = new THREE.PointLight(0xffffff, 0, 300); // Start at 0 intensity, 300 unit range (8x larger)
+	flashLight.castShadow = false;
+	flashLight.decay = 2;
+
+	// Position in rows 3-9 of buildings (depth 2-8)
+	positionFlashLight();
+
+	scene.add(flashLight);
+}
+
+function positionFlashLight() {
+	if (!flashLight) return;
+
+	// Random depth in rows 3-9 (depths 2, 3, 4, 5, 6, 7, 8)
+	var depth = 2 + Math.floor(Math.random() * 7); // depth 2, 3, 4, 5, 6, 7, or 8
+	var z = -depth * 60 - 100;
+
+	// Calculate frustum width at this depth
+	var camZ = 25;
+	var depthFromCamera = camZ - z;
+	var fov = 45 * Math.PI / 180;
+	var aspect = window.innerWidth / window.innerHeight;
+	var frustumHalfWidth = depthFromCamera * Math.tan(fov / 2) * aspect;
+
+	// Random position, strictly avoiding buildings
+	var maxAttempts = 50;
+	var x = 0;
+	var foundSpot = false;
+
+	for (var attempt = 0; attempt < maxAttempts; attempt++) {
+		x = (Math.random() - 0.5) * (frustumHalfWidth * 2);
+
+		// Check if this overlaps with ANY building (not just same depth)
+		var overlaps = false;
+		for (var i = 0; i < buildings.length; i++) {
+			var building = buildings[i];
+
+			// Check all nearby buildings (within reasonable Z range)
+			if (Math.abs(building.z - z) < 50) {
+				var halfWidth = building.width / 2;
+				var halfDepth = building.depth_size / 2;
+
+				// Add larger buffer to ensure light is NOT inside building
+				var bufferX = 30; // Large horizontal buffer
+				var bufferZ = 30; // Large depth buffer
+
+				if (Math.abs(x - building.x) < halfWidth + bufferX &&
+				    Math.abs(z - building.z) < halfDepth + bufferZ) {
+					overlaps = true;
+					break;
+				}
+			}
+		}
+
+		if (!overlaps) {
+			foundSpot = true;
+			break;
+		}
+	}
+
+	// Only set position if we found a clear spot
+	if (foundSpot) {
+		flashLight.position.set(x, 5, z); // y=5 (above ground)
+	} else {
+		// If no spot found, try a different depth (2-8)
+		var newDepth = 2 + Math.floor(Math.random() * 7);
+		flashLight.position.set(0, 5, -newDepth * 60 - 100); // Default safe position
+	}
+}
+
+function updateFlashLight() {
+	if (!flashLight) return;
+
+	flashLightTimer++;
+
+	switch (flashLightState) {
+		case 'off':
+			// No pause - immediately start next flash
+			flashLightState = 'flashing_on';
+			flashLightTimer = 0;
+			break;
+
+		case 'flashing_on':
+			// Ramp up intensity slowly - 62.5% brightness (50% + 25% increase), 2x longer duration
+			flashLight.intensity += 0.667; // Ramp up over ~30 frames
+			if (flashLight.intensity >= 20.0) { // 62.5% of original 32.0 (16.0 * 1.25)
+				flashLight.intensity = 20.0;
+				flashLightState = 'flashing_off';
+				flashLightTimer = 0;
+			}
+			break;
+
+		case 'flashing_off':
+			// Hold bright for longer, then fade slowly - 6x longer overall
+			if (flashLightTimer > 18) { // Hold for 18 frames (6x longer than original 3)
+				flashLight.intensity -= 0.208; // Fade out over ~96 frames (adjusted for 20.0)
+				if (flashLight.intensity <= 0) {
+					flashLight.intensity = 0;
+					flashLightState = 'moving';
+					flashLightTimer = 0;
+				}
+			}
+			break;
+
+		case 'moving':
+			// Reposition immediately and start next flash
+			positionFlashLight();
+			flashLightState = 'off';
+			flashLightTimer = 0;
+			break;
+	}
+}
+
+////////////////////////////////////////////////////////////////////
 // Mountains
 ////////////////////////////////////////////////////////////////////
 
@@ -1436,9 +1563,9 @@ function createMoon() {
 	var glowSprite = new THREE.Sprite(glowMaterial);
 
 	// Calculate offset to position glow behind moon from camera's perspective
-	// Camera is at approximately (0, 170, 25), moon at (-800, 600, -1400)
-	// Direction from camera to moon: (-800, 430, -1425)
-	// Normalized and scaled by 80 units: (-37.8, 20.3, -67.4)
+	// Camera is at approximately (0, 130, 25), moon at (-800, 600, -1400)
+	// Direction from camera to moon: (-800, 470, -1425)
+	// Normalized and scaled by 80 units: (-37.8, 22.1, -67.0)
 	glowSprite.position.set(-38, 20, -67);  // Behind moon from camera perspective
 	glowSprite.scale.set(360, 360, 1);  // Glow size reduced by 10% to match moon
 	moonGroup.add(glowSprite);
@@ -1728,6 +1855,7 @@ function render() {
 
 	// Update building positions and spawning
 	updateBuildingPositions();
+	updateFlashLight();
 
 	// Update camera marker for overhead view
 	updateCameraMarker();
@@ -1785,6 +1913,7 @@ function generateScene() {
 	createLighting();
 	createMountains();
 	generateBuildings();
+	createFlashLight(); // Create moving flash light after buildings
 	createStars();
 	createMoon();
 	createCameraMarker();
