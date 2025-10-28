@@ -12,7 +12,11 @@ GL-City renders an actual 3D cityscape with real depth. Unlike traditional paral
 - **Moving Camera**: Camera travels backward and upward as you scroll, creating natural parallax
 - **150 3D Buildings**: Procedurally generated boxes at 10 depth layers spread through 3D space
 - **3D Mountain Ranges**: Three layers of triangular prism geometry with atmospheric tinting
-- **100 Twinkling Stars**: Positioned in 3D space with enhanced flickering effects
+- **600 Twinkling Stars**: Positioned in 3D space with enhanced flickering effects
+- **Shooting Stars**: Glittering particle trails streak across the night sky
+- **Drifting Clouds**: Two-layer parallax clouds with procedural textures
+- **Flying UFOs**: Metallic saucers with colored lights and animated spotlight beams
+- **Bat Signal**: Periodic searchlight shining from city rooftops with bat symbol
 - **Depth Testing**: Proper Z-buffer rendering for realistic occlusion
 - **Perspective Projection**: 45-degree field of view with realistic perspective
 - **Responsive Design**: Entire 3D scene regenerates on window resize
@@ -49,16 +53,19 @@ GL-City requires WebGL support (available in all modern browsers):
 
 If WebGL is not available, the theme will gracefully fail and display an error message.
 
-### Comparison to Night City
+### Features
 
-GL-City is a simplified WebGL implementation of Night City, focusing on core features:
-- ✅ Buildings with parallax
+GL-City is a full-featured WebGL implementation with:
+- ✅ Buildings with parallax and textured windows
 - ✅ Mountains with atmospheric tinting
-- ✅ Twinkling stars
-- ✅ Window lights
-- ⏳ Shooting stars (coming soon)
-- ⏳ UFOs (coming soon)
-- ⏳ Moon and clouds (coming soon)
-- ⏳ Rooftop details (coming soon)
+- ✅ 600 twinkling stars
+- ✅ Shooting stars with particle trails
+- ✅ Drifting clouds (20 clouds, two-layer parallax)
+- ✅ Flying UFOs with spotlight beams
+- ✅ Bat Signal searchlight (appears every 2-3 minutes)
+- ✅ Moon with crater texture and glow
+- ✅ Rooftop details (water towers, HVAC units, antennas)
+- ✅ Moving flash light in the city
+- ✅ Shadow mapping and lighting
 
-This is a proof-of-concept demonstrating WebGL rendering. Additional features will be added iteratively.
+This WebGL theme demonstrates advanced 3D rendering techniques for web-based visualization.

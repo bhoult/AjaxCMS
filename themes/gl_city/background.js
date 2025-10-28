@@ -1380,6 +1380,197 @@ function updateUFOs() {
 }
 
 ////////////////////////////////////////////////////////////////////
+// Bat Signal
+////////////////////////////////////////////////////////////////////
+
+var batSignal = null;
+var batSignalBuilding = null;
+var batSignalSpawnTimer = 0;
+var batSignalSpawnInterval = 7200 + Math.random() * 3600; // 2-3 minutes (at 60fps)
+
+function createBatSignal() {
+	// Calculate current camera frustum to find buildings outside view
+	var camZ = 25;
+	var fov = 45 * Math.PI / 180;
+	var aspect = window.innerWidth / window.innerHeight;
+
+	// Find suitable buildings that are outside (to the right of) the view
+	var suitableBuildings = buildings.filter(function(b) {
+		// Tall buildings in rows 3-6
+		if (b.depth < 2 || b.depth > 5 || b.height <= 60) return false;
+
+		// Calculate frustum at building's depth
+		var depthFromCamera = Math.abs(b.z - camZ);
+		var frustumHalfWidth = depthFromCamera * Math.tan(fov / 2) * aspect;
+
+		// Building should be to the right of the view (x > frustumHalfWidth)
+		return b.x > frustumHalfWidth * 0.8; // Slightly inside margin for safety
+	});
+
+	if (suitableBuildings.length === 0) {
+		console.log('No suitable buildings outside view for bat signal yet');
+		return;
+	}
+
+	// Pick a random suitable building
+	batSignalBuilding = suitableBuildings[Math.floor(Math.random() * suitableBuildings.length)];
+	console.log('Placing bat signal on building at depth', batSignalBuilding.depth, 'height', batSignalBuilding.height, 'x', batSignalBuilding.x);
+
+	var batSignalGroup = new THREE.Group();
+
+	// Random angle for variety - lean left/right and tilt
+	var angleY = Math.random() * Math.PI * 2; // 0° to 360° - direction it points
+	var tiltAngle = (Math.random() - 0.5) * Math.PI / 4; // -22.5° to +22.5° - how much it leans
+
+	var targetX = Math.sin(angleY) * Math.sin(tiltAngle) * 400;
+	var targetZ = Math.cos(angleY) * Math.sin(tiltAngle) * 400;
+	var targetY = Math.cos(tiltAngle) * 400;
+
+	// Spotlight pointing upward into the sky at an angle
+	var spotlight = new THREE.SpotLight(0xffff99, 2.0, 400, Math.PI / 8, 0.2, 2);
+	spotlight.position.set(0, 0, 0);
+	spotlight.target.position.set(targetX, targetY, targetZ); // Point upward at angle
+	spotlight.castShadow = false;
+	batSignalGroup.add(spotlight);
+	batSignalGroup.add(spotlight.target);
+
+	// Create bat symbol texture
+	var batCanvas = document.createElement('canvas');
+	batCanvas.width = 256;
+	batCanvas.height = 256;
+	var batCtx = batCanvas.getContext('2d');
+
+	// Draw simplified bat symbol
+	batCtx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+	batCtx.beginPath();
+	// Bat body (center)
+	batCtx.arc(128, 140, 25, 0, Math.PI * 2);
+	batCtx.fill();
+
+	// Left wing
+	batCtx.beginPath();
+	batCtx.moveTo(103, 140);
+	batCtx.quadraticCurveTo(50, 100, 30, 150);
+	batCtx.quadraticCurveTo(50, 160, 103, 145);
+	batCtx.closePath();
+	batCtx.fill();
+
+	// Right wing
+	batCtx.beginPath();
+	batCtx.moveTo(153, 140);
+	batCtx.quadraticCurveTo(206, 100, 226, 150);
+	batCtx.quadraticCurveTo(206, 160, 153, 145);
+	batCtx.closePath();
+	batCtx.fill();
+
+	// Bat ears
+	batCtx.beginPath();
+	batCtx.moveTo(115, 120);
+	batCtx.lineTo(105, 95);
+	batCtx.lineTo(120, 115);
+	batCtx.closePath();
+	batCtx.fill();
+
+	batCtx.beginPath();
+	batCtx.moveTo(141, 120);
+	batCtx.lineTo(151, 95);
+	batCtx.lineTo(136, 115);
+	batCtx.closePath();
+	batCtx.fill();
+
+	// Create beam cone with bat symbol - half as tall
+	var beamHeight = 200; // Half of original 400
+	var beamRadius = Math.tan(Math.PI / 8) * beamHeight;
+
+	var beamCanvas = document.createElement('canvas');
+	beamCanvas.width = 512;
+	beamCanvas.height = 512;
+	var beamCtx = beamCanvas.getContext('2d');
+
+	// Draw light beam gradient - fade to transparent at top
+	var gradient = beamCtx.createLinearGradient(256, 512, 256, 0);
+	gradient.addColorStop(0, 'rgba(255, 255, 200, 0.4)'); // Bright at bottom
+	gradient.addColorStop(0.5, 'rgba(255, 255, 200, 0.15)'); // Medium in middle
+	gradient.addColorStop(0.8, 'rgba(255, 255, 200, 0.03)'); // Faint near top
+	gradient.addColorStop(1, 'rgba(255, 255, 200, 0)'); // Fully transparent at top
+
+	beamCtx.fillStyle = gradient;
+	beamCtx.beginPath();
+	beamCtx.moveTo(256, 512); // Bottom center
+	beamCtx.lineTo(100, 0); // Top left
+	beamCtx.lineTo(412, 0); // Top right
+	beamCtx.closePath();
+	beamCtx.fill();
+
+	// Overlay bat symbol at top of beam
+	beamCtx.globalAlpha = 0.6;
+	beamCtx.drawImage(batCanvas, 128, 20, 256, 256);
+
+	var beamTexture = new THREE.Texture(beamCanvas);
+	beamTexture.needsUpdate = true;
+	var beamMaterial = new THREE.MeshBasicMaterial({
+		map: beamTexture,
+		transparent: true,
+		opacity: 0.5,
+		side: THREE.DoubleSide,
+		depthWrite: false
+	});
+
+	// Use a sprite so it always faces the camera (billboard effect)
+	var beamSprite = new THREE.Sprite(beamMaterial);
+	beamSprite.scale.set(beamRadius * 2, beamHeight, 1);
+	beamSprite.position.set(0, beamHeight / 2, 0); // Center of beam above signal
+	batSignalGroup.add(beamSprite);
+
+	// Store the sprite reference so we can update its rotation in render loop
+	batSignalGroup.beamSprite = beamSprite;
+
+	// Position signal on top of the building (at roof level in local coordinates)
+	// Building mesh center is at origin, roof is at height/2
+	var roofY = batSignalBuilding.height / 2;
+	batSignalGroup.position.set(0, roofY, 0);
+
+	// Add signal to the building's mesh so it moves with the building
+	if (batSignalBuilding.mesh) {
+		batSignalBuilding.mesh.add(batSignalGroup);
+	}
+
+	// Don't rotate the group - let sprite billboard to camera naturally
+	// Store tilt info for visual reference only (spotlight already points in right direction)
+
+	batSignal = {
+		group: batSignalGroup,
+		building: batSignalBuilding
+	};
+	console.log('Bat signal created on building with tilt', tiltAngle, 'direction', angleY);
+}
+
+function updateBatSignal() {
+	// Increment timer
+	batSignalSpawnTimer++;
+
+	// Check if the building with the bat signal has been removed
+	if (batSignal && batSignal.building && !batSignal.building.mesh) {
+		batSignal = null;
+		batSignalBuilding = null;
+		console.log('Bat signal building removed');
+		// Reset timer for next spawn
+		batSignalSpawnTimer = 0;
+		batSignalSpawnInterval = 7200 + Math.random() * 3600; // 2-3 minutes
+	}
+
+	// Create bat signal if timer elapsed and we don't have one and buildings exist
+	if (!batSignal && buildings.length > 0 && batSignalSpawnTimer >= batSignalSpawnInterval) {
+		createBatSignal();
+		// If creation successful, reset timer
+		if (batSignal) {
+			batSignalSpawnTimer = 0;
+			batSignalSpawnInterval = 7200 + Math.random() * 3600; // 2-3 minutes
+		}
+	}
+}
+
+////////////////////////////////////////////////////////////////////
 // Mountains
 ////////////////////////////////////////////////////////////////////
 
@@ -2321,6 +2512,7 @@ function render() {
 	// Update building positions and spawning
 	updateBuildingPositions();
 	updateFlashLight();
+	updateBatSignal();
 
 	// Update camera marker for overhead view
 	updateCameraMarker();
@@ -2384,6 +2576,7 @@ function generateScene() {
 	generateClouds(); // Create clouds in far background
 	createStars();
 	createMoon();
+	// Bat signal will be created by updateBatSignal() once buildings are spawned
 	createCameraMarker();
 	createCameraFrustum();
 
