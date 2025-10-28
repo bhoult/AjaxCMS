@@ -587,9 +587,8 @@ Building.prototype.createAntenna = function() {
 	// Blinking light on top
 	var lightGeometry = new THREE.SphereGeometry(0.5, 8, 8);
 	var lightMaterial = new THREE.MeshBasicMaterial({
-		color: 0xff0000,
-		emissive: 0xff0000,
-		emissiveIntensity: 1.0
+		color: 0xff0000
+		// MeshBasicMaterial doesn't support emissive properties - just use bright color
 	});
 
 	var light = new THREE.Mesh(lightGeometry, lightMaterial);
@@ -679,9 +678,9 @@ Building.prototype.update = function() {
 		this.mesh.position.x = this.x;
 	}
 
-	// Animate window textures - swap textures periodically (slower - every 10-30 seconds)
+	// Animate window textures - swap textures periodically (1/3 the rate - every 30-90 seconds)
 	this.textureChangeTimer++;
-	if (this.textureChangeTimer > 600 + Math.random() * 1200) { // Change every 10-30 seconds
+	if (this.textureChangeTimer > 1800 + Math.random() * 3600) { // Change every 30-90 seconds (3x slower)
 		this.textureChangeTimer = 0;
 		this.currentTextureIndex = (this.currentTextureIndex + 1) % this.windowTextures.length;
 
@@ -982,13 +981,27 @@ function createStars() {
 	var starSizes = [];
 	var starColors = [];
 
-	for (var i = 0; i < 400; i++) {
-		var x = (Math.random() - 0.5) * 4000;
-		var y = 100 + Math.random() * 1100;
-		var z = -Math.random() * 300 - 1500;
+	// Calculate camera FOV bounds to ensure all stars are visible as camera moves
+	// Camera moves as user scrolls, so spread stars across a large vertical range
+	// Mountains are at y=50 with max height 375, so peaks reach up to y=425
+	// Stars need to be above y=425 to not be blocked by mountains
+	// FOV 45°: tan(22.5°) ≈ 0.414, typical aspect ~1.778
+	for (var i = 0; i < 600; i++) {  // 50% more stars (was 400)
+		var z = -Math.random() * 200 - 1900;  // -1900 to -2100 (closer to mountains, was -2400)
+		var distanceFromCamera = Math.abs(z - 25);  // Distance from camera z position
+
+		// Calculate FOV bounds at this distance
+		var halfHeight = distanceFromCamera * 0.414;  // tan(22.5°)
+		var halfWidth = halfHeight * 1.778;  // aspect ratio
+
+		// Position stars within visible frustum
+		var x = (Math.random() - 0.5) * 2 * halfWidth * 0.9;  // 90% of width for margin
+		// Spread stars across much larger vertical range to remain visible as camera moves
+		// From above mountains (y=450) to much higher (y=1200) to cover camera movement during scroll
+		var y = 450 + Math.random() * 750;  // From y=450 to y=1200
 
 		starPositions.push(x, y, z);
-		starSizes.push(6.0 + Math.random() * 9.0);  // Base sizes 6-15
+		starSizes.push(9.0 + Math.random() * 13.5);  // 50% larger: 9-22.5 (was 6-15)
 		starColors.push(1, 1, 1);  // White
 	}
 
@@ -1031,7 +1044,7 @@ function createStars() {
 	stars = new THREE.Points(starGeometry, starMaterial);
 	scene.add(stars);
 
-	console.log('Created 400 twinkling stars');
+	console.log('Created 600 twinkling stars');
 }
 
 // Update star twinkle animation
@@ -1060,6 +1073,316 @@ function updateStars() {
 
 	stars.geometry.attributes.size.needsUpdate = true;
 	stars.geometry.attributes.color.needsUpdate = true;
+}
+
+////////////////////////////////////////////////////////////////////
+// Shooting Stars
+////////////////////////////////////////////////////////////////////
+
+var shootingStars = [];
+var nextShootingStarTime = -1; // Start negative so first star spawns immediately
+
+// Create unified elongated teardrop texture with blur for shooting star
+function createShootingStarTexture() {
+	var canvas = document.createElement('canvas');
+	canvas.width = 512;
+	canvas.height = 96;
+	var ctx = canvas.getContext('2d');
+
+	// Clear canvas with extra space for blur
+	ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+	var centerY = 48;
+
+	// Create gradient from pure white opaque head (right) to transparent tail (left)
+	// Doubled brightness - more opaque throughout
+	var gradient = ctx.createLinearGradient(20, centerY, 490, centerY);
+	gradient.addColorStop(0, 'rgba(255, 255, 255, 0.0)');    // Fully transparent at tail tip
+	gradient.addColorStop(0.2, 'rgba(255, 255, 255, 0.0)');  // Stay transparent
+	gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.6)');  // Begin fade in (doubled from 0.3)
+	gradient.addColorStop(0.75, 'rgba(255, 255, 255, 1.0)'); // Fully bright earlier (was 0.8)
+	gradient.addColorStop(1, 'rgba(255, 255, 255, 1.0)');    // Pure white, fully opaque at head
+
+	// Apply stronger blur for brighter glow (doubled)
+	ctx.shadowBlur = 50;
+	ctx.shadowColor = 'rgba(255, 255, 255, 1.0)';
+
+	// Draw unified elongated teardrop shape - thinner profile
+	// Head on RIGHT (leads), tail tapers to point on LEFT
+	ctx.fillStyle = gradient;
+	ctx.beginPath();
+
+	// Start at tail tip (left side)
+	ctx.moveTo(20, centerY);
+
+	// Upper curve - smooth teardrop shape from tip to round head (thinner)
+	ctx.bezierCurveTo(
+		80, centerY - 2,    // Gentle start from tip (thinner)
+		200, centerY - 8,   // Widen gradually (thinner)
+		350, centerY - 12,  // Maximum width (thinner - was 22)
+		480, centerY - 6    // Approach head (thinner)
+	);
+
+	// Round head cap at right end (smaller)
+	ctx.bezierCurveTo(
+		490, centerY - 3,
+		495, centerY,
+		490, centerY + 6
+	);
+
+	// Lower curve - smooth teardrop back to tip (thinner)
+	ctx.bezierCurveTo(
+		350, centerY + 12,  // Maximum width (thinner - was 22)
+		200, centerY + 8,   // Narrow (thinner)
+		80, centerY + 2,    // Gentle taper (thinner)
+		20, centerY         // Back to tip
+	);
+
+	ctx.closePath();
+	ctx.fill();
+
+	// Draw again with more blur for enhanced glow effect (doubled)
+	ctx.shadowBlur = 70;
+	ctx.shadowColor = 'rgba(255, 255, 220, 1.0)';
+	ctx.fill();
+
+	var texture = new THREE.Texture(canvas);
+	texture.needsUpdate = true;
+	return texture;
+}
+
+function ShootingStar() {
+	// Position in far background between mountains (-1500) and moon (-1800 to -2200)
+	// Camera FOV at z=-1500 is roughly ±1000 units horizontally
+	// Spawn across the entire width so they're always visible
+	this.startX = -1200 + Math.random() * 2400;  // Span entire view (-1200 to +1200)
+	this.startY = 300 + Math.random() * 400;     // High in sky (300-700)
+	this.startZ = -1500 - Math.random() * 300;   // -1500 to -1800 (between mountains and moon)
+
+	// Diagonal motion - 30% slower than before
+	this.velocityX = (Math.random() - 0.5) * 7; // -3.5 to +3.5 (30% slower)
+	this.velocityY = -2.625 - Math.random() * 2.625; // -2.625 to -5.25 (30% slower)
+	this.velocityZ = 0;                          // Stay at same depth
+
+	// Longer lifetime for slower movement
+	this.life = 1.0;
+	this.maxLife = 8.0; // 8 seconds (longer to see slow movement)
+
+	// Position
+	this.x = this.startX;
+	this.y = this.startY;
+	this.z = this.startZ;
+
+	// Create plane with long teardrop glow texture - thinner
+	var length = 120 + Math.random() * 80; // 120-200 length (longer for tail)
+	var width = 8 + Math.random() * 7;     // 8-15 width (thinner - was 20-35)
+	var geometry = new THREE.PlaneGeometry(length, width);
+
+	var texture = createShootingStarTexture();
+	var material = new THREE.MeshBasicMaterial({
+		map: texture,
+		transparent: true,
+		opacity: 1.0,
+		blending: THREE.AdditiveBlending,
+		depthWrite: false,
+		side: THREE.DoubleSide,
+		fog: false
+	});
+
+	this.plane = new THREE.Mesh(geometry, material);
+	this.plane.position.set(this.x, this.y, this.z);
+
+	// Orient plane along direction of travel
+	var angle = Math.atan2(this.velocityY, this.velocityX);
+	this.plane.rotation.z = angle;
+
+	scene.add(this.plane);
+
+	// Particle trail system
+	this.particles = [];
+	this.maxParticles = 150;  // Maximum trail particles (increased for longer trails)
+	this.particleSpawnRate = 3; // Spawn 3 particles per frame
+	this.particleGeometry = new THREE.BufferGeometry();
+	this.particlePositions = new Float32Array(this.maxParticles * 3);
+	this.particleSizes = new Float32Array(this.maxParticles);
+	this.particleAlphas = new Float32Array(this.maxParticles);
+
+	// Initialize particle attributes
+	for (var i = 0; i < this.maxParticles; i++) {
+		this.particlePositions[i * 3] = this.x;
+		this.particlePositions[i * 3 + 1] = this.y;
+		this.particlePositions[i * 3 + 2] = this.z;
+		this.particleSizes[i] = 0;
+		this.particleAlphas[i] = 0;
+	}
+
+	this.particleGeometry.setAttribute('position', new THREE.BufferAttribute(this.particlePositions, 3));
+	this.particleGeometry.setAttribute('size', new THREE.BufferAttribute(this.particleSizes, 1));
+	this.particleGeometry.setAttribute('alpha', new THREE.BufferAttribute(this.particleAlphas, 1));
+
+	// Create particle shader material
+	var starTexture = createStarTexture();
+	this.particleMaterial = new THREE.ShaderMaterial({
+		uniforms: {
+			pointTexture: { value: starTexture },
+			time: { value: 0 }
+		},
+		vertexShader: `
+			attribute float size;
+			attribute float alpha;
+			varying float vAlpha;
+			void main() {
+				vAlpha = alpha;
+				vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+				gl_PointSize = size * (300.0 / -mvPosition.z);
+				gl_Position = projectionMatrix * mvPosition;
+			}
+		`,
+		fragmentShader: `
+			uniform sampler2D pointTexture;
+			varying float vAlpha;
+			void main() {
+				vec4 texColor = texture2D(pointTexture, gl_PointCoord);
+				gl_FragColor = vec4(1.0, 1.0, 1.0, vAlpha) * texColor;
+			}
+		`,
+		transparent: true,
+		blending: THREE.AdditiveBlending,
+		depthWrite: false,
+		fog: false
+	});
+
+	this.particlePoints = new THREE.Points(this.particleGeometry, this.particleMaterial);
+	scene.add(this.particlePoints);
+}
+
+ShootingStar.prototype.update = function() {
+	// Update lifetime
+	this.life -= 0.016; // Approximately 60fps
+
+	// Only update position and spawn particles if still alive
+	if (this.life > 0) {
+		// Update position
+		this.x += this.velocityX;
+		this.y += this.velocityY;
+		this.z += this.velocityZ;
+
+		// Update plane position
+		this.plane.position.set(this.x, this.y, this.z);
+
+		// Fade out based on lifetime
+		var fadeFactor = Math.max(0, this.life / this.maxLife);
+		this.plane.material.opacity = fadeFactor;
+
+		// Spawn new trail particles from the front (head) of the shooting star
+		for (var i = 0; i < this.particleSpawnRate; i++) {
+			if (this.particles.length < this.maxParticles) {
+				// Calculate the front position - offset along velocity direction
+				// Normalize velocity to get direction, then offset by half the plane length
+				var speed = Math.sqrt(this.velocityX * this.velocityX + this.velocityY * this.velocityY);
+				var dirX = this.velocityX / speed;
+				var dirY = this.velocityY / speed;
+				var planeLength = 120 + 40;  // Average plane length (120-200)
+				var frontOffset = planeLength / 2;  // Half the plane length to reach the front
+
+				// Spawn particle at the front (head) with slight randomness
+				// Each particle has its own independent lifetime
+				this.particles.push({
+					x: this.x + dirX * frontOffset + (Math.random() - 0.5) * 8,
+					y: this.y + dirY * frontOffset + (Math.random() - 0.5) * 8,
+					z: this.z + (Math.random() - 0.5) * 2,
+					size: 6 + Math.random() * 10,  // 6-16 size (slightly smaller)
+					life: 1.0,
+					maxLife: 1.5 + Math.random() * 1.5,  // 1.5-3.0 seconds (longer lifetime for longer trails)
+					twinklePhase: Math.random() * Math.PI * 2
+				});
+			}
+		}
+	} else if (this.plane.visible) {
+		// Hide plane once shooting star dies, but keep updating particles
+		this.plane.visible = false;
+	}
+
+	// Update existing particles
+	for (var i = this.particles.length - 1; i >= 0; i--) {
+		var particle = this.particles[i];
+		particle.life -= 0.016;
+
+		// Remove dead particles
+		if (particle.life <= 0) {
+			this.particles.splice(i, 1);
+			continue;
+		}
+
+		// Twinkle effect - vary alpha for glittering
+		var twinkle = Math.sin(frame * 0.2 + particle.twinklePhase) * 0.3 + 0.7; // 0.4 to 1.0
+		var lifeFade = particle.life / particle.maxLife;
+		particle.alpha = lifeFade * twinkle;
+	}
+
+	// Update particle buffer attributes
+	for (var i = 0; i < this.maxParticles; i++) {
+		if (i < this.particles.length) {
+			var p = this.particles[i];
+			this.particlePositions[i * 3] = p.x;
+			this.particlePositions[i * 3 + 1] = p.y;
+			this.particlePositions[i * 3 + 2] = p.z;
+			this.particleSizes[i] = p.size;
+			this.particleAlphas[i] = p.alpha;
+		} else {
+			// Hide unused particles
+			this.particleSizes[i] = 0;
+			this.particleAlphas[i] = 0;
+		}
+	}
+
+	// Mark attributes for update
+	this.particleGeometry.attributes.position.needsUpdate = true;
+	this.particleGeometry.attributes.size.needsUpdate = true;
+	this.particleGeometry.attributes.alpha.needsUpdate = true;
+
+	// Return true if still alive OR if particles still exist
+	// This allows particles to continue after the shooting star itself is gone
+	return this.life > 0 || this.particles.length > 0;
+};
+
+ShootingStar.prototype.remove = function() {
+	scene.remove(this.plane);
+	this.plane.geometry.dispose();
+	this.plane.material.map.dispose();
+	this.plane.material.dispose();
+
+	// Clean up particle system
+	scene.remove(this.particlePoints);
+	this.particleGeometry.dispose();
+	this.particleMaterial.uniforms.pointTexture.value.dispose();
+	this.particleMaterial.dispose();
+	this.particles = [];
+};
+
+function updateShootingStars() {
+	if (overheadView) return;
+
+	// Spawn shooting stars randomly at ~20 per minute (doubled frequency)
+	if (frame > nextShootingStarTime) {
+		try {
+			var star = new ShootingStar();
+			shootingStars.push(star);
+			// 20 per minute = average 3 seconds between stars = 180 frames
+			// Add randomness: 1.5-4.5 seconds (90-270 frames)
+			nextShootingStarTime = frame + 90 + Math.random() * 180; // 1.5-4.5 seconds at 60fps
+		} catch(e) {
+			console.error('Error creating shooting star:', e);
+		}
+	}
+
+	// Update existing shooting stars
+	for (var i = shootingStars.length - 1; i >= 0; i--) {
+		if (!shootingStars[i].update()) {
+			shootingStars[i].remove();
+			shootingStars.splice(i, 1);
+		}
+	}
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -1412,6 +1735,7 @@ function render() {
 	// Update star twinkle (not in overhead view)
 	if (!overheadView) {
 		updateStars();
+		updateShootingStars();
 	}
 
 	// Show/hide stars and moon based on view
