@@ -800,10 +800,12 @@ function processPageContent(contentData, url, callback) {
 	data = contentData;
 
 	// Protect triple-backtick code blocks
-	// Match from ```language\n or ```\n to the closing ```
-	data = data.replace(/```[^\n]*\n[\s\S]*?\n```/g, function(match) {
+	// Match: newline, ```, optional language, newline, content, newline, ```, newline
+	// The key is using multiline mode and ensuring ``` is on its own line
+	data = data.replace(/^```[^\n]*$\n([\s\S]*?)^```$/gm, function(fullMatch, content) {
 		var index = globalProtectedCodeBlocks.length;
-		globalProtectedCodeBlocks.push(match);
+		var codeBlock = fullMatch;
+		globalProtectedCodeBlocks.push(codeBlock);
 		return '___PROTECTED_CODE_BLOCK_' + index + '___';
 	});
 
