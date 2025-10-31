@@ -27,7 +27,7 @@ AjaxCMS uses a Node.js server that provides JSON directory listings via API endp
 
 **Naming Convention:** Files prefixed with numbers (e.g., `01-Home.md`) control menu order. The number and file extension are stripped from the display name.
 
-**Layouts & Inserts:** Pages can use layout templates (`layout.html`) for consistent styling. The `{{insert}}` helper embeds content from other files.
+**Layouts & Inserts:** Pages can use layout templates (`layout.html`) for consistent styling. The `{{     insert}}` helper embeds content from other files.
 
 ## Features
 

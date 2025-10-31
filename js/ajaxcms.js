@@ -673,7 +673,19 @@ function processInserts(callback) {
 
 	// Load all the files in the insert list
 	for (var i=0; i < insert_list.length; i++) {
-		var fname =  pageMatch(insert_list[i].replace(/[{}\s]/g,'').split("|")[1]);
+		var pageName = insert_list[i].replace(/[{}\s]/g,'').split("|")[1];
+
+		// Skip invalid inserts (no page name specified)
+		if (!pageName || pageName.trim() === '') {
+			console.warn('Skipping invalid insert (no page name):', insert_list[i]);
+			rcount--;
+			if (rcount == 0 && callback && typeof(callback) === "function") {
+				callback();
+			}
+			continue;
+		}
+
+		var fname = pageMatch(pageName);
 		console.log('Loading insert:', fname);
 
 		var scripts = insert_list[i].replace(/[{}\s]/g,'').split("|")[2];
