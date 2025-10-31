@@ -375,9 +375,9 @@ function process_page(sdata) {
 		var attributes_string = parsed.attributes;
 		var pieces = parsed.pieces;
 
-        // Blank - Skip any helpers that contain five sequential spaces.  This is so we can document the helpers format without it being replaced.  HTML merges the spaces.
+        // Blank - Skip any helpers that contain five sequential spaces.  This is so we can document the helpers format without it being replaced.
         if (/\s\s\s\s\s/.test(x)) {
-        	return x.replace(/\s+/,' ')
+        	return x; // Return unchanged to preserve spacing in <code>/<pre> blocks
         }
 
 		// Anchors

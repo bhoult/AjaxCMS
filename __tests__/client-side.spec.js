@@ -221,5 +221,24 @@ describe('AjaxCMS Client-Side JavaScript Regressions', () => {
       expect(tableContent).toMatch(/\{\{carousel\s*:\d+\s{5}\|/);
       expect(tableContent).toMatch(/\{\{insert\s{5}\|/);
     });
+
+    it('should preserve all spaces when skipping helpers (not collapse to 1)', () => {
+      // Find process_page function
+      const processPagePattern = /function process_page\([\s\S]*?^}/m;
+      const processPageMatch = ajaxcmsCode.match(processPagePattern);
+      expect(processPageMatch).toBeTruthy();
+
+      const processPageFunction = processPageMatch[0];
+
+      // The 5-space check should return x unchanged, not x.replace(/\s+/,' ')
+      // This preserves formatting in <code>/<pre> blocks
+      expect(processPageFunction).toMatch(/if\s*\(\/\\s\\s\\s\\s\\s\/\.test\(x\)\)/);
+
+      // Should return x unchanged (not collapsing spaces)
+      const fiveSpaceBlock = processPageFunction.match(/if\s*\(\/\\s\\s\\s\\s\\s\/\.test\(x\)\)\s*\{[\s\S]*?\}/);
+      expect(fiveSpaceBlock).toBeTruthy();
+      expect(fiveSpaceBlock[0]).toMatch(/return\s+x\s*;/); // return x;
+      expect(fiveSpaceBlock[0]).not.toMatch(/return\s+x\.replace/); // NOT return x.replace(...)
+    });
   });
 });
