@@ -2,32 +2,47 @@
 
 {{i | glacier_lake | Hidden Lake at Glacier National Park | class=>medium right}}
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum 
-dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+This page demonstrates a **two-column responsive layout** using Bootstrap's grid system. The layout is defined in `layout.html` in this directory and automatically applies to all pages in this folder.
 
-{{a | colorado.html | This is a test}} Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore 
-veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia 
-consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci 
-velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum 
-exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate 
-velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?
+### Layout Structure
 
-Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore 
-veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia 
-consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci 
-velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum 
-exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate 
-velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?
+The layout divides the page into two columns:
+- **Main content area** (left, 8/12 width) - You're reading this now
+- **Sidebar** (right, 4/12 width) - Shows a file list using the `{{     filelist}}` helper
 
-{{i | pagosa | pagosa | small left}}
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum 
-dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+On mobile devices, these columns stack vertically for better readability.
 
-Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore 
-veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia 
-consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci 
-velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum 
-exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate 
-velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?
+### Why Use Layouts?
+
+{{a | colorado.html | Layouts}} provide consistency across multiple pages without duplicating HTML. Common use cases include:
+
+1. **Documentation sites** - Consistent navigation sidebar across all docs
+2. **Blogs** - Standard sidebar with recent posts, categories, or tags
+3. **Multi-page forms** - Shared header/footer with different content sections
+4. **Portfolio sites** - Unified structure for project pages
+
+### Dynamic Content in Layouts
+
+{{i | pagosa | Pagosa Springs, Colorado | small left}}
+
+The sidebar in this layout uses the `{{     filelist}}` helper to automatically generate a file tree. When you add or remove files from this directory, the sidebar updates automatically—no manual editing required.
+
+This demonstrates how layouts can include dynamic helpers that process when the page loads. Other useful helpers in layouts include:
+
+- `{{     bloglist}}` - Recent blog posts
+- `{{     insert}}` - Reusable sidebar content
+- `{{     carousel}}` - Image slideshows
+- Custom navigation menus
+
+### Creating Your Own Layout
+
+To create a layout for your pages:
+
+1. Create a `layout.html` file in your pages directory
+2. Use `{{content}}` where you want the page content inserted
+3. Add Bootstrap grid classes (`col-md-8`, `col-md-4`, etc.)
+4. Include any helpers you want in the sidebar or header/footer
+
+All pages in that directory (and subdirectories) will automatically use the layout unless they have their own `layout.html` that overrides it.
+
+See the {{a | 01-Documentation/03-Layouts.md | Layouts documentation}} for complete details and examples.
