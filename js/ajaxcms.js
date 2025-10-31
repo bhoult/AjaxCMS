@@ -665,18 +665,14 @@ function loadInsert(fname,insert_location,allow_scripts,callback) {
  * @param {Function} callback - Function to call when all inserts are complete
  */
 function processInserts(callback) {
-	console.log('processInserts called');
-
 	// Find all {{insert}} helpers (allow up to 4 spaces for documentation)
 	var insert_list = data.match(/{{\s{0,4}insert.*?}}/gi);
 
 	// If no inserts found, we're done
 	if (insert_list == null) {
-		console.log('No inserts found, calling callback immediately');
 		callback();
 		return;
 	}
-	console.log('Found', insert_list.length, 'inserts:', insert_list);
 	var rcount = insert_list.length;
 
 	// Load all the files in the insert list
@@ -694,18 +690,15 @@ function processInserts(callback) {
 		}
 
 		var fname = pageMatch(pageName);
-		console.log('Loading insert:', fname);
 
 		var scripts = insert_list[i].replace(/[{}\s]/g,'').split("|")[2];
 		if (scripts === undefined || scripts.trim() == 'true') {var allow_scripts = true}
 
 		loadInsert(fname, insert_list[i], allow_scripts, function(){
 			rcount--;
-			console.log('Insert loaded, rcount:', rcount);
 
 			// Run Callback if it exists
 			if (rcount == 0 && callback && typeof(callback) === "function") {
-				console.log('All inserts loaded, processing complete');
 				data = data.replace(/@@@@@/,'{{').replace(/#####/,'}}');
 
 				// If there are more inserts in the new version then recurse.
@@ -731,8 +724,6 @@ function processInserts(callback) {
  * @param {Function} callback - Callback with save property indicating whether to save to history
  */
 function processPageContent(contentData, url, callback) {
-	console.log('processPageContent called:', url, 'callback type:', typeof callback);
-
 	// Step 1: Process meta-helpers (like {{blog}} which generates {{insert}} helpers)
 	data = pre_process_page(contentData);
 
@@ -741,7 +732,6 @@ function processPageContent(contentData, url, callback) {
 
 	// Step 3: Recursively process all {{insert}} helpers
 	processInserts(function(){
-		console.log('processInserts callback executed');
 		// Step 4: Process remaining helpers ({{a}}, {{i}}, {{carousel}}, etc.)
 		data = process_page();
 
@@ -786,7 +776,6 @@ function processPageContent(contentData, url, callback) {
  * @param {string} url - Page URL (unused but kept for consistency)
  */
 function loadPageBasic(data,url) {
-	console.log('loadPageBasic called, data length:', data.length);
 	$("main").html( data );
 }
 
@@ -798,8 +787,6 @@ function loadPageBasic(data,url) {
  * @param {string} url - Page URL to determine transition direction
  */
 function loadPageSlide(data,url) {
-	console.log('loadPageSlide called, data length:', data.length);
-
 	in_transition = true;
 
 	if (menuIndex(url) > menuIndex(current_page)) {
@@ -847,8 +834,6 @@ function loadPageSlide(data,url) {
  * @param {boolean} save - Whether to save this navigation to browser history
  */
 function loadPage(url, save) {
-	console.log('loadPage called:', url, 'save:', save);
-
 	// Prevent loading undefined or invalid pages
 	if (!url || url === 'undefined' || url === 'null') {
 		console.error('Invalid URL:', url);
@@ -858,7 +843,6 @@ function loadPage(url, save) {
 	highlightMenu(url);
 
 	$.get(url, function(d) {
-		console.log('Page content loaded, length:', d.length);
 		var layout_url = lastLayout(url);
 
 		// Check if layout exists before requesting it to avoid 404 errors
