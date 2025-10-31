@@ -191,4 +191,35 @@ describe('AjaxCMS Client-Side JavaScript Regressions', () => {
       expect(ajaxcmsCode).toContain('console.warn');
     });
   });
+
+  describe('Documentation Helper Examples (Issue #8)', () => {
+    it('should use 5 spaces in helper examples to prevent processing', () => {
+      // The Helpers.md documentation page should have examples with 5 spaces
+      // to prevent them from being processed as actual helpers
+      const helpersDoc = fs.readFileSync(
+        path.join(__dirname, '../sites/ajaxcms.org/pages/menus/01-Documentation/02-Helpers.md'),
+        'utf-8'
+      );
+
+      // The reference table should use 5 spaces in examples
+      // Check for escaped pipes in table that could become real helpers
+      const tableSection = helpersDoc.match(/## Helper Reference Quick Guide[\s\S]*?## Next Steps/);
+      expect(tableSection).toBeTruthy();
+
+      const tableContent = tableSection[0];
+
+      // Should NOT have patterns like {{a \| which become {{a | after markdown
+      // because they would be processed as helpers
+      expect(tableContent).not.toMatch(/\{\{a\s*\\\|/);
+      expect(tableContent).not.toMatch(/\{\{i\s*\\\|/);
+      expect(tableContent).not.toMatch(/\{\{carousel\s*\\\|/);
+      expect(tableContent).not.toMatch(/\{\{insert\s*\\\|/);
+
+      // Should have 5-space pattern to prevent processing
+      expect(tableContent).toMatch(/\{\{a\s{5}\|/);
+      expect(tableContent).toMatch(/\{\{i\s{5}\|/);
+      expect(tableContent).toMatch(/\{\{carousel\s*:\d+\s{5}\|/);
+      expect(tableContent).toMatch(/\{\{insert\s{5}\|/);
+    });
+  });
 });
