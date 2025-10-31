@@ -42,12 +42,15 @@ describe('Helpers Page Content Test', () => {
     expect(bodyText).toContain('{{i | image');
     expect(bodyText).toContain('{{insert | page_name');
     expect(bodyText).toContain('{{carousel:interval');
+    expect(bodyText).toContain('{{blog | directory');
+    expect(bodyText).toContain('{{bloglist | directory');
+    expect(bodyText).toContain('{{filelist | directory_path');
 
     // Should contain the HTML Attributes section properly
     expect(bodyText).toContain('HTML Attributes');
     expect(bodyText).toContain('attr=>value');
 
     console.log('✓ No placeholder tokens found');
-    console.log('✓ Helper syntax examples are visible');
+    console.log('✓ Helper syntax examples are visible (including blog, bloglist, filelist)');
   }, 30000);
 });

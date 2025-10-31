@@ -792,18 +792,45 @@ var globalProtectedHelpers = [];
 var globalProtectedCodeBlocks = [];
 
 function processPageContent(contentData, url, callback) {
-	// Step 1: Process meta-helpers (like {{blog}} which generates {{insert}} helpers)
-	data = pre_process_page(contentData);
-
-	// Step 1.5: Protect helpers with 5+ spaces (legacy documentation compatibility)
+	// Step 0.5: Protect markdown code blocks BEFORE any helper processing
+	// This prevents {{blog}}, {{bloglist}}, etc. in documentation from being processed
 	globalProtectedHelpers = [];
 	globalProtectedCodeBlocks = [];
 
+	data = contentData;
+
+	// Protect triple-backtick code blocks
+	data = data.replace(/```[\s\S]*?```/g, function(match) {
+		var index = globalProtectedCodeBlocks.length;
+		globalProtectedCodeBlocks.push(match);
+		return '___PROTECTED_CODE_BLOCK_' + index + '___';
+	});
+
+	// Protect inline code (single backticks)
+	data = data.replace(/`[^`\n]+`/g, function(match) {
+		var index = globalProtectedCodeBlocks.length;
+		globalProtectedCodeBlocks.push(match);
+		return '___PROTECTED_CODE_BLOCK_' + index + '___';
+	});
+
+	// Also protect helpers with 5+ spaces (legacy documentation compatibility)
 	data = data.replace(/{{[^}]*\s\s\s\s\s[^}]*}}/g, function(match) {
 		var index = globalProtectedHelpers.length;
 		globalProtectedHelpers.push(match);
 		return '___PROTECTED_HELPER_' + index + '___';
 	});
+
+	// Step 1: Process meta-helpers (like {{blog}} which generates {{insert}} helpers)
+	// Protected code blocks won't match {{}} patterns
+	data = pre_process_page(data);
+
+	// Step 1.5: Restore protected code blocks so markdown can process them
+	data = data.replace(/___PROTECTED_CODE_BLOCK_(\d+)___/g, function(match, index) {
+		return globalProtectedCodeBlocks[parseInt(index)];
+	});
+
+	// Reset the array since we'll re-protect after markdown
+	globalProtectedCodeBlocks = [];
 
 	// Step 2: Convert Markdown to HTML if this is a .md file
 	if (/\.md$/.test(url)){ data = marked.parse(data);}
