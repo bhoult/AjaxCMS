@@ -840,15 +840,15 @@ function loadPage(url, save) {
 					}
 
 					// Process the page content
-					processPageContent(contentData, url, function() {
-						this.save = save;
-					});
+					var callbackObj = function() {};
+					callbackObj.save = save;
+					processPageContent(contentData, url, callbackObj);
 				});
 		} else {
 			// No layout, process content directly
-			processPageContent(d, url, function() {
-				this.save = save;
-			});
+			var callbackObj = function() {};
+			callbackObj.save = save;
+			processPageContent(d, url, callbackObj);
 		}
 	}).fail(function(jqXHR, textStatus, errorThrown) {
 		console.error('Error loading page ' + url + ':', textStatus, errorThrown);
