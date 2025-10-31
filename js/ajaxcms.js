@@ -610,8 +610,25 @@ function loadInsert(fname,insert_location,allow_scripts,callback) {
 	$.get(fname,function(insert_contents){
 		var layout_url = lastLayout(fname);
 
-		// Protect helpers with 5+ spaces before any markdown processing
+		// Protect helpers in markdown code blocks and inline code before markdown processing
 		var protectedHelpers = [];
+		var protectedCodeBlocks = [];
+
+		// Protect triple-backtick code blocks (```...```)
+		insert_contents = insert_contents.replace(/```[\s\S]*?```/g, function(match) {
+			var index = protectedCodeBlocks.length;
+			protectedCodeBlocks.push(match);
+			return '___PROTECTED_CODE_BLOCK_' + index + '___';
+		});
+
+		// Protect inline code (`...`)
+		insert_contents = insert_contents.replace(/`[^`]+`/g, function(match) {
+			var index = protectedCodeBlocks.length;
+			protectedCodeBlocks.push(match);
+			return '___PROTECTED_CODE_BLOCK_' + index + '___';
+		});
+
+		// Also protect helpers with 5+ spaces (legacy documentation compatibility)
 		insert_contents = insert_contents.replace(/{{[^}]*\s\s\s\s\s[^}]*}}/g, function(match) {
 			var index = protectedHelpers.length;
 			protectedHelpers.push(match);
@@ -630,7 +647,10 @@ function loadInsert(fname,insert_location,allow_scripts,callback) {
 					// Run through markdown if the file ends in .md
 					if (/\.md$/.test(fname)){ insert_contents = marked.parse(insert_contents);	}
 
-					// Restore protected helpers after markdown processing
+					// Restore protected code blocks and helpers after markdown processing
+					insert_contents = insert_contents.replace(/___PROTECTED_CODE_BLOCK_(\d+)___/g, function(match, index) {
+						return protectedCodeBlocks[parseInt(index)];
+					});
 					insert_contents = insert_contents.replace(/___PROTECTED_HELPER_(\d+)___/g, function(match, index) {
 						return protectedHelpers[parseInt(index)];
 					});
@@ -656,7 +676,10 @@ function loadInsert(fname,insert_location,allow_scripts,callback) {
 			// Run through markdown if the file ends in .md
 			if (/\.md$/.test(fname)){ insert_contents = marked.parse(insert_contents);	}
 
-			// Restore protected helpers after markdown processing
+			// Restore protected code blocks and helpers after markdown processing
+			insert_contents = insert_contents.replace(/___PROTECTED_CODE_BLOCK_(\d+)___/g, function(match, index) {
+				return protectedCodeBlocks[parseInt(index)];
+			});
 			insert_contents = insert_contents.replace(/___PROTECTED_HELPER_(\d+)___/g, function(match, index) {
 				return protectedHelpers[parseInt(index)];
 			});
@@ -752,9 +775,26 @@ function processPageContent(contentData, url, callback) {
 	// Step 1: Process meta-helpers (like {{blog}} which generates {{insert}} helpers)
 	data = pre_process_page(contentData);
 
-	// Step 1.5: Protect helpers with 5+ spaces BEFORE markdown processing
-	// Convert them to placeholders that won't be processed
+	// Step 1.5: Protect helpers in markdown code blocks and inline code BEFORE markdown processing
+	// This allows documentation to show helper syntax without needing 5 spaces
 	var protectedHelpers = [];
+	var protectedCodeBlocks = [];
+
+	// Protect triple-backtick code blocks (```...```)
+	data = data.replace(/```[\s\S]*?```/g, function(match) {
+		var index = protectedCodeBlocks.length;
+		protectedCodeBlocks.push(match);
+		return '___PROTECTED_CODE_BLOCK_' + index + '___';
+	});
+
+	// Protect inline code (`...`)
+	data = data.replace(/`[^`]+`/g, function(match) {
+		var index = protectedCodeBlocks.length;
+		protectedCodeBlocks.push(match);
+		return '___PROTECTED_CODE_BLOCK_' + index + '___';
+	});
+
+	// Also protect helpers with 5+ spaces (legacy documentation compatibility)
 	data = data.replace(/{{[^}]*\s\s\s\s\s[^}]*}}/g, function(match) {
 		var index = protectedHelpers.length;
 		protectedHelpers.push(match);
@@ -764,7 +804,10 @@ function processPageContent(contentData, url, callback) {
 	// Step 2: Convert Markdown to HTML if this is a .md file
 	if (/\.md$/.test(url)){ data = marked.parse(data);}
 
-	// Step 2.5: Restore protected helpers AFTER markdown processing
+	// Step 2.5: Restore protected code blocks and helpers AFTER markdown processing
+	data = data.replace(/___PROTECTED_CODE_BLOCK_(\d+)___/g, function(match, index) {
+		return protectedCodeBlocks[parseInt(index)];
+	});
 	data = data.replace(/___PROTECTED_HELPER_(\d+)___/g, function(match, index) {
 		return protectedHelpers[parseInt(index)];
 	});

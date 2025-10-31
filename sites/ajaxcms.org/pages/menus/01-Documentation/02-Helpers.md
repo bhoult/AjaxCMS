@@ -45,7 +45,7 @@ Pages with `.md` extensions are processed through the **marked** Markdown parser
 
 ### Anchor (Link)
 
-**Syntax:** `{{a     | page     | link_text     | alt_text}}`
+**Syntax:** `{{a | page | link_text | alt_text}}`
 
 Creates an internal link that loads a page via AJAX without refreshing the browser. Uses partial matching to find pages, so you only need to specify enough of the filename to uniquely identify it.
 
@@ -73,7 +73,7 @@ Regular HTML anchor tags (`<a href="...">`) cause full page reloads. The `{{a}}`
 
 ### Image
 
-**Syntax:** `{{i     | image     | alt_text}}`
+**Syntax:** `{{i | image | alt_text}}`
 
 Inserts an image from the `images/` directory. Uses partial matching, so you only need enough of the filename to uniquely identify it.
 
@@ -106,7 +106,7 @@ Inserts an image from the `images/` directory. Uses partial matching, so you onl
 
 ### Carousel (Slideshow)
 
-**Syntax:** `{{carousel:interval     | image1:alt1:caption1     | image2:alt2:caption2     | ...}}`
+**Syntax:** `{{carousel:interval | image1:alt1:caption1 | image2:alt2:caption2 | ...}}`
 
 Creates a Bootstrap 5 carousel slideshow with multiple images. Supports unlimited slides.
 
@@ -146,7 +146,7 @@ Creates a Bootstrap 5 carousel slideshow with multiple images. Supports unlimite
 
 ### Insert
 
-**Syntax:** `{{insert     | page_name     | allow_scripts}}`
+**Syntax:** `{{insert | page_name | allow_scripts}}`
 
 Embeds the content of another page at the helper location. The inserted page includes any `layout.html` that applies to it. Inserts can be nested (inserted pages can contain other inserts).
 
@@ -178,7 +178,7 @@ Embeds the content of another page at the helper location. The inserted page inc
 
 ### File List
 
-**Syntax:** `{{filelist     | directory_path}}`
+**Syntax:** `{{filelist | directory_path}}`
 
 Generates a hierarchical menu from a directory and all its subdirectories. Uses standard HTML list format (`<ul>`, `<li>`).
 
@@ -199,7 +199,7 @@ Generates a hierarchical menu from a directory and all its subdirectories. Uses 
 
 ### Blog
 
-**Syntax:** `{{blog     | directory     | start     | stop}}`
+**Syntax:** `{{blog | directory | start | stop}}`
 
 Displays blog entries as expandable summaries. Entries load full content via AJAX when clicked. Blog files must follow a specific naming convention.
 
@@ -238,7 +238,7 @@ YYYY-MM-DD-n-Title.md  (n = optional number for multiple posts per day)
 
 ### Blog List
 
-**Syntax:** `{{bloglist     | directory     | start     | stop}}`
+**Syntax:** `{{bloglist | directory | start | stop}}`
 
 Displays a simple list of blog post titles with links. Similar to `{{blog}}` but shows only titles without excerpts or expansion.
 
