@@ -6,25 +6,28 @@ Before a page is displayed, helpers are replaced with the appropriate HTML conte
 
 ## Helper Syntax Rules
 
-### Disabling Helpers
+### Displaying Helper Code in Documentation
 
-If a helper contains **five or more sequential spaces**, it will be skipped. This allows you to display helper code examples without processing them (as used throughout this documentation page).
+Helper syntax inside **code blocks** (using backticks `` ` `` or triple backticks ` ``` `) is automatically protected from processing. This allows you to show helper examples in documentation without them being executed.
 
 **Example:**
+```markdown
+Use `{{a | home}}` to create a link to the home page.
 ```
-{{a     | home}}  ← Five spaces - NOT processed (displays as-is)
-{{a     | home}}  ← Normal - WILL be processed
-```
+
+The helper syntax above will display as-is in code blocks, not be processed.
+
+**Legacy method:** Helpers with **five or more sequential spaces** are also skipped for backward compatibility, but this is no longer necessary with automatic code block protection.
 
 ### HTML Attributes
 
-All helpers (except `{{     insert}}`) support **attribute parameters** using the `=>` syntax. These inject HTML attributes into the generated element.
+All helpers (except `{{insert}}`) support **attribute parameters** using the `=>` syntax. These inject HTML attributes into the generated element.
 
 **Format:** `attr=>value` becomes `attr="value"` in the output HTML
 
 **Example:**
 ```
-{{a     | documentation     | class=>btn btn-primary     | id=>nav-link}}
+{{a | documentation | class=>btn btn-primary | id=>nav-link}}
 ```
 
 **Becomes:**
@@ -56,14 +59,14 @@ Creates an internal link that loads a page via AJAX without refreshing the brows
 
 **Examples:**
 ```
-{{a     | 01-Getting_Started.md}}
-{{a     | 01-Getting_Started.md | Get Started}}
-{{a     | 01-Getting_Started.md | Get Started | Getting Started Guide}}
+{{a | 01-Getting_Started.md}}
+{{a | 01-Getting_Started.md | Get Started}}
+{{a | 01-Getting_Started.md | Get Started | Getting Started Guide}}
 ```
 
 **With attributes:**
 ```
-{{a     | home | Home Page | class=>nav-link active}}
+{{a | home | Home Page | class=>nav-link active}}
 ```
 
 **Why use this instead of `<a>`?**
@@ -83,14 +86,14 @@ Inserts an image from the `images/` directory. Uses partial matching, so you onl
 
 **Examples:**
 ```
-{{i     | logo}}
-{{i     | logo | Company Logo}}
-{{i     | vacation/colorado.jpg | Mountain View}}
+{{i | logo}}
+{{i | logo | Company Logo}}
+{{i | vacation/colorado.jpg | Mountain View}}
 ```
 
 **With CSS classes:**
 ```
-{{i     | logo | Company Logo | class=>img-fluid rounded}}
+{{i | logo | Company Logo | class=>img-fluid rounded}}
 ```
 
 **Built-in CSS classes** (defined in `index.html`):
@@ -99,7 +102,7 @@ Inserts an image from the `images/` directory. Uses partial matching, so you onl
 
 **Example with built-in classes:**
 ```
-{{i     | photo | class=>medium left}}
+{{i | photo | class=>medium left}}
 ```
 
 ---
@@ -121,17 +124,17 @@ Creates a Bootstrap 5 carousel slideshow with multiple images. Supports unlimite
 
 **Basic carousel (3 slides, 5-second interval):**
 ```
-{{carousel:5000     | slide1.jpg     | slide2.jpg     | slide3.jpg}}
+{{carousel:5000 | slide1.jpg     | slide2.jpg     | slide3.jpg}}
 ```
 
 **With alt text:**
 ```
-{{carousel:3000     | beach.jpg:Sunset at the beach     | mountain.jpg:Mountain peak}}
+{{carousel:3000 | beach.jpg:Sunset at the beach     | mountain.jpg:Mountain peak}}
 ```
 
 **With captions (HTML allowed):**
 ```
-{{carousel:4000     |
+{{carousel:4000 |
   product1.jpg:Product Image:<h3>New Arrival</h3><p>Check out our latest product</p>     |
   product2.jpg:Product Image:<h3>Best Seller</h3><p>Our most popular item</p>
 }}
@@ -139,7 +142,7 @@ Creates a Bootstrap 5 carousel slideshow with multiple images. Supports unlimite
 
 **With CSS classes:**
 ```
-{{carousel:5000     | img1     | img2     | img3     | class=>carousel-fade}}
+{{carousel:5000 | img1     | img2     | img3     | class=>carousel-fade}}
 ```
 
 ---
@@ -156,9 +159,9 @@ Embeds the content of another page at the helper location. The inserted page inc
 
 **Examples:**
 ```
-{{insert     | sidebar}}
-{{insert     | header}}
-{{insert     | footer     | false}}
+{{insert | sidebar}}
+{{insert | header}}
+{{insert | footer     | false}}
 ```
 
 **Use cases:**
@@ -170,7 +173,7 @@ Embeds the content of another page at the helper location. The inserted page inc
 
 ```html
 <div id="sidebar" class="col-md-4">
-  {{insert     | sidebar_content}}
+  {{insert | sidebar_content}}
 </div>
 ```
 
@@ -187,7 +190,7 @@ Generates a hierarchical menu from a directory and all its subdirectories. Uses 
 
 **Example:**
 ```
-{{filelist     | ./pages/tutorials}}
+{{filelist | ./pages/tutorials}}
 ```
 
 **Use cases:**
@@ -224,9 +227,9 @@ YYYY-MM-DD-n-Title.md  (n = optional number for multiple posts per day)
 
 **Usage:**
 ```
-{{blog     | ./pages/blog}}
-{{blog     | ./pages/blog     | 0     | 5}}    ← Show first 5 posts
-{{blog     | ./pages/blog     | 5     | 10}}   ← Show posts 5-10 (pagination)
+{{blog | ./pages/blog}}
+{{blog | ./pages/blog     | 0     | 5}}    ← Show first 5 posts
+{{blog | ./pages/blog     | 5     | 10}}   ← Show posts 5-10 (pagination)
 ```
 
 **How it works:**
@@ -251,8 +254,8 @@ Displays a simple list of blog post titles with links. Similar to `{{blog}}` but
 
 **Examples:**
 ```
-{{bloglist     | ./pages/blog}}
-{{bloglist     | ./pages/blog     | 0     | 10}}  ← Show first 10 post titles
+{{bloglist | ./pages/blog}}
+{{bloglist | ./pages/blog     | 0     | 10}}  ← Show first 10 post titles
 ```
 
 **Use case:** Create a compact blog archive or sidebar widget
@@ -263,13 +266,13 @@ Displays a simple list of blog post titles with links. Similar to `{{blog}}` but
 
 | Helper | Purpose | Example |
 |--------|---------|---------|
-| `{{     a}}` | Internal link | `{{a     | page     | text}}` |
-| `{{     i}}` | Image | `{{i     | image     | alt}}` |
-| `{{     carousel}}` | Slideshow | `{{carousel:5000     | img1     | img2}}` |
-| `{{     insert}}` | Embed page | `{{insert     | page}}` |
-| `{{     filelist}}` | Directory tree | `{{filelist     | ./pages/docs}}` |
-| `{{     blog}}` | Blog with excerpts | `{{blog     | ./pages/blog     | 0     | 5}}` |
-| `{{     bloglist}}` | Blog titles only | `{{bloglist     | ./pages/blog}}` |
+| `{{     a}}` | Internal link | `{{a | page     | text}}` |
+| `{{     i}}` | Image | `{{i | image     | alt}}` |
+| `{{     carousel}}` | Slideshow | `{{carousel:5000 | img1     | img2}}` |
+| `{{     insert}}` | Embed page | `{{insert | page}}` |
+| `{{     filelist}}` | Directory tree | `{{filelist | ./pages/docs}}` |
+| `{{     blog}}` | Blog with excerpts | `{{blog | ./pages/blog     | 0     | 5}}` |
+| `{{     bloglist}}` | Blog titles only | `{{bloglist | ./pages/blog}}` |
 
 ## Next Steps
 

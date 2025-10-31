@@ -206,33 +206,37 @@ describe('AjaxCMS Client-Side JavaScript Regressions', () => {
   });
 
   describe('Documentation Helper Examples (Issue #8)', () => {
-    it('should use 5 spaces in helper examples to prevent processing', () => {
-      // The Helpers.md documentation page should have examples with 5 spaces
-      // to prevent them from being processed as actual helpers
+    it('should have documentation explaining code block protection', () => {
+      // The Helpers.md documentation page should explain the new automatic
+      // code block protection feature
       const helpersDoc = fs.readFileSync(
         path.join(__dirname, '../sites/ajaxcms.org/pages/menus/01-Documentation/02-Helpers.md'),
         'utf-8'
       );
 
-      // The reference table should use 5 spaces in examples
-      // Check for escaped pipes in table that could become real helpers
+      // Should mention automatic code block protection
+      expect(helpersDoc).toMatch(/code blocks.*automatically protected/i);
+      expect(helpersDoc).toMatch(/backticks/);
+
+      // Should still mention 5-space legacy method for backward compatibility
+      expect(helpersDoc).toMatch(/five or more sequential spaces/i);
+      expect(helpersDoc).toMatch(/backward compatibility/i);
+
+      // Helper examples should NOT have excessive spacing anymore
       const tableSection = helpersDoc.match(/## Helper Reference Quick Guide[\s\S]*?## Next Steps/);
       expect(tableSection).toBeTruthy();
 
       const tableContent = tableSection[0];
 
-      // Should NOT have patterns like {{a \| which become {{a | after markdown
-      // because they would be processed as helpers
+      // Should NOT have patterns like {{a \| which would be processed
       expect(tableContent).not.toMatch(/\{\{a\s*\\\|/);
       expect(tableContent).not.toMatch(/\{\{i\s*\\\|/);
       expect(tableContent).not.toMatch(/\{\{carousel\s*\\\|/);
       expect(tableContent).not.toMatch(/\{\{insert\s*\\\|/);
 
-      // Should have 5-space pattern to prevent processing
-      expect(tableContent).toMatch(/\{\{a\s{5}\|/);
-      expect(tableContent).toMatch(/\{\{i\s{5}\|/);
-      expect(tableContent).toMatch(/\{\{carousel\s*:\d+\s{5}\|/);
-      expect(tableContent).toMatch(/\{\{insert\s{5}\|/);
+      // Examples should be in backticks (code blocks)
+      expect(tableContent).toMatch(/`\{\{a/);
+      expect(tableContent).toMatch(/`\{\{i/);
     });
 
     it('should preserve all spaces when skipping helpers (not collapse to 1)', () => {
