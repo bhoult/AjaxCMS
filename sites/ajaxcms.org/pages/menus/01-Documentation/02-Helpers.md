@@ -263,13 +263,13 @@ Displays a simple list of blog post titles with links. Similar to `{{blog}}` but
 
 | Helper | Purpose | Example |
 |--------|---------|---------|
-| `{{a}}` | Internal link | `{{a | page | text}}` |
-| `{{i}}` | Image | `{{i | image | alt}}` |
-| `{{carousel}}` | Slideshow | `{{carousel:5000 | img1 | img2}}` |
-| `{{insert}}` | Embed page | `{{insert | page}}` |
-| `{{filelist}}` | Directory tree | `{{filelist | ./pages/docs}}` |
-| `{{blog}}` | Blog with excerpts | `{{blog | ./pages/blog | 0 | 5}}` |
-| `{{bloglist}}` | Blog titles only | `{{bloglist | ./pages/blog}}` |
+| `{{a}}` | Internal link | `{{a \| page \| text}}` |
+| `{{i}}` | Image | `{{i \| image \| alt}}` |
+| `{{carousel}}` | Slideshow | `{{carousel:5000 \| img1 \| img2}}` |
+| `{{insert}}` | Embed page | `{{insert \| page}}` |
+| `{{filelist}}` | Directory tree | `{{filelist \| ./pages/docs}}` |
+| `{{blog}}` | Blog with excerpts | `{{blog \| ./pages/blog \| 0 \| 5}}` |
+| `{{bloglist}}` | Blog titles only | `{{bloglist \| ./pages/blog}}` |
 
 ## Next Steps
 
