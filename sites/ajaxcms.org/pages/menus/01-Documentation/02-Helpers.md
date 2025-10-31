@@ -124,25 +124,22 @@ Creates a Bootstrap 5 carousel slideshow with multiple images. Supports unlimite
 
 **Basic carousel (3 slides, 5-second interval):**
 ```
-{{carousel:5000 | slide1.jpg     | slide2.jpg     | slide3.jpg}}
+{{carousel:5000 | slide1.jpg | slide2.jpg | slide3.jpg}}
 ```
 
 **With alt text:**
 ```
-{{carousel:3000 | beach.jpg:Sunset at the beach     | mountain.jpg:Mountain peak}}
+{{carousel:3000 | beach.jpg:Sunset at the beach | mountain.jpg:Mountain peak}}
 ```
 
 **With captions (HTML allowed):**
 ```
-{{carousel:4000 |
-  product1.jpg:Product Image:<h3>New Arrival</h3><p>Check out our latest product</p>     |
-  product2.jpg:Product Image:<h3>Best Seller</h3><p>Our most popular item</p>
-}}
+{{carousel:4000 | product1.jpg:Product Image:<h3>New Arrival</h3><p>Check out our latest product</p> | product2.jpg:Product Image:<h3>Best Seller</h3><p>Our most popular item</p>}}
 ```
 
 **With CSS classes:**
 ```
-{{carousel:5000 | img1     | img2     | img3     | class=>carousel-fade}}
+{{carousel:5000 | img1 | img2 | img3 | class=>carousel-fade}}
 ```
 
 ---
@@ -161,7 +158,7 @@ Embeds the content of another page at the helper location. The inserted page inc
 ```
 {{insert | sidebar}}
 {{insert | header}}
-{{insert | footer     | false}}
+{{insert | footer | false}}
 ```
 
 **Use cases:**
@@ -169,7 +166,7 @@ Embeds the content of another page at the helper location. The inserted page inc
 - Insert formatted content into pages without layouts
 - Create reusable content blocks
 
-**Note:** The `{{     insert}}` helper does NOT support attribute parameters. To add attributes, wrap it manually:
+**Note:** The `{{insert}}` helper does NOT support attribute parameters. To add attributes, wrap it manually:
 
 ```html
 <div id="sidebar" class="col-md-4">
@@ -228,8 +225,8 @@ YYYY-MM-DD-n-Title.md  (n = optional number for multiple posts per day)
 **Usage:**
 ```
 {{blog | ./pages/blog}}
-{{blog | ./pages/blog     | 0     | 5}}    ← Show first 5 posts
-{{blog | ./pages/blog     | 5     | 10}}   ← Show posts 5-10 (pagination)
+{{blog | ./pages/blog | 0 | 5}}    ← Show first 5 posts
+{{blog | ./pages/blog | 5 | 10}}   ← Show posts 5-10 (pagination)
 ```
 
 **How it works:**
@@ -255,7 +252,7 @@ Displays a simple list of blog post titles with links. Similar to `{{blog}}` but
 **Examples:**
 ```
 {{bloglist | ./pages/blog}}
-{{bloglist | ./pages/blog     | 0     | 10}}  ← Show first 10 post titles
+{{bloglist | ./pages/blog | 0 | 10}}  ← Show first 10 post titles
 ```
 
 **Use case:** Create a compact blog archive or sidebar widget
@@ -266,13 +263,13 @@ Displays a simple list of blog post titles with links. Similar to `{{blog}}` but
 
 | Helper | Purpose | Example |
 |--------|---------|---------|
-| `{{     a}}` | Internal link | `{{a | page     | text}}` |
-| `{{     i}}` | Image | `{{i | image     | alt}}` |
-| `{{     carousel}}` | Slideshow | `{{carousel:5000 | img1     | img2}}` |
-| `{{     insert}}` | Embed page | `{{insert | page}}` |
-| `{{     filelist}}` | Directory tree | `{{filelist | ./pages/docs}}` |
-| `{{     blog}}` | Blog with excerpts | `{{blog | ./pages/blog     | 0     | 5}}` |
-| `{{     bloglist}}` | Blog titles only | `{{bloglist | ./pages/blog}}` |
+| `{{a}}` | Internal link | `{{a | page | text}}` |
+| `{{i}}` | Image | `{{i | image | alt}}` |
+| `{{carousel}}` | Slideshow | `{{carousel:5000 | img1 | img2}}` |
+| `{{insert}}` | Embed page | `{{insert | page}}` |
+| `{{filelist}}` | Directory tree | `{{filelist | ./pages/docs}}` |
+| `{{blog}}` | Blog with excerpts | `{{blog | ./pages/blog | 0 | 5}}` |
+| `{{bloglist}}` | Blog titles only | `{{bloglist | ./pages/blog}}` |
 
 ## Next Steps
 
