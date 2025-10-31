@@ -610,29 +610,14 @@ function loadInsert(fname,insert_location,allow_scripts,callback) {
 	$.get(fname,function(insert_contents){
 		var layout_url = lastLayout(fname);
 
-		// Protect helpers in markdown code blocks and inline code before markdown processing
+		// Protect helpers with 5+ spaces (legacy documentation compatibility)
 		var protectedHelpers = [];
 		var protectedCodeBlocks = [];
 
-		// Protect triple-backtick code blocks (```...```)
-		insert_contents = insert_contents.replace(/```[\s\S]*?```/g, function(match) {
-			var index = protectedCodeBlocks.length;
-			protectedCodeBlocks.push(match);
-			return '___PROTECTED_CODE_BLOCK_' + index + '___';
-		});
-
-		// Protect inline code (`...`)
-		insert_contents = insert_contents.replace(/`[^`]+`/g, function(match) {
-			var index = protectedCodeBlocks.length;
-			protectedCodeBlocks.push(match);
-			return '___PROTECTED_CODE_BLOCK_' + index + '___';
-		});
-
-		// Also protect helpers with 5+ spaces (legacy documentation compatibility)
 		insert_contents = insert_contents.replace(/{{[^}]*\s\s\s\s\s[^}]*}}/g, function(match) {
 			var index = protectedHelpers.length;
 			protectedHelpers.push(match);
-			return '___PROTECTED_HELPER_' + index + '___';
+			return '___INSERT_PROTECTED_HELPER_' + index + '___';
 		});
 
 		// Check if layout exists before requesting it to avoid 404 errors
@@ -647,11 +632,28 @@ function loadInsert(fname,insert_location,allow_scripts,callback) {
 					// Run through markdown if the file ends in .md
 					if (/\.md$/.test(fname)){ insert_contents = marked.parse(insert_contents);	}
 
-					// Restore protected code blocks and helpers after markdown processing
-					insert_contents = insert_contents.replace(/___PROTECTED_CODE_BLOCK_(\d+)___/g, function(match, index) {
+					// Protect <code> and <pre> tags after markdown processing
+					// First protect <pre> blocks (which may contain <code> tags)
+					insert_contents = insert_contents.replace(/<pre>[\s\S]*?<\/pre>/gi, function(match) {
+						var index = protectedCodeBlocks.length;
+						protectedCodeBlocks.push(match);
+						return '___INSERT_PROTECTED_CODE_' + index + '___';
+					});
+					// Then protect standalone <code> tags
+					insert_contents = insert_contents.replace(/<code>[\s\S]*?<\/code>/gi, function(match) {
+						var index = protectedCodeBlocks.length;
+						protectedCodeBlocks.push(match);
+						return '___INSERT_PROTECTED_CODE_' + index + '___';
+					});
+
+					// Process any helpers in the inserted content (but not in code blocks)
+					// ... this happens later when it's merged into main data ...
+
+					// Restore protected code blocks and helpers before inserting
+					insert_contents = insert_contents.replace(/___INSERT_PROTECTED_CODE_(\d+)___/g, function(match, index) {
 						return protectedCodeBlocks[parseInt(index)];
 					});
-					insert_contents = insert_contents.replace(/___PROTECTED_HELPER_(\d+)___/g, function(match, index) {
+					insert_contents = insert_contents.replace(/___INSERT_PROTECTED_HELPER_(\d+)___/g, function(match, index) {
 						return protectedHelpers[parseInt(index)];
 					});
 
@@ -676,11 +678,25 @@ function loadInsert(fname,insert_location,allow_scripts,callback) {
 			// Run through markdown if the file ends in .md
 			if (/\.md$/.test(fname)){ insert_contents = marked.parse(insert_contents);	}
 
-			// Restore protected code blocks and helpers after markdown processing
-			insert_contents = insert_contents.replace(/___PROTECTED_CODE_BLOCK_(\d+)___/g, function(match, index) {
+			// Protect <code> and <pre> tags after markdown processing
+			// First protect <pre> blocks (which may contain <code> tags)
+			insert_contents = insert_contents.replace(/<pre>[\s\S]*?<\/pre>/gi, function(match) {
+				var index = protectedCodeBlocks.length;
+				protectedCodeBlocks.push(match);
+				return '___INSERT_PROTECTED_CODE_' + index + '___';
+			});
+			// Then protect standalone <code> tags
+			insert_contents = insert_contents.replace(/<code>[\s\S]*?<\/code>/gi, function(match) {
+				var index = protectedCodeBlocks.length;
+				protectedCodeBlocks.push(match);
+				return '___INSERT_PROTECTED_CODE_' + index + '___';
+			});
+
+			// Restore protected code blocks and helpers before inserting
+			insert_contents = insert_contents.replace(/___INSERT_PROTECTED_CODE_(\d+)___/g, function(match, index) {
 				return protectedCodeBlocks[parseInt(index)];
 			});
-			insert_contents = insert_contents.replace(/___PROTECTED_HELPER_(\d+)___/g, function(match, index) {
+			insert_contents = insert_contents.replace(/___INSERT_PROTECTED_HELPER_(\d+)___/g, function(match, index) {
 				return protectedHelpers[parseInt(index)];
 			});
 
@@ -771,51 +787,54 @@ function processInserts(callback) {
  * @param {string} url - Page URL
  * @param {Function} callback - Callback with save property indicating whether to save to history
  */
+// Global arrays for code block protection (shared across processPageContent scope)
+var globalProtectedHelpers = [];
+var globalProtectedCodeBlocks = [];
+
 function processPageContent(contentData, url, callback) {
 	// Step 1: Process meta-helpers (like {{blog}} which generates {{insert}} helpers)
 	data = pre_process_page(contentData);
 
-	// Step 1.5: Protect helpers in markdown code blocks and inline code BEFORE markdown processing
-	// This allows documentation to show helper syntax without needing 5 spaces
-	var protectedHelpers = [];
-	var protectedCodeBlocks = [];
+	// Step 1.5: Protect helpers with 5+ spaces (legacy documentation compatibility)
+	globalProtectedHelpers = [];
+	globalProtectedCodeBlocks = [];
 
-	// Protect triple-backtick code blocks (```...```)
-	data = data.replace(/```[\s\S]*?```/g, function(match) {
-		var index = protectedCodeBlocks.length;
-		protectedCodeBlocks.push(match);
-		return '___PROTECTED_CODE_BLOCK_' + index + '___';
-	});
-
-	// Protect inline code (`...`)
-	data = data.replace(/`[^`]+`/g, function(match) {
-		var index = protectedCodeBlocks.length;
-		protectedCodeBlocks.push(match);
-		return '___PROTECTED_CODE_BLOCK_' + index + '___';
-	});
-
-	// Also protect helpers with 5+ spaces (legacy documentation compatibility)
 	data = data.replace(/{{[^}]*\s\s\s\s\s[^}]*}}/g, function(match) {
-		var index = protectedHelpers.length;
-		protectedHelpers.push(match);
+		var index = globalProtectedHelpers.length;
+		globalProtectedHelpers.push(match);
 		return '___PROTECTED_HELPER_' + index + '___';
 	});
 
 	// Step 2: Convert Markdown to HTML if this is a .md file
 	if (/\.md$/.test(url)){ data = marked.parse(data);}
 
-	// Step 2.5: Restore protected code blocks and helpers AFTER markdown processing
-	data = data.replace(/___PROTECTED_CODE_BLOCK_(\d+)___/g, function(match, index) {
-		return protectedCodeBlocks[parseInt(index)];
+	// Step 2.5: Protect HTML <code> and <pre> tags AFTER markdown processing
+	// This prevents helpers inside code blocks from being processed
+	// First protect <pre> blocks (which may contain <code> tags)
+	data = data.replace(/<pre>[\s\S]*?<\/pre>/gi, function(match) {
+		var index = globalProtectedCodeBlocks.length;
+		globalProtectedCodeBlocks.push(match);
+		return '___PROTECTED_CODE_BLOCK_' + index + '___';
 	});
-	data = data.replace(/___PROTECTED_HELPER_(\d+)___/g, function(match, index) {
-		return protectedHelpers[parseInt(index)];
+	// Then protect standalone <code> tags (inline code, not inside <pre>)
+	data = data.replace(/<code>[\s\S]*?<\/code>/gi, function(match) {
+		var index = globalProtectedCodeBlocks.length;
+		globalProtectedCodeBlocks.push(match);
+		return '___PROTECTED_CODE_BLOCK_' + index + '___';
 	});
 
 	// Step 3: Recursively process all {{insert}} helpers
 	processInserts(function(){
 		// Step 4: Process remaining helpers ({{a}}, {{i}}, {{carousel}}, etc.)
 		data = process_page();
+
+		// Step 4.5: Restore protected code blocks and helpers AFTER all processing
+		data = data.replace(/___PROTECTED_CODE_BLOCK_(\d+)___/g, function(match, index) {
+			return globalProtectedCodeBlocks[parseInt(index)];
+		});
+		data = data.replace(/___PROTECTED_HELPER_(\d+)___/g, function(match, index) {
+			return globalProtectedHelpers[parseInt(index)];
+		});
 
 		// Step 5: Render with appropriate page transition animation
 		switch(load_transition) {
