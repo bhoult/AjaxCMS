@@ -610,6 +610,14 @@ function loadInsert(fname,insert_location,allow_scripts,callback) {
 	$.get(fname,function(insert_contents){
 		var layout_url = lastLayout(fname);
 
+		// Protect helpers with 5+ spaces before any markdown processing
+		var protectedHelpers = [];
+		insert_contents = insert_contents.replace(/{{[^}]*\s\s\s\s\s[^}]*}}/g, function(match) {
+			var index = protectedHelpers.length;
+			protectedHelpers.push(match);
+			return '___PROTECTED_HELPER_' + index + '___';
+		});
+
 		// Check if layout exists before requesting it to avoid 404 errors
 		if ($.inArray(layout_url, layouts) > -1) {
 			// Layout exists, load it
@@ -621,6 +629,11 @@ function loadInsert(fname,insert_location,allow_scripts,callback) {
 
 					// Run through markdown if the file ends in .md
 					if (/\.md$/.test(fname)){ insert_contents = marked.parse(insert_contents);	}
+
+					// Restore protected helpers after markdown processing
+					insert_contents = insert_contents.replace(/___PROTECTED_HELPER_(\d+)___/g, function(match, index) {
+						return protectedHelpers[parseInt(index)];
+					});
 
 					// If there is a layout then insert the data into the layout
 					if (typeof(layout) != "object") {
@@ -642,6 +655,11 @@ function loadInsert(fname,insert_location,allow_scripts,callback) {
 			// No layout, use content directly
 			// Run through markdown if the file ends in .md
 			if (/\.md$/.test(fname)){ insert_contents = marked.parse(insert_contents);	}
+
+			// Restore protected helpers after markdown processing
+			insert_contents = insert_contents.replace(/___PROTECTED_HELPER_(\d+)___/g, function(match, index) {
+				return protectedHelpers[parseInt(index)];
+			});
 
 			// Strip the scripts if specified
 			if (!allow_scripts) {insert_contents = removeScripts(insert_contents);}
@@ -727,8 +745,22 @@ function processPageContent(contentData, url, callback) {
 	// Step 1: Process meta-helpers (like {{blog}} which generates {{insert}} helpers)
 	data = pre_process_page(contentData);
 
+	// Step 1.5: Protect helpers with 5+ spaces BEFORE markdown processing
+	// Convert them to placeholders that won't be processed
+	var protectedHelpers = [];
+	data = data.replace(/{{[^}]*\s\s\s\s\s[^}]*}}/g, function(match) {
+		var index = protectedHelpers.length;
+		protectedHelpers.push(match);
+		return '___PROTECTED_HELPER_' + index + '___';
+	});
+
 	// Step 2: Convert Markdown to HTML if this is a .md file
 	if (/\.md$/.test(url)){ data = marked.parse(data);}
+
+	// Step 2.5: Restore protected helpers AFTER markdown processing
+	data = data.replace(/___PROTECTED_HELPER_(\d+)___/g, function(match, index) {
+		return protectedHelpers[parseInt(index)];
+	});
 
 	// Step 3: Recursively process all {{insert}} helpers
 	processInserts(function(){

@@ -18,7 +18,7 @@ If a helper contains **five or more sequential spaces**, it will be skipped. Thi
 
 ### HTML Attributes
 
-All helpers (except `{{insert}}`) support **attribute parameters** using the `=>` syntax. These inject HTML attributes into the generated element.
+All helpers (except `{{     insert}}`) support **attribute parameters** using the `=>` syntax. These inject HTML attributes into the generated element.
 
 **Format:** `attr=>value` becomes `attr="value"` in the output HTML
 
@@ -166,7 +166,7 @@ Embeds the content of another page at the helper location. The inserted page inc
 - Insert formatted content into pages without layouts
 - Create reusable content blocks
 
-**Note:** The `{{insert}}` helper does NOT support attribute parameters. To add attributes, wrap it manually:
+**Note:** The `{{     insert}}` helper does NOT support attribute parameters. To add attributes, wrap it manually:
 
 ```html
 <div id="sidebar" class="col-md-4">
@@ -263,13 +263,13 @@ Displays a simple list of blog post titles with links. Similar to `{{blog}}` but
 
 | Helper | Purpose | Example |
 |--------|---------|---------|
-| `{{a}}` | Internal link | `{{a     | page     | text}}` |
-| `{{i}}` | Image | `{{i     | image     | alt}}` |
-| `{{carousel}}` | Slideshow | `{{carousel:5000     | img1     | img2}}` |
-| `{{insert}}` | Embed page | `{{insert     | page}}` |
-| `{{filelist}}` | Directory tree | `{{filelist     | ./pages/docs}}` |
-| `{{blog}}` | Blog with excerpts | `{{blog     | ./pages/blog     | 0     | 5}}` |
-| `{{bloglist}}` | Blog titles only | `{{bloglist     | ./pages/blog}}` |
+| `{{     a}}` | Internal link | `{{a     | page     | text}}` |
+| `{{     i}}` | Image | `{{i     | image     | alt}}` |
+| `{{     carousel}}` | Slideshow | `{{carousel:5000     | img1     | img2}}` |
+| `{{     insert}}` | Embed page | `{{insert     | page}}` |
+| `{{     filelist}}` | Directory tree | `{{filelist     | ./pages/docs}}` |
+| `{{     blog}}` | Blog with excerpts | `{{blog     | ./pages/blog     | 0     | 5}}` |
+| `{{     bloglist}}` | Blog titles only | `{{bloglist     | ./pages/blog}}` |
 
 ## Next Steps
 
