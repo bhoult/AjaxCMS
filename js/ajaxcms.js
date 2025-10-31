@@ -734,8 +734,10 @@ function processPageContent(contentData, url, callback) {
 		var ajaxcms_page_id = url.replace(/[\s\/\.]/g,'_')
 		$('body').attr("id", ajaxcms_page_id);
 
-		// Step 8: Track page view in Google Analytics
-		ga('send', 'pageview', location.href)
+		// Step 8: Track page view in Google Analytics (if initialized)
+		if (typeof ga === 'function') {
+			ga('send', 'pageview', location.href);
+		}
 
 		// Call completion callback if provided
 		if (callback && typeof(callback) === "function") {
