@@ -1,87 +1,122 @@
+(function() {
+'use strict';
+
+/**
+ * AjaxCMS - Dynamic front-end CMS with static file backend
+ *
+ * This IIFE (Immediately Invoked Function Expression) wraps the entire CMS
+ * to prevent global namespace pollution. Only the loadPage function is
+ * exposed globally for onclick handlers in generated HTML.
+ */
+
 /////////////////////////////////  CONFIGURATION   ///////////////////////////////
-		
+
+// Animation and timing constants
+var CAROUSEL_INIT_DELAY = 1000;        // Delay before initializing Bootstrap carousels (ms)
+var TRANSITION_DURATION = 500;          // Duration of page transition animations (ms)
+var BACKGROUND_HEIGHT_OFFSET = 120;     // Extra height for background to prevent glitches on mobile
+
+// Page transition type: "slide" (directional) or "basic" (instant)
 var load_transition = "slide";
 
+// Disable AJAX caching to ensure fresh content
 $.ajaxSetup({ cache: false });
 
 //////////////////////////////////////////////////////////////////////////////////
 
+// Data arrays populated from directory listings
+var menus = [];      // Menu page paths (files in pages/menus/)
+var pages = [];      // All page paths (both files and directories)
+var layouts = [];    // Layout template paths (layout.html files)
+var blogs = [];      // Blog post paths (reserved for future use)
+var images = [];     // Image file paths from images/ directory
 
-// Polyfill for String.prototype.trim() https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/Trim
-if (!String.prototype.trim) {
-  String.prototype.trim = function () {
-    return this.replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g, '');
-  };
-}
+// Async operation counters - track when directory listings are fully loaded
+var menu_count = 0;     // Reserved for future use
+var pages_count = 0;    // Counter for pending page directory requests
+var images_count = 0;   // Counter for pending image directory requests
+var in_transition = false;  // Flag to prevent overlapping page transitions
+
+// URL and page state management
+var base_url = window.location.href.replace(/\?.*/,'');  // Base URL without query params
+var current_page;   // Currently displayed page path
+var just_pages;     // Filtered array of actual pages (excludes directories and layouts)
+var menu_pages;     // Pages that appear in the navigation menu
+var data;           // Global variable holding current page content during processing
+
+// Directories to skip when loading images (special size variants)
+var SKIP_IMAGE_DIRS = ['icon/', 'thumb/', 'small/', 'medium/', 'large/'];
 
 //////////////////////////////////////////////////////////////////////////////////
 
-var menus = [];
-var pages = [];
-var layouts = [];
-var blogs = [];
-var images = [];
-
-var menu_count = 0; // Keep track of recursive asyncronous directory list.
-var pages_count = 0;
-var images_count = 0;
-var in_transition = false;
-
-var base_url = window.location.href.replace(/\?.*/,'');
-
-var current_page;
-var just_pages;
-var menu_pages;
-var data;
-
-
-// Resize <main> to fit children;
-function scaleMain(selector) {
-    var objHeight = $(selector).height();
-    $('#main').height(objHeight);
-}
-
-// return url parameter value
+/**
+ * Extract URL parameter value by key
+ * @param {string} key - The parameter name to look for
+ * @returns {string|undefined} The parameter value or undefined if not found
+ */
 function param(key) {
 	var params = window.location.href.replace(/.*\?/,'').split('&');
-	
-	for (i=0; i<params.length; i++) {
-		x = params[i].split("=");
+
+	for (var i=0; i<params.length; i++) {
+		var x = params[i].split("=");
 		if (x[0] == key) {return x[1]}
 	}
-	// console.log(params);
 }
 
-// Pages return just the html files (not directories)
+/**
+ * Filter pages array to get only actual page files (HTML/Markdown)
+ * Also populates the layouts array as a side effect
+ * @returns {Array} Array of page file paths (excludes directories and layouts)
+ */
 function findPages() {
 	return $.grep(pages, function(n,i){
+		// Collect layout files in separate array
 		if (/\/layout\.html$/.test(n)) {layouts.push(n)}
-		
-		return /[\.html|\.md]$/.test(n) && !/\/layout\.html$/.test(n);
+
+		// Return only .html and .md files, excluding layouts
+		return /\.(html|md)$/.test(n) && !/\/layout\.html$/.test(n);
 	});
 }
 
+/**
+ * Filter pages to get only menu items (pages in the menus/ directory)
+ * @returns {Array} Array of menu page paths
+ */
 function findMenus(){
 	return $.grep(pages, function(n,i){
 		return /\/menus\/.+/.test(n) && !/\/layout\.html$/.test(n);
 	});
 }
 
-// Return Index of specified menu
+/**
+ * Get the index position of a menu item
+ * @param {string} m - Menu page path
+ * @returns {number} Index in menus array, or -1 if not found
+ */
 function menuIndex(m) {
 	return menus.indexOf(m);
 }
+
+/**
+ * Get the index position of a page in the menu_pages array
+ * @param {string} m - Page path
+ * @returns {number} Index in menu_pages array, or -1 if not found
+ */
 function mpIndex(m) {
 	return menu_pages.indexOf(m);
 }
 
 
-// Fetch JSON directory listing data... add to pages
+/**
+ * Recursively load all pages from a directory via JSON API
+ * Populates the pages array and triggers initialization when complete
+ * @param {string} url - Directory path to load (e.g., './pages')
+ */
 function load_pages(url) {
-	url = url.replace(/\/$/,''); // Remove trailing slash from starting point url
+	url = url.replace(/\/$/,''); // Remove trailing slash for consistency
 	pages_count++;
 
-	// Fetch recursive directory listing as JSON
+	// Fetch recursive directory listing as JSON from the server API
 	$.getJSON('api/list-recursive?dir=' + encodeURIComponent(url), function(data) {
 		// Add all files to pages array
 		for (var i = 0; i < data.files.length; i++) {
@@ -104,6 +139,8 @@ function load_pages(url) {
 		for (var dir in dirs) {
 			pages.push(url + '/' + dir);
 		}
+	}).fail(function(jqXHR, textStatus, errorThrown) {
+		console.error('Error loading pages from ' + url + ':', textStatus, errorThrown);
 	}).then(function(){
 		pages_count--;
 		if (pages_count === 0) {
@@ -118,6 +155,8 @@ function load_pages(url) {
 			if (pages.indexOf("./pages/splash.html") >= 0 && !param('page')) {
 				$.get("./pages/splash.html",function(data){
 					$(".container").before("<div id='splash' style='width:100%; position:absolute;'>"+data+"</div>");
+				}).fail(function(jqXHR, textStatus, errorThrown) {
+					console.error('Error loading splash page:', textStatus, errorThrown);
 				});
 
 				setTimeout(function(){
@@ -130,8 +169,7 @@ function load_pages(url) {
 			}
 
 			// Load the page in the params if specified, first menu page otherwise.
-			p = param('page');
-			// console.log("p=" + p);
+			var p = param('page');
 			if (p) {
 				loadPage('./'+p, true);
 				current_page = p;
@@ -147,111 +185,193 @@ function load_pages(url) {
 }
 
 
-// Fetch JSON directory listing data... add to images
+/**
+ * Recursively load all images from a directory via JSON API
+ * Populates the images array, excluding special size variant directories
+ * @param {string} url - Directory path to load (e.g., './images')
+ */
 function load_images(url) {
-	url = url.replace(/\/$/,''); // Remove trailing slash from starting point url
+	url = url.replace(/\/$/,''); // Remove trailing slash for consistency
 	images_count++;
 
-	// Fetch recursive directory listing as JSON
+	// Fetch recursive directory listing as JSON from the server API
 	$.getJSON('api/list-recursive?dir=' + encodeURIComponent(url), function(data) {
 		// Add all image files to images array
 		for (var i = 0; i < data.files.length; i++) {
 			var filePath = data.files[i].path;
 
-			// Skip special directories
-			if (filePath.indexOf('icon/') === 0) { continue; }
-			if (filePath.indexOf('thumb/') === 0) { continue; }
-			if (filePath.indexOf('small/') === 0) { continue; }
-			if (filePath.indexOf('medium/') === 0) { continue; }
-			if (filePath.indexOf('large/') === 0) { continue; }
+			// Skip special directories (icon/, thumb/, small/, medium/, large/)
+			if (SKIP_IMAGE_DIRS.some(function(dir) { return filePath.indexOf(dir) === 0; })) {
+				continue;
+			}
 
 			images.push(url + '/' + filePath);
 		}
+	}).fail(function(jqXHR, textStatus, errorThrown) {
+		console.error('Error loading images from ' + url + ':', textStatus, errorThrown);
 	}).then(function(){
 		images_count--;
 		if (images_count === 0) {
-			// Stuff to run after page list is loaded.
+			// All image directories loaded - reserved for future initialization
 		}
 	});
 }
 
-// Return the url of the first partial-match image.
+/**
+ * Find the first image that matches the search term
+ * @param {string} s - Search term (partial match, case insensitive)
+ * @returns {string|undefined} Image URL or undefined if no match
+ */
 function imageMatch(s) {
-	for (i=0; i<images.length; i++) {
-		var re = new RegExp(s,"gi");
-		if (re.test(images[i])){return images[i]} 
+	var re = new RegExp(s,"gi");
+	for (var i=0; i<images.length; i++) {
+		if (re.test(images[i])){return images[i]}
 	}
 }
 
-// Return the url of the first partial-match page.
+/**
+ * Find the best matching page for a search term
+ * Best match is defined as the shortest filename (without path) that matches
+ * @param {string} s - Search term (partial match, case insensitive)
+ * @returns {string} Page URL or empty string if no match
+ */
 function pageMatch(s) {
 	var best_match = "";
 	var return_url = "";
-	for (i=0; i<just_pages.length; i++) {
-		
-		var re = new RegExp(s,"gi");
-		
-		// Best match is shortest filename without directories stripped of headers and footers. 
+	var re = new RegExp(s,"gi");
+
+	for (var i=0; i<just_pages.length; i++) {
+		// Test if search term matches this page path
 		if (re.test(just_pages[i])){
+			// Extract just the filename, strip numeric prefixes and extensions
 			var page_name = just_pages[i].split('/').slice(-1)[0].replace(/^\d+\-/,'').replace(/\..*?$/,'');
+
+			// Keep the shortest matching filename (most specific match)
 			if ((page_name.length < best_match.length) || (best_match.length == 0)) {
 				best_match = page_name;
 				return_url = just_pages[i]
 			}
-		} 
+		}
 	}
 	return return_url;
 }
 
-// Remove Scripts from strings of html
+/**
+ * Strip all <script> tags from HTML content
+ * Used when inserting untrusted content via the {{insert}} helper
+ * @param {string} text - HTML content to sanitize
+ * @returns {string} HTML with all script tags removed
+ */
 function removeScripts(text) {
 	return text.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,"");
 }
-        
 
-// Do shortcut replacement in page html content.  (links and stuff)
+/**
+ * Parse helper syntax and extract parts and attributes
+ * Helpers use format: {{type | param1 | param2 | attr => value}}
+ * @param {string} helperString - Full helper string including {{ }}
+ * @returns {Object} Object with parts array, attributes string, and original pieces
+ */
+function parseHelper(helperString) {
+	var pieces = helperString.replace(/{{/g,'').replace(/}}/g,'').split('|');
+	var parts = [];
+	var attributes = [];
+
+	// separate parts and attributes
+	for (var i=0; i<pieces.length; i++) {
+		if (/=&gt;/.test(pieces[i])){
+			attributes.push(pieces[i]);
+		} else {
+			parts.push(pieces[i]);
+		}
+	}
+
+	// Convert attributes to string attr => value becomes attr='value'
+	for (var i=0; i<attributes.length; i++){
+		var apieces = attributes[i].split('=&gt;');
+		attributes[i] = apieces[0].trim()+"=\""+apieces[1].trim()+"\"";
+	}
+	var attributes_string = attributes.join(" ");
+
+	// Remove Blanks from parts
+	for (var i=0; i < parts.length; i++) {
+		parts[i] = parts[i].trim().toLowerCase();
+	}
+
+	return {
+		parts: parts,
+		attributes: attributes_string,
+		pieces: pieces
+	};
+}
+
+/**
+ * Extract and process blog list from a directory
+ * Blog posts must be named with date prefix: YYYY-MM-DD-Title.html
+ * Shared helper used by both {{blog}} and {{bloglist}} helpers
+ * @param {Array} parts - Parsed helper parts [type, directory, start, stop]
+ * @returns {Array} Array of blog objects with {name, date, url} properties
+ */
+function processBlogList(parts) {
+	// Find all pages in the specified directory that are HTML or Markdown
+	var blog_list = $.grep(just_pages, function(n,i){
+		return n.toLowerCase().indexOf(parts[1].toLowerCase()) > -1 && /\.(html|md)$/i.test(n);
+	}).sort().reverse();  // Sort reverse chronologically (newest first)
+
+	// Apply pagination if start and stop parameters provided
+	var start;
+	var stop;
+	if (parts[2] != undefined) {start = parseInt(parts[2])}
+	if (parts[3] != undefined) {stop = parseInt(parts[3])} else {stop = blog_list.length}
+	if (parts.length > 2) {blog_list = blog_list.slice(start,stop);}
+
+	// Parse blog filename to extract date and clean title
+	for (var i=0; i< blog_list.length; i++) {
+		var blog_name = blog_list[i].split("/").slice(-1)[0].replace(/\.html$|\.md$/gi,'').replace(/_/g," ");
+		var blog_date_parts = /(\d+)-(\d+)-(\d+)(-(\d+)-)?/g.exec(blog_name);
+		var blog_date;
+		if (blog_date_parts != null) {
+			// Parse YYYY-MM-DD date from filename
+			blog_date = new Date(blog_date_parts.slice(1,4).join('/'))
+			// Extract just the title (everything after date prefix)
+			blog_name = blog_name.split('-').slice(-1)[0];
+		}
+		blog_list[i] = {name: blog_name, date: blog_date, url: blog_list[i]}
+	}
+
+	return blog_list;
+}
+
+
+/**
+ * Process all helper syntax in page content
+ * Converts {{helper}} tags to their HTML replacements
+ * Supports: {{a}}, {{i}}, {{carousel}}, {{filelist}}, {{bloglist}}
+ * @param {string} sdata - HTML content to process (optional, uses global data if undefined)
+ * @returns {string} Processed HTML with helpers replaced
+ */
 function process_page(sdata) {
-	var d; 
-	var size;
-	
-	// If a string is passed in then process the string.  Otherwise process global data variable.
+	var d;
+
+	// If a string is passed in, process it; otherwise use global data variable
 	if (sdata === undefined) {
 		d = data;
 	} else {
 		d = sdata;
 	}
-	
-	// Convert stuff in {{ }} (helpers)
-	d = d.replace(/{{.*}}/gi, function myFunction(x){
-		var pieces = x.replace(/{{/g,'').replace(/}}/g,'').split('|');
-		var parts = [];
-		var attributes = [];
-		var attribute_string = ""
-		
-		// separate parts and attributes
-		for (var i=0; i<pieces.length; i++) {
-			if (/=&gt;/.test(pieces[i])){
-				attributes.push(pieces[i]);
-			} else {
-				parts.push(pieces[i]);
-			}
-		}
-		
-		// Convert attributes to string attr => value becomes attr='value'
-		for (var i=0; i<attributes.length; i++){
-			var apieces = attributes[i].split('=&gt;');
-			attributes[i] = apieces[0].trim()+"=\""+apieces[1].trim()+"\"";
-		}
-		attributes_string = attributes.join(" ");
+
+	// Convert all {{helper}} tags - use non-greedy matching to handle multiple helpers
+	d = d.replace(/{{.*?}}/gi, function myFunction(x){
+		var parsed = parseHelper(x);
+		var parts = parsed.parts;
+		var attributes_string = parsed.attributes;
+		var pieces = parsed.pieces;
 
         // Blank - Skip any helpers that contain five sequential spaces.  This is so we can document the helpers format without it being replaced.  HTML merges the spaces.
         if (/\s\s\s\s\s/.test(x)) {
         	return x.replace(/\s+/,' ')
         }
-        
-        // Remove Blanks
-        for (i=0; i < parts.length; i++) {parts[i] = parts[i].trim().toLowerCase()}
-        
+
 		// Anchors
 		if (parts[0]=='a' && parts.length == 2) {
 			return "<a href=\"javascript:void(0);\" "+attributes_string+" onclick=\"loadPage(\'" + pageMatch(parts[1]) + "\'); return false;\">"+parts[1]+"</a>";
@@ -262,7 +382,7 @@ function process_page(sdata) {
 		if (parts[0]=='a' && parts.length == 4) {
 			return "<a href=\"javascript:void(0);\" "+attributes_string+" onclick=\"loadPage(\'" + pageMatch(parts[1]) + "\'); return false;\" alt=\"" + parts[3] + "\">"+parts[2]+"</a>";
 		}
-		
+
 		// Images
 		if (parts[0]=='i' && parts.length == 2) {
 			return "<img "+attributes_string+" src=\"" + imageMatch(parts[1]) + "\" alt=\"" + parts[1] + "\">";
@@ -270,20 +390,20 @@ function process_page(sdata) {
 		if (parts[0]=='i' && parts.length == 3) {
 			return "<img "+attributes_string+" src=\"" + imageMatch(parts[1]) + "\" alt=\"" + parts[2] + "\">";
 		}
-		
+
 		// Carousel {{ carousel:speed | image1:alt1:caption1 | image2:alt2:caption2 | image3:alt3:caption3 }}
 		if (parts[0].includes('carousel') && parts.length > 2) {
-			var idn = Math.floor(rand(9999999999));
+			var idn = Math.floor(Math.random() * 9999999999);
 			var carousel_images = parts.slice(1);
 			var carousel_speed = 5000;
 			if (parts[0].split(':').length == 2) {carousel_speed = parseInt(parts[0].split(':')[1])}
-			
+
 			// Build the repeating parts of the carousel
 			var carousel_indicators = "";
 			var slides = "";
-			for (ii=0; ii < carousel_images.length; ii++) {
+			for (var ii=0; ii < carousel_images.length; ii++) {
 				carousel_indicators += "<button type=\"button\" data-bs-target=\"#carousel_"+idn+"\" data-bs-slide-to=\""+ii+"\" class=\""+ (ii==0 ? 'active' : '') +"\" aria-current=\""+(ii==0 ? 'true' : 'false')+"\" aria-label=\"Slide "+(ii+1)+"\"></button>";
-				
+
 				var image_parts = carousel_images[ii].split(':');
 				var slide_image;
 				var slide_caption;
@@ -295,14 +415,11 @@ function process_page(sdata) {
 							"<img src=\""+ imageMatch(slide_image) +"\" alt=\""+ slide_alt  +"\" class=\"d-block w-100\">" +
 							"<div class=\"carousel-caption\">"+slide_caption+"</div></div>";
 			}
-			
+
 			// Wait a second then start the carousel - use IIFE to capture variables
 			(function(carouselId, speed){
 				setTimeout(function(){
-					// console.log("Initializing carousel:", carouselId, "speed:", speed);
 					var carouselElement = document.getElementById(carouselId);
-					// console.log("Carousel element found:", carouselElement);
-					// console.log("Bootstrap available:", typeof bootstrap !== "undefined");
 					if (carouselElement) {
 						if (typeof bootstrap !== "undefined") {
 							try {
@@ -311,7 +428,6 @@ function process_page(sdata) {
 									wrap: true,
 									touch: true
 								});
-								// console.log("Carousel instance created, starting cycle");
 								carousel.cycle();
 							} catch(e) {
 								console.error("Error creating carousel:", e);
@@ -320,9 +436,9 @@ function process_page(sdata) {
 							console.error("Bootstrap is not defined!");
 						}
 					}
-				}, 1000);
+				}, CAROUSEL_INIT_DELAY);
 			})("carousel_"+idn, carousel_speed);
-			
+
 			// Extract class from attributes and merge with carousel classes
 			var carousel_class = "carousel slide";
 			var class_match = attributes_string.match(/class="([^"]*)"/);
@@ -341,14 +457,14 @@ function process_page(sdata) {
 					"<span class=\"carousel-control-next-icon\" aria-hidden=\"true\"></span><span class=\"visually-hidden\">Next</span></button>" +
 					"</div>"
 		}
-		
+
 		// {{filelist | directory}}
 		if (parts[0] == 'filelist' && parts.length == 2) {
-			var level = 0;
-			var rstring = "";
-			var list =  $.grep(pages, function(n,i){return (n.indexOf(parts[1]) > -1) && (!/\/layout\.html$/.test(n))}).sort();
+			var list =  $.grep(pages, function(n,i){
+				return (n.indexOf(parts[1]) > -1) && (!/\/layout\.html$/.test(n));
+			}).sort();
 			list.shift(); // Don't show the first directory.
-			
+
 			// Convert the list to a hash with the name and the url
 			for (var i = 0; i < list.length; i++) {
 				var fname = list[i].replace(/\/$/,'')
@@ -358,10 +474,10 @@ function process_page(sdata) {
 				fname = fname.replace(/_/g,' ')
 				list[i] = {name: fname,url: list[i].replace(/\/$/,'')}
 			}
-			
+
 			// Remove any empty strings that are left in the list
 			list = $.grep(list, function(n,i){return n.name != ""});
-			
+
 			var rootList = $("<ul>")
 		    var elements = {};
 		    $.each(list, function() {
@@ -372,156 +488,117 @@ function process_page(sdata) {
 		        }
 		        var item = $("<li>").appendTo(list);
 		        if (!/\.html|\.md/.test(this.url)) {
-		        	$("<a>").attr("href", "javascript:void(0);").attr('class','folder').text(this.name).appendTo(item);	
+		        	$("<a>").attr("href", "javascript:void(0);").attr('class','folder').text(this.name).appendTo(item);
 		        } else {
 		        	$("<a>").attr("href", "javascript:void(0);").attr("onclick", "loadPage(\""+this.url+"\"); return false;").attr('class','file').text(this.name).appendTo(item);
 		        }
 		        elements[this.url] = item;
 		    });
-		    
+
 			return "<ul "+attributes_string+" class=\"filelist\">" + rootList.html() + "</ul>";
 		}
-		
+
 		// {{bloglist | directory | start | stop }}
 		if (parts[0] == 'bloglist' && parts.length > 1) {
-			// Get all the blog pages
-			var blog_list = $.grep(just_pages, function(n,i){return n.toLowerCase().indexOf(parts[1].toLowerCase()) > -1 && /\.html$|\.md$/i.test(n) }).sort().reverse();
-			
-			// If start and stop are specified then limit blog pages
-			var start;
-			var stop;
-			if (parts[2] != undefined) {start = parseInt(parts[2])}
-			if (parts[3] != undefined) {stop = parseInt(parts[3])} else {stop = blog_list.length}
-			if (parts.length > 2) {blog_list = blog_list.slice(start,stop);}
-			
-			// Convert the blog list to a hash with name and date.
-			for (var i=0; i< blog_list.length; i++) {
-				var blog_name = blog_list[i].split("/").slice(-1)[0].replace(/\.html$|\.md$/gi,'').replace(/_/g," ");
-				var blog_date_parts = /(\d+)-(\d+)-(\d+)(-(\d+)-)?/g.exec(blog_name);
-				var blog_date;
-				if (blog_date_parts != null) { 
-					blog_date = new Date(blog_date_parts.slice(1,4).join('/')) 
-					blog_name = blog_name.split('-').slice(-1)[0];
-				}
-				blog_list[i] = {name: blog_name, date: blog_date, url: blog_list[i]}
-			}
-			
+			var blog_list = processBlogList(parts);
+
 			// Make a li for each blog entry
 			var output = "";
 			for (var i=0; i < blog_list.length; i++){
 				output += "<li class=\"blog_entry\"><a href=\"javascript:void(0);\" onclick=\"loadPage('"+blog_list[i].url+"'); return false;\">" + blog_list[i].name + "</a></li>"
 			}
-			
+
 			// Output all the blog entries wrapped in a div and then use javascript to load the contgents of each.
 			return "<ul "+attributes_string+" class=\"blog_list\">"+output+"</ul>"
 		}
-		
+
 		// If all else fails return the original tag.
 		return "{{"+pieces.join("|")+"}}"
 	});
-	
+
 	return d
 }
 
-// Do shortcut replacement of helpers that themselves produce other helpers.
+/**
+ * Pre-process helpers that generate other helpers
+ * Must run before process_page() to handle nested helper generation
+ * Currently only processes the {{blog}} helper which generates {{insert}} helpers
+ * @param {string} sdata - HTML content to process (optional, uses global data if undefined)
+ * @returns {string} Processed HTML with meta-helpers expanded
+ */
 function pre_process_page(sdata) {
-	var d; 
-	var size;
-	
-	// If a string is passed in then process the string.  Otherwise process global data variable.
+	var d;
+
+	// If a string is passed in, process it; otherwise use global data variable
 	if (sdata === undefined) {
 		d = data;
 	} else {
 		d = sdata;
 	}
-	
-	// Convert stuff in {{ }} (helpers)
-	d = d.replace(/{{.*}}/gi, function myFunction(x){
+
+	// Convert meta-helpers that generate other helpers - use non-greedy matching
+	d = d.replace(/{{.*?}}/gi, function myFunction(x){
 		var original = x;
-		var pieces = x.replace(/{{/g,'').replace(/}}/g,'').split('|');
-		var parts = [];
-		var attributes = [];
-		var attribute_string = ""
-		
-		// separate parts and attributes
-		for (var i=0; i<pieces.length; i++) {
-			if (/=&gt;/.test(pieces[i])){
-				attributes.push(pieces[i]);
-			} else {
-				parts.push(pieces[i]);
-			}
-		}
-		
-		// Convert attributes to string attr => value becomes attr='value'
-		for (var i=0; i<attributes.length; i++){
-			var apieces = attributes[i].split('=&gt;');
-			attributes[i] = apieces[0].trim()+"=\""+apieces[1].trim()+"\"";
-		}
-		attributes_string = attributes.join(" ");
+		var parsed = parseHelper(x);
+		var parts = parsed.parts;
+		var attributes_string = parsed.attributes;
 
         // Blank - Skip any helpers that contain five sequential spaces.  This is so we can document the helpers format without it being replaced.  HTML merges the spaces.
         if (/\s\s\s\s\s/.test(x)) {
         	return original;
         }
-        
-        // Remove Blanks
-        for (i=0; i < parts.length; i++) {parts[i] = parts[i].trim().toLowerCase()}
-        
+
 		// {{blog | directory | start | stop }}
 		if (parts[0] == 'blog' && parts.length > 1) {
-			// Get all the blog pages
-			var blog_list = $.grep(just_pages, function(n,i){return n.toLowerCase().indexOf(parts[1].toLowerCase()) > -1 && /\.html$|\.md$/i.test(n) }).sort().reverse();
-			
-			// If start and stop are specified then limit blog pages
-			var start;
-			var stop;
-			if (parts[2] != undefined) {start = parseInt(parts[2])}
-			if (parts[3] != undefined) {stop = parseInt(parts[3])} else {stop = blog_list.length}
-			if (parts.length > 2) {blog_list = blog_list.slice(start,stop);}
-			
-			// Convert the blog list to a hash with name and date.
-			for (var i=0; i< blog_list.length; i++) {
-				var blog_name = blog_list[i].split("/").slice(-1)[0].replace(/\.html$|\.md$/gi,'').replace(/_/g," ");
-				var blog_date_parts = /(\d+)-(\d+)-(\d+)(-(\d+)-)?/g.exec(blog_name);
-				var blog_date;
-				if (blog_date_parts != null) { 
-					blog_date = new Date(blog_date_parts.slice(1,4).join('/')) 
-					blog_name = blog_name.split('-').slice(-1)[0];
-				}
-				blog_list[i] = {name: blog_name, date: blog_date, url: blog_list[i]}
-			}
-			
+			var blog_list = processBlogList(parts);
+
 			// Make a div for each blog entry
 			var output = "";
 			for (var i=0; i < blog_list.length; i++){
 				output += "<div class='blog_entry' data-url='"+blog_list[i].url+"' onclick=\"loadPage('"+blog_list[i].url+"'); return false;\" style=\"cursor: pointer;\">"
 				output += "<h1>"+blog_list[i].name+"</h1><time>"+blog_list[i].date.toLocaleDateString()+"</time><div class='blog_content'>\n{{insert | "+blog_list[i].url+" | false}}\n</div></div>"
 			}
-			
+
 			return "<div "+attributes_string+" class='blog'>\n"+output+"</div>"
 		}
-		
+
 		// If all else fails return the original tag.
 		return original
-		
+
 	});
-	
+
 	return d
 }
 
+/**
+ * Find the appropriate layout template for a file
+ * Searches up the directory tree for the nearest layout.html
+ * @param {string} filename - Full path to the file
+ * @returns {string} Path to the nearest layout.html file
+ */
 function lastLayout(filename) {
 	var pieces = filename.split("/")
-	for (i=1; i < pieces.length; i++) {
+
+	// Walk up the directory tree looking for layout.html
+	for (var i=1; i < pieces.length; i++) {
 		var name = pieces.slice(0,pieces.length-i).concat(["layout.html"]).join("/")
 		if ($.inArray(name, layouts) > -1) { return name }
 	}
-	
+
+	// Fallback: return expected layout path even if not found
 	return pieces.slice(0,-1).concat(["layout.html"]).join("/")
 }
 
+/**
+ * Load and insert content from another page
+ * Used by the {{insert}} helper to embed one page within another
+ * @param {string} fname - Path to file to insert
+ * @param {string} insert_location - Original helper string to replace
+ * @param {boolean} allow_scripts - Whether to allow <script> tags (default: true)
+ * @param {Function} callback - Function to call when insert is complete
+ */
 function loadInsert(fname,insert_location,allow_scripts,callback) {
-	
-	// console.log(fname);
+
 	$.get(fname,function(insert_contents){
 		var layout_url = lastLayout(fname);
 
@@ -529,6 +606,9 @@ function loadInsert(fname,insert_location,allow_scripts,callback) {
 		if ($.inArray(layout_url, layouts) > -1) {
 			// Layout exists, load it
 			$.get( layout_url )
+				.fail(function(jqXHR, textStatus, errorThrown) {
+					console.error('Error loading insert layout ' + layout_url + ':', textStatus, errorThrown);
+				})
 				.always(function( layout ) {
 
 					// Run through markdown if the file ends in .md
@@ -564,31 +644,39 @@ function loadInsert(fname,insert_location,allow_scripts,callback) {
 			// Run Callback if it exists
 			if (callback && typeof(callback) === "function") {callback();}
 		}
+	}).fail(function(jqXHR, textStatus, errorThrown) {
+		console.error('Error loading insert ' + fname + ':', textStatus, errorThrown);
 	});
 };
 
+/**
+ * Recursively process all {{insert}} helpers in the global data variable
+ * Inserts can contain other inserts, so this function calls itself recursively
+ * @param {Function} callback - Function to call when all inserts are complete
+ */
 function processInserts(callback) {
-	
-	var insert_list = data.match(/{{\s{0,4}insert.*?}}/gi); // skip if more than 5 spaces at the beginning for documentation purposes.
-	
-	// If there are no callbacks then done.
+
+	// Find all {{insert}} helpers (allow up to 4 spaces for documentation)
+	var insert_list = data.match(/{{\s{0,4}insert.*?}}/gi);
+
+	// If no inserts found, we're done
 	if (insert_list == null) {callback(); return}
 	var rcount = insert_list.length;
 
 	// Load all the files in the insert list
 	for (var i=0; i < insert_list.length; i++) {
 		var fname =  pageMatch(insert_list[i].replace(/[{}\s]/g,'').split("|")[1]);
-		
+
 		var scripts = insert_list[i].replace(/[{}\s]/g,'').split("|")[2];
 		if (scripts === undefined || scripts.trim() == 'true') {var allow_scripts = true}
-		
+
 		loadInsert(fname, insert_list[i], allow_scripts, function(){
 			rcount--;
-			
+
 			// Run Callback if it exists
 			if (rcount == 0 && callback && typeof(callback) === "function") {
 				data = data.replace(/@@@@@/,'{{').replace(/#####/,'}}');
-				
+
 				// If there are more inserts in the new version then recurse.
 				var more_inserts = data.match(/{{\s*insert.*?}}/gi);
 				if (more_inserts) {
@@ -603,37 +691,104 @@ function processInserts(callback) {
 	}
 }
 
-// Define functions for load transitions.
+/**
+ * Process and render page content after loading
+ * Handles all content transformation steps and page transitions
+ * Extracted to eliminate duplication in loadPage() function
+ * @param {string} contentData - Raw page content (possibly with layout applied)
+ * @param {string} url - Page URL
+ * @param {Function} callback - Callback with save property indicating whether to save to history
+ */
+function processPageContent(contentData, url, callback) {
+	// Step 1: Process meta-helpers (like {{blog}} which generates {{insert}} helpers)
+	data = pre_process_page(contentData);
+
+	// Step 2: Convert Markdown to HTML if this is a .md file
+	if (/\.md$/.test(url)){ data = marked.parse(data);}
+
+	// Step 3: Recursively process all {{insert}} helpers
+	processInserts(function(){
+		// Step 4: Process remaining helpers ({{a}}, {{i}}, {{carousel}}, etc.)
+		data = process_page();
+
+		// Step 5: Render with appropriate page transition animation
+		switch(load_transition) {
+			case 'basic':
+				loadPageBasic(data, url)
+				break;
+			case 'slide':
+				loadPageSlide(data, url);
+				break;
+			default:
+				loadPageBasic(data, url);
+		}
+
+		// Step 6: Update browser history (if save is true or undefined)
+		var save = callback.save;
+		if (save == undefined || save == true) {
+			var new_url = base_url+'?page='+url.replace(/^\.\//,'');
+			window.history.pushState({page: new_url},'test',new_url);
+		}
+
+		// Step 7: Update body ID for page-specific CSS
+		var ajaxcms_page_id = url.replace(/[\s\/\.]/g,'_')
+		$('body').attr("id", ajaxcms_page_id);
+
+		// Step 8: Track page view in Google Analytics
+		ga('send', 'pageview', location.href)
+
+		// Call completion callback if provided
+		if (callback && typeof(callback) === "function") {
+			callback();
+		}
+	});
+}
+
+/**
+ * Basic page transition - instant replacement
+ * @param {string} data - Processed HTML content
+ * @param {string} url - Page URL (unused but kept for consistency)
+ */
 function loadPageBasic(data,url) {
 	$("main").html( data );
 }
 
+/**
+ * Slide page transition - animated directional slides
+ * Determines slide direction based on menu position (forward/back) or fades for non-menu pages
+ * Uses two content divs (#a and #b) that swap with jQuery UI effects
+ * @param {string} data - Processed HTML content
+ * @param {string} url - Page URL to determine transition direction
+ */
 function loadPageSlide(data,url) {
-	
+
 	in_transition = true;
-	
+
 	if (menuIndex(url) > menuIndex(current_page)) {
+		// Moving forward in menu - slide left to right
 		$("#b").html( data )
-		$("#a").hide("slide", { direction: "left"}, 500);
+		$("#a").hide("slide", { direction: "left"}, TRANSITION_DURATION);
 		$("#b").show("slide", { direction: "right", complete: function(){
 			in_transition = false;
 			current_page = url;
 			$("#a").html($('#b').html());
 			$("#a").show();
 			$("#b").hide();
-		}}, 500);
+		}}, TRANSITION_DURATION);
 	} else if (menuIndex(url) < menuIndex(current_page) && menuIndex(url) != -1) {
+		// Moving backward in menu - slide right to left
 		$("#b").html( data )
-		$("#a").hide("slide", { direction: "right"}, 500);
+		$("#a").hide("slide", { direction: "right"}, TRANSITION_DURATION);
 		$("#b").show("slide", { direction: "left", complete: function(){
 			in_transition = false;
 			current_page = url;
 			$("#a").html($('#b').html());
 			$("#a").show();
 			$("#b").hide();
-		}}, 500);
+		}}, TRANSITION_DURATION);
 	} else {
-		$("#a").hide("fade", { }, 500);
+		// Non-sequential or non-menu page - use fade transition
+		$("#a").hide("fade", { }, TRANSITION_DURATION);
 		$("#b").show("fade", { complete: function(){
 			  $("#b").html( data )
 			  in_transition = false;
@@ -641,14 +796,19 @@ function loadPageSlide(data,url) {
 			  $("#a").html($('#b').html());
 			  $("#a").show();
 			  $("#b").hide();
-		}}, 500);
+		}}, TRANSITION_DURATION);
 	}
-		  
+
 }
 
 
-// Set load_transition variable at top to set transition type for page loads.
-function loadPage(url,save) {
+/**
+ * Load and display a page with optional layout and content processing
+ * Main entry point for all page navigation
+ * @param {string} url - Page URL to load
+ * @param {boolean} save - Whether to save this navigation to browser history
+ */
+function loadPage(url, save) {
 	// Prevent loading undefined or invalid pages
 	if (!url || url === 'undefined' || url === 'null') {
 		return;
@@ -656,134 +816,89 @@ function loadPage(url,save) {
 
 	highlightMenu(url);
 
-	$.get( url, function(d) {
+	$.get(url, function(d) {
 		var layout_url = lastLayout(url);
 
 		// Check if layout exists before requesting it to avoid 404 errors
 		if ($.inArray(layout_url, layouts) > -1) {
 			// Layout exists, load it
-			$.get( layout_url )
-				.always(function( layout ) {
+			$.get(layout_url)
+				.fail(function(jqXHR, textStatus, errorThrown) {
+					console.error('Error loading layout ' + layout_url + ':', textStatus, errorThrown);
+				})
+				.always(function(layout) {
+					var contentData;
 
 					// If there is a layout then insert the data into the layout
 					if (typeof(layout) != "object") {
-						data = layout.replace(/{{content}}/gi, function myFunction(x){
+						contentData = layout.replace(/{{content}}/gi, function myFunction(x){
 							if (/\.md/.test(url)){ d = marked.parse(d); }
 							return d;
 						});
 					} else {
-						data = d;
+						contentData = d;
 					}
 
-					// Process any helpers that themselves produce other helpers (like the blog)
-					data = pre_process_page();
-					// Filter content through markdown if the file extension is .md
-					if (/\.md$/.test(url)){ data = marked.parse(data);}
-					// Process any inserts recursively.
-					processInserts( function(){
-						// --- We are now back from the insert processing. ---
-						data = process_page();
-
-						// Render the appropriate page transition effect.
-						switch(load_transition) {
-							case 'basic':
-								loadPageBasic(data,url)
-								break;
-							case 'slide':
-								loadPageSlide(data,url);
-								break;
-							default:
-								loadPageBasic(data,url);
-						}
-
-						// Store the URL of the current page in the history
-						if (save == undefined || save == true) {
-							var old_url = window.location.href
-							var new_url = base_url+'?page='+url.replace(/^\.\//,'');
-							window.history.pushState({page: new_url},'test',new_url);
-						}
-
-						// Update the body id with the name of the page (for css)
-						ajaxcms_page_id = url.replace(/[\s\/\.]/g,'_')
-						$('body').attr("id", ajaxcms_page_id);
-
-						//Google Analytics
-						ga('send', 'pageview', location.href)
-
+					// Process the page content
+					processPageContent(contentData, url, function() {
+						this.save = save;
 					});
 				});
 		} else {
 			// No layout, process content directly
-			data = d;
-
-			// Process any helpers that themselves produce other helpers (like the blog)
-			data = pre_process_page();
-			// Filter content through markdown if the file extension is .md
-			if (/\.md$/.test(url)){ data = marked.parse(data);}
-			// Process any inserts recursively.
-			processInserts( function(){
-				// --- We are now back from the insert processing. ---
-				data = process_page();
-
-				// Render the appropriate page transition effect.
-				switch(load_transition) {
-					case 'basic':
-						loadPageBasic(data,url)
-						break;
-					case 'slide':
-						loadPageSlide(data,url);
-						break;
-					default:
-						loadPageBasic(data,url);
-				}
-
-				// Store the URL of the current page in the history
-				if (save == undefined || save == true) {
-					var old_url = window.location.href
-					var new_url = base_url+'?page='+url.replace(/^\.\//,'');
-					window.history.pushState({page: new_url},'test',new_url);
-				}
-
-				// Update the body id with the name of the page (for css)
-				ajaxcms_page_id = url.replace(/[\s\/\.]/g,'_')
-				$('body').attr("id", ajaxcms_page_id);
-
-				//Google Analytics
-				ga('send', 'pageview', location.href)
-
+			processPageContent(d, url, function() {
+				this.save = save;
 			});
 		}
+	}).fail(function(jqXHR, textStatus, errorThrown) {
+		console.error('Error loading page ' + url + ':', textStatus, errorThrown);
 	});
-};
+}
 
+/**
+ * Convert a file path to a valid CSS class name
+ * Replaces special characters (/, \, ., spaces) with hyphens
+ * @param {string} n - File path
+ * @returns {string} CSS-safe class name
+ */
 function fileToClass(n){
 	return n.replace(/\/$/,'').replace(/[\.|\\|\/|\s]/g,'-');
 }
 
+/**
+ * Highlight the active menu item for the current page
+ * Adds 'active' class to the appropriate menu li element
+ * @param {string} fn - Full file path of current page
+ */
 function highlightMenu(fn) {
 	var c = fn;
+	// Truncate to first 4 path segments for menu matching
 	if (fn.split('/').length > 4){ c = fn.split('/').slice(0,4).join('/');}
-	
+
     c = fileToClass(c);
 	$('#menu li').removeClass('active');
 	$('.'+c).addClass('active');
 }
 
-// Put the pages in the menu (can only be two levels deep)
+/**
+ * Build the navigation menu from the menus array
+ * Creates Bootstrap navbar with dropdown support (max 2 levels deep)
+ * Menu structure is determined by files in pages/menus/ directory
+ */
 function makemenu() {
     $.each(menus, function(index,file){
     	if (file.split("/").length < 6) { // Only go two levels deep in the menu structure.
-    	
+
 	    	var filename = file;
 	    	filename = filename.replace(/\.\/pages\/menus\//,'');   // Remove ./pages from beginning
 	    	filename = filename.replace(/\d+\-/,'');       			// Remove any digits followed by a dash at the beginning (use for sort)
 	    	filename = filename.replace(/\.html$/,'');     			// Remove .html from end.
 	    	filename = filename.replace(/\.md$/,''); 				// Remove .md from end.
 	    	filename = filename.replace(/_/g,' ');					// Replace underscores with spaces.
-	    	
-	    	classname = fileToClass(file);
-	
-	    	if (/\/$/.test(filename)) { 
+
+	    	var classname = fileToClass(file);
+
+	    	if (/\/$/.test(filename)) {
 	    		// It is a directory
 	    		$('#menu').append(
 	    			'<li class="nav-item dropdown '+classname+'"><a href="javascript:void(0);" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false">'
@@ -804,26 +919,32 @@ function makemenu() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//  EVENT HANDLERS & INITIALIZATION
+//
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-
-// When the page is loaded.
+/**
+ * Document ready handler - initializes the CMS
+ * Sets up event handlers for navigation, swipe gestures, keyboard shortcuts, and browser back button
+ */
 $( document ).ready(function() {
-	
-	// Get the directory listings.
+
+	// Load directory listings from the server
 	load_images('./images');
 	load_pages('./pages');
 
-    // Home on Brand Click
+    // Navigate to home page when clicking the site logo/brand
     $('.navbar-brand').click(function(e){
     	e.preventDefault();
     	current_page = menu_pages[0];
 		loadPage(current_page, true);
 		return false;
     });
-    
-    // Setup Swipe Events
+
+    // Swipe gesture navigation on touch devices
 	$("#a").on("swiperight",function(event){
+		// Swipe right = go to previous page
 		var currentIndex = mpIndex(current_page);
 		if (currentIndex > 0 && !in_transition){
 			var nextPage = menu_pages[currentIndex - 1];
@@ -833,6 +954,7 @@ $( document ).ready(function() {
 		}
 	});
 	$("#a").on("swipeleft",function(event){
+		// Swipe left = go to next page
 		var currentIndex = mpIndex(current_page);
 		if (currentIndex >= 0 && currentIndex < menu_pages.length - 1 && !in_transition){
 			var nextPage = menu_pages[currentIndex + 1];
@@ -841,18 +963,19 @@ $( document ).ready(function() {
 			}
 		}
 	});
-	
-	// Back button clicked
+
+	// Browser back/forward button support
 	$(window).on("popstate", function(e) {
-		page = e.originalEvent.state.page
-	    loadPage('./' + /(.*)\?page\=(.*)/.exec(page)[2],false); // the part after the ?page=
+		var page = e.originalEvent.state.page
+	    // Extract page path from URL and load without adding to history
+	    loadPage('./' + /(.*)\?page\=(.*)/.exec(page)[2],false);
 	});
-	
-	// Detect keypress
+
+	// Keyboard navigation with arrow keys
 	$(function(){
     	$('html').keydown(function(e){
 
-	        // left key
+	        // Right arrow key = next page
 	        if (e.keyCode == 39 && !in_transition) {
 	        	var currentIndex = mpIndex(current_page);
 	        	if (currentIndex >= 0 && currentIndex < menu_pages.length - 1){
@@ -863,7 +986,7 @@ $( document ).ready(function() {
 	        	}
 			}
 
-	        // right key
+	        // Left arrow key = previous page
 	        if (e.keyCode == 37 && !in_transition) {
 	        	var currentIndex = mpIndex(current_page);
 	        	if (currentIndex > 0){
@@ -874,10 +997,18 @@ $( document ).ready(function() {
 	        	}
 			}
 	    });
-    
+
 	});
-	
-	// Fix background glitch on mobile devices when address bar hides / unhides.
-	$('#background').height(jQuery(window).height() + 120);
-	window.onresize = function(){$('#background').height(jQuery(window).height() + 120)}; // not sure uf this works on iphone may need to use orientationchange event.
+
+	// Fix for mobile: prevent background glitches when address bar shows/hides
+	// Add extra height to ensure background covers viewport changes
+	$('#background').height(jQuery(window).height() + BACKGROUND_HEIGHT_OFFSET);
+	window.onresize = function(){
+		$('#background').height(jQuery(window).height() + BACKGROUND_HEIGHT_OFFSET);
+	};
 });
+
+// Expose loadPage to global scope so onclick handlers in generated HTML can call it
+window.loadPage = loadPage;
+
+})();
