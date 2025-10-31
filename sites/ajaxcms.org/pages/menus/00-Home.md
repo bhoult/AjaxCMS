@@ -1,41 +1,75 @@
-## What is this?
+## What is AjaxCMS?
 
 {{carousel | back-e.jpg | back-b.jpg | back-c.jpg | back-d.jpg | back-a.jpg | class=>carousel-float-right}}
 
-AjaxCMS is an open source static file based CMS that runs almost entirely in javascript on the browser.  The server is only used for passing static files for the browser to process and display.  You add content by uploading [HTML](http://www.w3schools.com/html/) or [Markdown](https://guides.github.com/features/mastering-markdown/) files into the "pages" folder.  If you want them in the menu then you upload them to the "pages/menus" folder.  These files are automatically detected and added to the menu, folders of files are turned into drop down menus.  When the menus or links are clicked the content of the file is displayed without doing a page refresh.  This has a number of implications.  
+AjaxCMS is an open-source, static-file-based CMS that runs entirely in JavaScript on the browser. The server only provides static files and JSON directory listings—everything else happens client-side. You add content by uploading [HTML](https://www.w3schools.com/html/) or [Markdown](https://guides.github.com/features/mastering-markdown/) files to the `pages/` directory. Files in `pages/menus/` automatically appear in the navigation menu. When users navigate, content loads via AJAX without page refreshes.
 
-1. First, it is fast.  The main "theme" html, css and javascript is loaded and processed only once when the site first loads.  Subsequent pages are then just inserted into the content area using AJAX so that only new content is actually processed by the browser.
+### Key Advantages
 
-2. You don't need a server side database, or code.  Because all the site content on the server is just static HTML it does not need to be processed by the webserver.  It is just sent as is. This again contributes to greater speed and reduces server costs.
+1. **Fast Performance** - The main HTML, CSS, and JavaScript load once. Subsequent pages are inserted via AJAX, so only new content is processed.
 
-3. Because the page is not reloaded you can create interesting effects such as page transitions and background animations that continue to play seamlessly as the user navigates your site. The animation running in the background of this page is just a small Javascript program using the HTML5 Canvas.  
+2. **No Backend Required** - No database or server-side code needed. All content is static HTML/Markdown, reducing server costs and complexity.
 
-4. Because there is no administrative backend, server side code or database, the site is much less vulnerable to hackers.  There are no server side CMS vulnerabilities requiring constant updates or holes for possible SQL injection.
+3. **Seamless Animations** - Background animations and page transitions continue smoothly during navigation since the page never reloads.
 
-5. It is very simple.  At the moment the entire code of AjaxCMS is less than 1000 lines not including the various libraries (jquery, bootstrap, animations, etc.) It is all included in just two files: index.html and js/ajaxcms.js.  This makes it relatively simple to understand the entire source code by just having a basic understanding of html / css / javascript.  It then becomes easy to fully customize your site without having to worry about dealing with the peculiarities of a complex system.  
+4. **Enhanced Security** - No admin backend, server-side code, or database means fewer vulnerabilities. No CMS updates to manage or SQL injection risks.
 
-## How does it work?
-By default the Apache web server will show a file listing if you go a folder that does not contain an index.hmtl file.  AjaxCMS utilizes this to recursively index the files and directories listed in the "pages" folder when you first open the site.  It will use this list to build the menu.  The name of the file determines the name shown for that page in the menu.  If there is a number followed by a dash at the front of the file name (ie. 01-file.html) it will use this to order the menu items.  It will remove the number at the beginning and the extension (.html or .md) from the end.
+5. **Simple & Transparent** - The entire CMS is ~1,000 lines of well-documented JavaScript in `js/ajaxcms.js`. Easy to understand and customize with basic HTML/CSS/JavaScript knowledge.
 
-From a content creators perspective all you have to worry about is creating content files in html or markdown, naming them appropriately and putting them in the right place on the server.
+## How It Works
 
-For complex and consistent page layouts AjaxCMS pages support "Layouts" and "Inserts".  If a folder contains a file called "layout.html" then the files in that folder and it's subfolders will be inserted into the layout before it is displayed.  Pages and layouts can also contain "inserts" which allows other files to be embedded inside a file.
+AjaxCMS uses a Node.js server that provides JSON directory listings via API endpoints. When the site loads, it:
+
+1. Fetches recursive directory listings from `pages/` and `images/` via `/api/list-recursive`
+2. Builds the navigation menu from files in `pages/menus/`
+3. Loads the initial page or splash screen
+4. Dynamically loads content when users navigate
+
+**Naming Convention:** Files prefixed with numbers (e.g., `01-Home.md`) control menu order. The number and file extension are stripped from the display name.
+
+**Layouts & Inserts:** Pages can use layout templates (`layout.html`) for consistent styling. The `{{insert}}` helper embeds content from other files.
 
 ## Features
-1. Mobile Friendly - By default AjaxCMS uses [Bootstrap](http://getbootstrap.com/) to provide a themeable responsive grid-based layout that will adapt to different devices.  Swipe events are also detected and can be used to navigate forward and backwards through the menus as can the left and right arrow keys.
 
-2. Markdown - You can create pages as either .html files or .md (markdown) files.  Markdown is generally faster and easier for novice users to edit, while plain html allows for more complex layouts.
+**Mobile-Friendly** - Built on [Bootstrap 5](https://getbootstrap.com/) with responsive design. Supports swipe gestures and arrow key navigation.
 
-3. Helpers - There are a number of helpers that will assist in tasks like finding and inserting non-menu links and images, or more complicated things like slideshows.  See the {{a | documentation | class=>testclass | id=>testid }} for more information.
+**Markdown Support** - Create pages as `.html` or `.md` files. Markdown is faster for simple content; HTML allows complex layouts.
 
-4. Themes - AjaxCMS is easily themeable.  We plan to support the development of the AjaxCMS core through the sales of themes consisting of background animations combined with CSS color schemes. For a list of the themes currently available click on the "Themes" menu at the top right.
+**Helper Syntax** - Custom `{{ }}` tags simplify common tasks:
+- Links: `{{a | page_name | link text}}`
+- Images: `{{i | image_name | alt text}}`
+- Carousels: `{{carousel | img1 | img2 | img3}}`
+- See {{a | documentation}} for complete helper reference.
+
+**Themes** - Animated canvas backgrounds with coordinated CSS color schemes. Each theme includes `background.js` and `theme.css`.
+
+**Multi-Site Hosting** - The Node.js server supports hosting multiple sites from a single installation. Sites can be accessed via paths (`/sitename/`) or domain names.
+
+## Modern Architecture
+
+**Dependencies Managed via NPM** - All third-party libraries (jQuery, Bootstrap, marked, etc.) are managed through npm and served from `node_modules/`. Run `npm install` to set up all dependencies.
+
+**Resource Fallback** - The server shares `js/`, `themes/`, `images/`, and `node_modules/` across all sites. Individual sites can override by providing their own copies.
+
+**Well-Documented Code** - Comprehensive JSDoc comments throughout the codebase. See `CLAUDE.md` for development guidance.
 
 ## Limitations
-AjaxCMS is basically just for viewing content, the user can look around but cannot change anything. For the majority of simple sites, this is fine.  But it does mean that you have to use external tools to include features like response forms, chat rooms, forums, shopping carts, wikis, etc. However, due to the recent widespread compatibility of AJAX enabled browsers there are many options to embed dynamic features like the ones mentioned above.  These include embedded google maps, discussion boards like http://disqus.com, or response forms using http://forms.google.com 
 
-At the moment, because we need the list of files from the webserver, AjaxCMS requires [Apache](http://www.apache.org/). However it would be trivial to modify the code to parse directory lists from other web servers.
+**Content Display Only** - AjaxCMS is designed for viewing content, not user-generated changes. For interactive features (forms, forums, shopping carts), use third-party services:
+- Forms: [Google Forms](https://www.google.com/forms/about/)
+- Comments: [Disqus](https://disqus.com/)
+- Maps: [Google Maps Embed API](https://developers.google.com/maps/documentation/embed)
 
-## Plans for the Future.
-We will continue development of the core of AjaxCMS as an open source project under the GPL v3 license. In order to support the development of AjaxCMS we plan to sell individual and site licences for the background animations and themes.  We also intend to develop a number of services that will allow functionality not possible in a purely client side system.  We hope that AJaxCMS is a tool that will make developing websites quicker, easier and more secure.  Let us know which direction you would like us to take to make this happen.
+**Server Requirement** - Requires a web server that can provide directory listings (Node.js server included, or Apache).
 
-If you have any questions or suggestions or would like to purchase a theme please contact me at <a href="mailto:brandon.hoult@softwyre.com">brandon.hoult@softwyre.com</a> The source code (install files) can be downloaded from https://github.com/bhoult/AjaxCMS.
+## Open Source
+
+AjaxCMS is free and open source under the GPL v3 license.
+
+**Source Code:** [github.com/bhoult/AjaxCMS](https://github.com/bhoult/AjaxCMS)
+**Demo Site:** [ajaxcms.org](http://ajaxcms.org)
+**Questions?** Email [brandon.hoult@softwyre.com](mailto:brandon.hoult@softwyre.com)
+
+---
+
+*Getting started? See the {{a | 01-Getting_Started.md | Getting Started guide}}.*
