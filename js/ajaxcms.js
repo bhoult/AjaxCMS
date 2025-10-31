@@ -800,7 +800,8 @@ function processPageContent(contentData, url, callback) {
 	data = contentData;
 
 	// Protect triple-backtick code blocks
-	data = data.replace(/```[\s\S]*?```/g, function(match) {
+	// Match from ```language\n or ```\n to the closing ```
+	data = data.replace(/```[^\n]*\n[\s\S]*?\n```/g, function(match) {
 		var index = globalProtectedCodeBlocks.length;
 		globalProtectedCodeBlocks.push(match);
 		return '___PROTECTED_CODE_BLOCK_' + index + '___';
