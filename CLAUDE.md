@@ -115,10 +115,11 @@ Demo and documentation: http://ajaxcms.org
 - Sites are subdirectories in `./sites/` (configurable via `SITES_DIR` env var)
 - Root URL (`http://localhost:3000`) displays a visual index of all sites
 - **Resource Fallback System**:
-  - `js/` and `themes/` folders are shared across all sites by default
+  - `js/`, `themes/`, `images/`, and `node_modules/` folders are shared across all sites by default
   - Server checks site directory first, then falls back to main directory
   - Sites can override shared files by creating local copies
   - Priority: `sites/mysite/js/ajaxcms.js` → `js/ajaxcms.js`
+  - Priority: `sites/mysite/node_modules/` → `node_modules/`
 - Static file serving with directory traversal protection
 
 **Page Transitions:**
