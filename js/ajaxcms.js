@@ -700,6 +700,8 @@ function processInserts(callback) {
  * @param {Function} callback - Callback with save property indicating whether to save to history
  */
 function processPageContent(contentData, url, callback) {
+	console.log('processPageContent called:', url, 'callback type:', typeof callback);
+
 	// Step 1: Process meta-helpers (like {{blog}} which generates {{insert}} helpers)
 	data = pre_process_page(contentData);
 
@@ -708,6 +710,7 @@ function processPageContent(contentData, url, callback) {
 
 	// Step 3: Recursively process all {{insert}} helpers
 	processInserts(function(){
+		console.log('processInserts callback executed');
 		// Step 4: Process remaining helpers ({{a}}, {{i}}, {{carousel}}, etc.)
 		data = process_page();
 
@@ -752,6 +755,7 @@ function processPageContent(contentData, url, callback) {
  * @param {string} url - Page URL (unused but kept for consistency)
  */
 function loadPageBasic(data,url) {
+	console.log('loadPageBasic called, data length:', data.length);
 	$("main").html( data );
 }
 
@@ -763,6 +767,7 @@ function loadPageBasic(data,url) {
  * @param {string} url - Page URL to determine transition direction
  */
 function loadPageSlide(data,url) {
+	console.log('loadPageSlide called, data length:', data.length);
 
 	in_transition = true;
 
@@ -811,14 +816,18 @@ function loadPageSlide(data,url) {
  * @param {boolean} save - Whether to save this navigation to browser history
  */
 function loadPage(url, save) {
+	console.log('loadPage called:', url, 'save:', save);
+
 	// Prevent loading undefined or invalid pages
 	if (!url || url === 'undefined' || url === 'null') {
+		console.error('Invalid URL:', url);
 		return;
 	}
 
 	highlightMenu(url);
 
 	$.get(url, function(d) {
+		console.log('Page content loaded, length:', d.length);
 		var layout_url = lastLayout(url);
 
 		// Check if layout exists before requesting it to avoid 404 errors
