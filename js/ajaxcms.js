@@ -223,10 +223,18 @@ function load_images(url) {
  * @returns {string|undefined} Image URL or undefined if no match
  */
 function imageMatch(s) {
+	if (!s || s.trim() === '') {
+		console.warn('imageMatch called with empty string');
+		return '';
+	}
+
 	var re = new RegExp(s,"gi");
 	for (var i=0; i<images.length; i++) {
 		if (re.test(images[i])){return images[i]}
 	}
+
+	console.warn('Image not found:', s);
+	return ''; // Return empty string instead of undefined
 }
 
 /**

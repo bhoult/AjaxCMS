@@ -1,7 +1,5 @@
 ## What is AjaxCMS?
 
-{{carousel | back-e.jpg | back-b.jpg | back-c.jpg | back-d.jpg | back-a.jpg | class=>carousel-float-right}}
-
 AjaxCMS is an open-source, static-file-based CMS that runs entirely in JavaScript on the browser. The server only provides static files and JSON directory listings—everything else happens client-side. You add content by uploading [HTML](https://www.w3schools.com/html/) or [Markdown](https://guides.github.com/features/mastering-markdown/) files to the `pages/` directory. Files in `pages/menus/` automatically appear in the navigation menu. When users navigate, content loads via AJAX without page refreshes.
 
 ### Key Advantages
