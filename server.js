@@ -300,9 +300,9 @@ app.use((req, res, next) => {
 
   // Try to serve from site directory first with caching
   sendFileWithCache(filePath, req, res, () => {
-    // If file not found in site directory, check if it's in js/, css/, themes/, or images/
+    // If file not found in site directory, check if it's in js/, css/, themes/, images/, or node_modules/
     // and try to serve from main AjaxCMS directory as fallback
-    if (relativePath.startsWith('/js/') || relativePath.startsWith('/css/') || relativePath.startsWith('/themes/') || relativePath.startsWith('/images/')) {
+    if (relativePath.startsWith('/js/') || relativePath.startsWith('/css/') || relativePath.startsWith('/themes/') || relativePath.startsWith('/images/') || relativePath.startsWith('/node_modules/')) {
       const fallbackPath = path.join(__dirname, relativePath);
 
       // Security check for fallback path
@@ -310,7 +310,8 @@ app.use((req, res, next) => {
         path.resolve(__dirname, 'js'),
         path.resolve(__dirname, 'css'),
         path.resolve(__dirname, 'themes'),
-        path.resolve(__dirname, 'images')
+        path.resolve(__dirname, 'images'),
+        path.resolve(__dirname, 'node_modules')
       ];
 
       const resolvedFallback = path.resolve(fallbackPath);
