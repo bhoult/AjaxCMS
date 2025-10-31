@@ -158,16 +158,29 @@ describe('AjaxCMS Client-Side JavaScript Regressions', () => {
   });
 
   describe('Helper Documentation Pattern (Issue #7)', () => {
-    it('should only match helpers with 0-4 spaces', () => {
-      // The insert regex should skip helpers with 5+ spaces
+    it('should filter out helpers with 5+ consecutive spaces anywhere', () => {
+      // The processInserts function finds matches then filters them
       const insertRegex = /\{\{\s{0,4}insert.*?\}\}/gi;
+      const fiveSpaceFilter = /\s\s\s\s\s/;
 
+      // These should match the regex
       expect('{{insert | page}}').toMatch(insertRegex);
-      expect('{{ insert | page}}').toMatch(insertRegex);
-      expect('{{  insert | page}}').toMatch(insertRegex);
-      expect('{{   insert | page}}').toMatch(insertRegex);
-      expect('{{    insert | page}}').toMatch(insertRegex);
-      expect('{{     insert | page}}').not.toMatch(insertRegex); // 5 spaces
+      expect('{{insert     | page}}').toMatch(insertRegex);
+
+      // But helpers with 5+ spaces should be filtered out
+      expect(fiveSpaceFilter.test('{{insert     | page}}')).toBe(true);
+      expect(fiveSpaceFilter.test('{{insert | page}}')).toBe(false);
+
+      // Simulate the filter logic
+      const testCases = [
+        '{{insert | page}}',
+        '{{insert     | sidebar}}',
+        '{{insert     | header}}',
+        '{{insert     | footer     | false}}'
+      ];
+
+      const filtered = testCases.filter(helper => !/\s\s\s\s\s/.test(helper));
+      expect(filtered).toEqual(['{{insert | page}}']);
     });
   });
 

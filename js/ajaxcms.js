@@ -686,8 +686,15 @@ function processInserts(callback) {
 	// Find all {{insert}} helpers (allow up to 4 spaces for documentation)
 	var insert_list = data.match(/{{\s{0,4}insert.*?}}/gi);
 
+	// Filter out helpers with 5+ consecutive spaces (documentation examples)
+	if (insert_list) {
+		insert_list = insert_list.filter(function(helper) {
+			return !/\s\s\s\s\s/.test(helper);
+		});
+	}
+
 	// If no inserts found, we're done
-	if (insert_list == null) {
+	if (insert_list == null || insert_list.length === 0) {
 		callback();
 		return;
 	}
