@@ -66,11 +66,19 @@ Demo and documentation: http://ajaxcms.org
 ### Directory Structure
 
 - **`index.html`**: Main entry point, configuration, and HTML structure
-- **`js/ajaxcms.js`**: Core CMS logic (792 lines) - page loading, helper processing, menu generation
-- **`js/canvasstuff.js`**: Canvas animation utilities
-- **`js/segment.js`**: SVG path animation library
-- **`js/victor.js`**: 2D vector math library
-- **`js/jquery-mobile-swipe.js`**: Touch gesture support
+- **`js/ajaxcms.js`**: Core CMS logic (~1000 lines) - page loading, helper processing, menu generation
+  - Wrapped in IIFE (Immediately Invoked Function Expression) to prevent global pollution
+  - Comprehensive JSDoc documentation for all functions
+  - Optimized and refactored (eliminated ~140 lines of duplicate code)
+- **`js/canvasstuff.js`**: Canvas animation utilities (custom)
+- **`js/jquery-mobile-swipe.js`**: Touch gesture support (custom)
+- **`node_modules/`**: Third-party libraries managed by npm
+  - **`jquery`**: DOM manipulation and AJAX (v3.7.1)
+  - **`jquery-ui-dist`**: UI widgets and effects (v1.13.3)
+  - **`bootstrap`**: CSS framework (v5.3.8)
+  - **`marked`**: Markdown to HTML converter (v16.4.1)
+  - **`victor`**: 2D vector math library
+  - **`segment-js`**: SVG path animation library
 - **`pages/`**: Content pages (HTML/Markdown) organized in directories
   - **`pages/menus/`**: Pages that appear in navigation menu (auto-discovered)
   - **`pages/splash.html`**: Optional splash screen shown on initial load
@@ -80,17 +88,21 @@ Demo and documentation: http://ajaxcms.org
   - **`background.js`**: Animated canvas background implementation
   - **`theme.css`**: Theme-specific styles
 - **`ajaxcms.html`**: Standalone SVG logo animation demo
-- **`ajaxcms_helper.rb`**: Ruby utility script (purpose unclear from file listing)
 
 ### Key Implementation Details
 
 **Page Discovery:**
 - System fetches JSON directory listings via `/api/list-recursive` endpoint
-- `load_pages()` (js/ajaxcms.js:81-148) builds arrays from JSON responses
-- `load_images()` (js/ajaxcms.js:151-177) loads image paths from JSON
-- `load_themes()` (js/ajaxcms.js:179-208) loads theme directories from JSON
+- `load_pages()` builds arrays from JSON responses
+- `load_images()` loads image paths from JSON
 - Menu items are files in `pages/menus/` (sorted, with numeric prefixes for ordering)
 - Layouts are discovered as `layout.html` files in directory hierarchy
+
+**Dependencies:**
+- All third-party libraries are managed via npm and served from `node_modules/`
+- Run `npm install` to install all dependencies
+- Libraries are referenced in `index.html` via `node_modules/` paths
+- Custom code remains in `js/` directory (ajaxcms.js, canvasstuff.js, jquery-mobile-swipe.js)
 
 **Server Architecture:**
 - Node.js server (`server.js`) provides three JSON API endpoints:

@@ -23,7 +23,9 @@
     "greenlock-express": "^4.0.3",
     "jquery": "^3.7.1",
     "jquery-ui-dist": "^1.13.3",
-    "marked": "^16.4.1"
+    "marked": "^16.4.1",
+    "segment-js": "^1.1.2",
+    "victor": "^1.1.0"
   },
   "devDependencies": {
     "jest": "^29.7.0",
