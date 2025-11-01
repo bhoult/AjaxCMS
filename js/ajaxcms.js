@@ -887,8 +887,20 @@ function processPageContent(contentData, url, callback) {
 		return '___PROTECTED_HELPER_' + index + '___';
 	});
 
-	// Step 1: Convert Markdown to HTML FIRST (before helper processing)
-	// This ensures Markdown headers and formatting work even when mixed with helpers
+	// Step 1: Protect ALL helpers from Markdown processing
+	// This ensures helpers aren't mangled by markdown parser
+	var globalProtectedActiveHelpers = [];
+	data = data.replace(/{{.*?}}/g, function(match) {
+		// Skip already protected helpers (5+ spaces)
+		if (/___PROTECTED_HELPER_\d+___/.test(match)) {
+			return match;
+		}
+		var index = globalProtectedActiveHelpers.length;
+		globalProtectedActiveHelpers.push(match);
+		return '___ACTIVE_HELPER_' + index + '___';
+	});
+
+	// Step 2: Convert Markdown to HTML (helpers are now protected)
 	if (/\.md$/.test(url)) {
 		// Temporarily restore code blocks so markdown can process them
 		data = data.replace(/___PROTECTED_CODE_BLOCK_(\d+)___/g, function(match, index) {
@@ -911,16 +923,20 @@ function processPageContent(contentData, url, callback) {
 		});
 	}
 
-	// Step 2: Process meta-helpers (like {{blog}} which generates {{insert}} helpers)
-	// This now happens AFTER markdown conversion, so HTML is already generated
+	// Step 3: Restore helpers so they can be processed
+	data = data.replace(/___ACTIVE_HELPER_(\d+)___/g, function(match, index) {
+		return globalProtectedActiveHelpers[parseInt(index)];
+	});
+
+	// Step 4: Process meta-helpers (like {{blog}} which generates {{insert}} helpers)
 	data = pre_process_page(data);
 
-	// Step 3: Recursively process all {{insert}} helpers
+	// Step 5: Recursively process all {{insert}} helpers
 	processInserts(function(){
-		// Step 4: Process remaining helpers ({{a}}, {{i}}, {{carousel}}, etc.)
+		// Step 6: Process remaining helpers ({{a}}, {{i}}, {{carousel}}, etc.)
 		data = process_page();
 
-		// Step 4.5: Restore protected code blocks and helpers AFTER all processing
+		// Step 7: Restore protected code blocks and helpers AFTER all processing
 		data = data.replace(/___PROTECTED_CODE_BLOCK_(\d+)___/g, function(match, index) {
 			return globalProtectedCodeBlocks[parseInt(index)];
 		});
@@ -928,7 +944,7 @@ function processPageContent(contentData, url, callback) {
 			return globalProtectedHelpers[parseInt(index)];
 		});
 
-		// Step 5: Render with appropriate page transition animation
+		// Step 8: Render with appropriate page transition animation
 		switch(load_transition) {
 			case 'basic':
 				loadPageBasic(data, url)
