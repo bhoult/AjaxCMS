@@ -184,11 +184,43 @@ AjaxCMS/
         └── pages/
 ```
 
+## SEO Features (Built-in)
+
+Every AjaxCMS site includes automatic SEO features - no configuration needed!
+
+**Automatic XML Sitemap:**
+```
+http://yoursite.com/sitemap.xml
+```
+
+**Static HTML for Search Engines:**
+```
+http://yoursite.com/static/pages/menus/01-Home.md
+```
+
+**Automatic robots.txt:**
+```
+http://yoursite.com/robots.txt
+```
+
+**Features:**
+- Auto-generated sitemaps with modification timestamps
+- Server-rendered static HTML versions of all pages
+- SEO-optimized meta tags (title, description, Open Graph, Twitter Cards)
+- Organized sections (Homepage, Menu Pages, Blog Posts, Other Pages)
+- Human-readable sitemap display with XSLT
+
+**Submit to search engines:**
+1. Visit [Google Search Console](https://search.google.com/search-console)
+2. Add your site and verify ownership
+3. Submit sitemap: `http://yoursite.com/sitemap.xml`
+
 ## Next Steps
 
 - **Add content**: Create pages in `sites/mysite.com/pages/menus/` for navigation
 - **Choose theme**: Edit `default_background` in `index.html` (15+ themes available)
 - **Customize**: Override `js/`, `themes/`, or `images/` per-site as needed
+- **SEO**: Submit your sitemap to Google Search Console and Bing Webmaster Tools
 - **Test**: Run `npm test` to verify functionality
 - **Documentation**: See [README.md](README.md) for features and [CLAUDE.md](CLAUDE.md) for development details
 

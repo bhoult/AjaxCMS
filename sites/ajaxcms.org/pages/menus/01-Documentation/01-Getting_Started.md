@@ -191,7 +191,69 @@ AjaxCMS shares resources across all sites:
 
 **To override a shared file:** Just create a local copy in your site directory.
 
-## 9. Deployment to Production
+## 9. SEO Features
+
+AjaxCMS includes comprehensive built-in SEO features - no configuration required!
+
+### Automatic XML Sitemap
+
+Every site automatically has an XML sitemap at `/sitemap.xml`:
+
+```
+http://yoursite.com/sitemap.xml
+```
+
+**Features:**
+- Auto-discovers all `.html` and `.md` files in `pages/`
+- Includes modification timestamps
+- Organized into sections (Homepage, Menu Pages, Blog Posts, Other Pages)
+- Human-readable display with XSLT stylesheet
+- Includes alternate links to static HTML versions
+
+### Static HTML for Search Engines
+
+Every page has a crawlable static HTML version at `/static/*`:
+
+```
+http://yoursite.com/static/pages/menus/01-Home.md
+```
+
+These pages include:
+- SEO-optimized meta tags (title, description)
+- Open Graph tags for social media
+- Twitter Card tags
+- Canonical URLs pointing to the AJAX version
+
+**Dual rendering strategy:**
+- Users see the full interactive AJAX site
+- Search engines see clean, crawlable HTML
+
+### Robots.txt
+
+Every site has an automatic `robots.txt` at `/robots.txt`:
+
+```
+User-agent: *
+Allow: /
+
+Sitemap: http://yoursite.com/sitemap.xml
+```
+
+### Submitting to Search Engines
+
+**Google Search Console:**
+1. Visit [Google Search Console](https://search.google.com/search-console)
+2. Add your property and verify ownership
+3. Submit sitemap: `http://yoursite.com/sitemap.xml`
+
+**Bing Webmaster Tools:**
+1. Visit [Bing Webmaster Tools](https://www.bing.com/webmasters)
+2. Add your site and verify ownership
+3. Submit sitemap: `http://yoursite.com/sitemap.xml`
+
+For detailed information, see the {{a | ../../AjaxCMS_Blog/2025-10-31-SEO_Enhancements.md | SEO Enhancements blog post}}.
+
+## 10. Deployment to Production
 
 ### HTTP Development Mode
 
@@ -221,7 +283,7 @@ Sites can be accessed via:
 
 For domain-based routing, create a site directory matching your domain name in `sites/`.
 
-## 10. Learning Resources
+## 11. Learning Resources
 
 **Essential skills:**
 - **Markdown:** [Mastering Markdown](https://guides.github.com/features/mastering-markdown/) (5-minute read)
