@@ -127,6 +127,136 @@ rsync -av dist/ user@server:/var/www/mysite/
 | **Animation** | ✅ Smooth (jQuery UI) | ✅ Smooth (transitions) | ✅ Smooth (animations) |
 | **Background** | ✅ Continues playing | ⚠️ May restart | ⚠️ May restart |
 
+### Server-Side Load & Capacity
+
+One of AjaxCMS's biggest advantages is **minimal server-side processing**. This dramatically affects hosting costs and scalability.
+
+#### Server Processing Per Request
+
+| Operation | AjaxCMS | Vue/React (CSR) | Nuxt/Next.js (SSR) |
+|-----------|---------|-----------------|---------------------|
+| **HTML Generation** | ⚡ Static file (~0.1ms) | ⚡ Static file (~0.1ms) | 🔥 Server render (~50-200ms) |
+| **Markdown Parsing** | ✅ Client-side | ✅ Client-side | ⚠️ Server-side |
+| **Component Rendering** | ✅ Client-side | ✅ Client-side | ⚠️ Server-side |
+| **Database Queries** | ❌ None | ❌ None | ⚠️ Often required |
+| **CPU Usage** | ⭐ Minimal | ⭐ Minimal | ⭐⭐⭐⭐ High |
+| **Memory Usage** | ⭐ ~10MB | ⭐ ~10MB | ⭐⭐⭐⭐ ~100-500MB |
+
+**Note:** CSR = Client-Side Rendering, SSR = Server-Side Rendering
+
+#### User Capacity Comparison
+
+**Scenario:** 1GB RAM, 1 CPU core server (e.g., $5/month VPS)
+
+| Metric | AjaxCMS / CSR Frameworks | SSR Frameworks (Nuxt/Next.js) |
+|--------|--------------------------|-------------------------------|
+| **Concurrent Users** | ~10,000+ | ~50-100 |
+| **Requests/Second** | ~1,000-2,000 | ~10-50 |
+| **Bottleneck** | Network bandwidth | CPU + Memory |
+| **Server Type** | Static file server (Nginx) | Node.js/Application server |
+| **Memory per Request** | <1 KB | 5-20 MB |
+| **CPU per Request** | <0.1ms | 50-200ms |
+
+#### Real-World Capacity Examples
+
+**Small Server (1 vCPU, 1GB RAM, $5-10/month):**
+
+| System | Concurrent Users | Peak Traffic | Notes |
+|--------|------------------|--------------|-------|
+| **AjaxCMS** | 10,000+ | 100,000 pageviews/day | Limited by bandwidth, not CPU |
+| **Vue/React (CSR)** | 10,000+ | 100,000 pageviews/day | Same as AjaxCMS - static files |
+| **Nuxt/Next.js (SSR)** | 50-100 | 5,000 pageviews/day | CPU/memory limited |
+| **WordPress** | 20-50 | 2,000 pageviews/day | Database queries add overhead |
+
+**Medium Server (2 vCPU, 4GB RAM, $20-40/month):**
+
+| System | Concurrent Users | Peak Traffic | Notes |
+|--------|------------------|--------------|-------|
+| **AjaxCMS** | 50,000+ | 1M pageviews/day | Still bandwidth-limited |
+| **Vue/React (CSR)** | 50,000+ | 1M pageviews/day | Static serving scales easily |
+| **Nuxt/Next.js (SSR)** | 200-500 | 50,000 pageviews/day | Need caching to scale more |
+| **WordPress** | 100-200 | 10,000 pageviews/day | Database becomes bottleneck |
+
+**Large Server (8 vCPU, 16GB RAM, $80-160/month):**
+
+| System | Concurrent Users | Peak Traffic | Notes |
+|--------|------------------|--------------|-------|
+| **AjaxCMS** | Unlimited* | 10M+ pageviews/day | *Bandwidth is the only limit |
+| **Vue/React (CSR)** | Unlimited* | 10M+ pageviews/day | Use CDN for even better performance |
+| **Nuxt/Next.js (SSR)** | 1,000-2,000 | 200,000 pageviews/day | Good with caching layer |
+| **WordPress** | 500-1,000 | 50,000 pageviews/day | Needs caching plugins + database tuning |
+
+#### Cost Analysis Example
+
+**Supporting 100,000 daily pageviews:**
+
+| Solution | Server Type | Monthly Cost | Notes |
+|----------|-------------|--------------|-------|
+| **AjaxCMS** | $5 VPS + CDN | ~$10-15 | Nginx serving static files + free Cloudflare CDN |
+| **Vue/React (CSR)** | $5 VPS + CDN | ~$10-15 | Same as AjaxCMS |
+| **Nuxt/Next.js (SSR)** | $40-80 VPS | ~$40-80 | Need more powerful server, caching layer |
+| **WordPress** | $20-40 VPS + caching | ~$30-50 | Managed WordPress hosting or VPS with optimizations |
+
+**Supporting 1 million daily pageviews:**
+
+| Solution | Server Type | Monthly Cost | Notes |
+|----------|-------------|--------------|-------|
+| **AjaxCMS** | $10 VPS + CDN | ~$20-30 | CDN handles 90%+ of traffic |
+| **Vue/React (CSR)** | $10 VPS + CDN | ~$20-30 | CDN is essential at this scale |
+| **Nuxt/Next.js (SSR)** | Load balancer + 3-5 app servers | ~$200-400 | Need horizontal scaling |
+| **WordPress** | Managed hosting or cluster | ~$100-300 | Specialized hosting recommended |
+
+#### Why AjaxCMS Scales Better
+
+**1. Static File Serving is Extremely Efficient**
+- Nginx can serve 10,000+ requests/second on modest hardware
+- No CPU cycles wasted on rendering
+- Operating system file cache keeps hot files in RAM
+
+**2. No Server-Side Processing**
+- No Markdown parsing on server
+- No template rendering on server
+- No database queries
+- No session management
+
+**3. Client Does the Heavy Lifting**
+- User's browser handles Markdown conversion
+- User's CPU renders animations
+- Processing distributed across all users
+
+**4. CDN-Friendly**
+- All content is static and cacheable
+- Set long cache headers (1 year+)
+- Users hit origin server once, CDN serves rest
+- Global distribution is simple and cheap
+
+**5. Minimal Memory Footprint**
+- Nginx uses ~10MB RAM baseline
+- No growing memory per connection
+- No memory leaks from application code
+
+#### When Server Load Matters
+
+**Choose AjaxCMS/CSR if:**
+- You want minimal hosting costs
+- You expect traffic spikes
+- You have limited server budget
+- You want simple horizontal scaling
+- Content is mostly static
+
+**Choose SSR (Nuxt/Next.js) if:**
+- SEO is critical and you can't use static generation
+- You need server-side data fetching
+- You have budget for powerful servers
+- You need user-specific server-rendered content
+- Initial page load performance is paramount
+
+**Best of Both Worlds:**
+- Use **Static Site Generation (SSG)** with Nuxt/Next.js
+- Pre-render pages at build time
+- Get SEO benefits + static file performance
+- Rebuild when content changes
+
 ## When to Use Each
 
 ### ✅ Use AjaxCMS When:
