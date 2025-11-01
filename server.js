@@ -341,6 +341,17 @@ app.get('*/sitemap.xml', async (req, res) => {
   }
 });
 
+// SEO: Serve sitemap XSLT stylesheet
+app.get('*/sitemap.xsl', (req, res) => {
+  const xslPath = path.join(__dirname, 'sitemap.xsl');
+  res.header('Content-Type', 'application/xslt+xml');
+  res.sendFile(xslPath, (err) => {
+    if (err) {
+      res.status(404).send('Stylesheet not found');
+    }
+  });
+});
+
 // SEO: Serve robots.txt
 app.get('*/robots.txt', (req, res) => {
   const baseUrl = req.protocol + '://' + req.get('host') + (req.sitePrefix || '');
