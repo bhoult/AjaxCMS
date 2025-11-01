@@ -2,8 +2,8 @@
 
 // Global variables
 var scene, camera, renderer;
-var page_width = window.innerWidth;
-var page_height = window.innerHeight;
+var page_width;  // Will be set in initThreeJS
+var page_height; // Will be set in initThreeJS
 var frame = 0;
 var animationFrameId = null;
 
@@ -46,6 +46,11 @@ var buildingPanSpeed = 0.16;  // Units per frame to pan left (68% slower than or
 
 function initThreeJS() {
 	console.log('initThreeJS called');
+
+	// Capture dimensions at initialization time (after DOM is ready)
+	page_width = window.innerWidth;
+	page_height = window.innerHeight;
+	console.log('Dimensions captured:', page_width, 'x', page_height);
 
 	// Check if THREE is loaded
 	if (typeof THREE === 'undefined') {
@@ -2625,6 +2630,12 @@ var startBackground = function() {
 	render();
 
 	console.log('Three.js GL-City started successfully');
+
+	// Trigger a resize event after a short delay to ensure proper sizing
+	// This fixes issues where initial dimensions might not be final
+	setTimeout(function() {
+		$(window).trigger('resize');
+	}, 100);
 };
 
 // Auto-start when document is ready
