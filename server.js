@@ -305,6 +305,9 @@ app.get('*/sitemap.xml', async (req, res) => {
 
     await walkDirectory(pagesPath);
 
+    // Sort pages alphabetically by path (respects numeric prefixes like 01-, 02-)
+    pages.sort((a, b) => a.url.localeCompare(b.url));
+
     // Generate XML sitemap
     let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
     xml += '<?xml-stylesheet type="text/xsl" href="/sitemap.xsl"?>\n';
