@@ -218,44 +218,24 @@ describe('AjaxCMS Client-Side JavaScript Regressions', () => {
       expect(helpersDoc).toMatch(/code blocks.*automatically protected/i);
       expect(helpersDoc).toMatch(/backticks/);
 
-      // Should still mention 5-space legacy method for backward compatibility
-      expect(helpersDoc).toMatch(/five or more sequential spaces/i);
-      expect(helpersDoc).toMatch(/backward compatibility/i);
-
-      // Helper examples should NOT have excessive spacing anymore
+      // Helper examples should be in code blocks (backticks)
       const tableSection = helpersDoc.match(/## Helper Reference Quick Guide[\s\S]*?## Next Steps/);
       expect(tableSection).toBeTruthy();
 
       const tableContent = tableSection[0];
 
-      // Should NOT have patterns like {{a \| which would be processed
-      expect(tableContent).not.toMatch(/\{\{a\s*\\\|/);
-      expect(tableContent).not.toMatch(/\{\{i\s*\\\|/);
-      expect(tableContent).not.toMatch(/\{\{carousel\s*\\\|/);
-      expect(tableContent).not.toMatch(/\{\{insert\s*\\\|/);
-
-      // Examples should be in backticks (code blocks)
+      // Examples should be in backticks (code blocks) which prevents processing
       expect(tableContent).toMatch(/`\{\{a/);
       expect(tableContent).toMatch(/`\{\{i/);
     });
 
-    it('should preserve all spaces when skipping helpers (not collapse to 1)', () => {
-      // Find process_page function
-      const processPagePattern = /function process_page\([\s\S]*?^}/m;
-      const processPageMatch = ajaxcmsCode.match(processPagePattern);
-      expect(processPageMatch).toBeTruthy();
+    it('should use code block protection instead of 5-space legacy method', () => {
+      // Code should NOT have the old 5-space check
+      expect(ajaxcmsCode).not.toMatch(/if\s*\(\/\\s\\s\\s\\s\\s\/\.test\(x\)\)/);
 
-      const processPageFunction = processPageMatch[0];
-
-      // The 5-space check should return x unchanged, not x.replace(/\s+/,' ')
-      // This preserves formatting in <code>/<pre> blocks
-      expect(processPageFunction).toMatch(/if\s*\(\/\\s\\s\\s\\s\\s\/\.test\(x\)\)/);
-
-      // Should return x unchanged (not collapsing spaces)
-      const fiveSpaceBlock = processPageFunction.match(/if\s*\(\/\\s\\s\\s\\s\\s\/\.test\(x\)\)\s*\{[\s\S]*?\}/);
-      expect(fiveSpaceBlock).toBeTruthy();
-      expect(fiveSpaceBlock[0]).toMatch(/return\s+x\s*;/); // return x;
-      expect(fiveSpaceBlock[0]).not.toMatch(/return\s+x\.replace/); // NOT return x.replace(...)
+      // Code SHOULD have backtick/code block protection
+      expect(ajaxcmsCode).toMatch(/PROTECTED_CODE_BLOCK/);
+      expect(ajaxcmsCode).toMatch(/```/);
     });
   });
 });
