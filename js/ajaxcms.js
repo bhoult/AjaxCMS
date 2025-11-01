@@ -383,11 +383,6 @@ function process_page(sdata) {
 		var attributes_string = parsed.attributes;
 		var pieces = parsed.pieces;
 
-        // Blank - Skip any helpers that contain five sequential spaces.  This is so we can document the helpers format without it being replaced.
-        if (/\s\s\s\s\s/.test(x)) {
-        	return x; // Return unchanged to preserve spacing in <code>/<pre> blocks
-        }
-
 		// Anchors
 		if (parts[0]=='a' && parts.length == 2) {
 			return "<a href=\"javascript:void(0);\" "+attributes_string+" onclick=\"loadPage(\'" + pageMatch(parts[1]) + "\'); return false;\">"+parts[1]+"</a>";
@@ -558,11 +553,6 @@ function pre_process_page(sdata) {
 		var parsed = parseHelper(x);
 		var parts = parsed.parts;
 		var attributes_string = parsed.attributes;
-
-        // Blank - Skip any helpers that contain five sequential spaces.  This is so we can document the helpers format without it being replaced.  HTML merges the spaces.
-        if (/\s\s\s\s\s/.test(x)) {
-        	return original;
-        }
 
 		// {{blog | directory | start | stop }}
 		if (parts[0] == 'blog' && parts.length > 1) {
@@ -851,14 +841,12 @@ function processInserts(callback) {
  * @param {string} url - Page URL
  * @param {Function} callback - Callback with save property indicating whether to save to history
  */
-// Global arrays for code block protection (shared across processPageContent scope)
-var globalProtectedHelpers = [];
+// Global array for code block protection (shared across processPageContent scope)
 var globalProtectedCodeBlocks = [];
 
 function processPageContent(contentData, url, callback) {
 	// Step 0.5: Protect markdown code blocks BEFORE any helper processing
 	// This prevents {{blog}}, {{bloglist}}, etc. in documentation from being processed
-	globalProtectedHelpers = [];
 	globalProtectedCodeBlocks = [];
 
 	data = contentData;
@@ -880,28 +868,11 @@ function processPageContent(contentData, url, callback) {
 		return '___PROTECTED_CODE_BLOCK_' + index + '___';
 	});
 
-	// Also protect helpers with 5+ spaces (legacy documentation compatibility)
-	data = data.replace(/{{[^}]*\s\s\s\s\s[^}]*}}/g, function(match) {
-		var index = globalProtectedHelpers.length;
-		globalProtectedHelpers.push(match);
-		return '___PROTECTED_HELPER_' + index + '___';
-	});
+	// Step 1: Process meta-helpers FIRST ({{blog}}, {{bloglist}})
+	// These generate content that needs to be present before Markdown conversion
+	data = pre_process_page(data);
 
-	// Step 1: Protect ALL helpers from Markdown processing
-	// This ensures helpers aren't mangled by markdown parser
-	// Use XOXOXO pattern instead of underscores (which Markdown treats as emphasis)
-	var globalProtectedActiveHelpers = [];
-	data = data.replace(/{{.*?}}/g, function(match) {
-		// Skip already protected helpers (5+ spaces)
-		if (/XOXPROTECTEDHELPERXOX/.test(match)) {
-			return match;
-		}
-		var index = globalProtectedActiveHelpers.length;
-		globalProtectedActiveHelpers.push(match);
-		return 'XOXACTIVEHELPERXOX' + index + 'XOXOX';
-	});
-
-	// Step 2: Convert Markdown to HTML (helpers are now protected)
+	// Step 2: Convert Markdown to HTML
 	// Match .md files, ignoring any hash fragments (#...)
 	if (/\.md($|#)/.test(url)) {
 		// Temporarily restore code blocks so markdown can process them
@@ -925,39 +896,17 @@ function processPageContent(contentData, url, callback) {
 		});
 	}
 
-	// Step 3: Restore helpers so they can be processed
-	// Convert => to =&gt; so parseHelper can recognize attributes
-	data = data.replace(/XOXACTIVEHELPERXOX(\d+)XOXOX/g, function(match, index) {
-		return globalProtectedActiveHelpers[parseInt(index)].replace(/=>/g, '=&gt;');
-	});
-
-	// Step 3.5: Remove <p> tags that Markdown added around helper tokens
-	// Markdown wraps standalone lines in <p> tags, but helpers generate block elements
-	// This regex finds <p> tags that only contain a helper and removes the <p> wrapper
-	var beforeRemove = data.match(/<p>{{.*?}}<\/p>/g);
-	if (beforeRemove) console.log('Found helpers in <p> tags:', beforeRemove);
-	data = data.replace(/<p>({{.*?}})<\/p>/g, '$1');
-	var afterRemove = data.match(/<p>{{.*?}}<\/p>/g);
-	if (afterRemove) console.log('Still in <p> tags after removal:', afterRemove);
-	else console.log('Successfully removed all <p> wrappers around helpers');
-
-	// Step 4: Process meta-helpers (like {{blog}} which generates {{insert}} helpers)
-	data = pre_process_page(data);
-
-	// Step 5: Recursively process all {{insert}} helpers
+	// Step 3: Recursively process all {{insert}} helpers
 	processInserts(function(){
-		// Step 6: Process remaining helpers ({{a}}, {{i}}, {{carousel}}, etc.)
+		// Step 4: Process remaining helpers ({{a}}, {{i}}, {{carousel}}, etc.)
 		data = process_page();
 
-		// Step 7: Restore protected code blocks and helpers AFTER all processing
+		// Step 5: Restore protected code blocks AFTER all processing
 		data = data.replace(/___PROTECTED_CODE_BLOCK_(\d+)___/g, function(match, index) {
 			return globalProtectedCodeBlocks[parseInt(index)];
 		});
-		data = data.replace(/___PROTECTED_HELPER_(\d+)___/g, function(match, index) {
-			return globalProtectedHelpers[parseInt(index)];
-		});
 
-		// Step 8: Render with appropriate page transition animation
+		// Step 6: Render with appropriate page transition animation
 		switch(load_transition) {
 			case 'basic':
 				loadPageBasic(data, url)
