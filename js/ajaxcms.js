@@ -889,19 +889,21 @@ function processPageContent(contentData, url, callback) {
 
 	// Step 1: Protect ALL helpers from Markdown processing
 	// This ensures helpers aren't mangled by markdown parser
+	// Use XOXOXO pattern instead of underscores (which Markdown treats as emphasis)
 	var globalProtectedActiveHelpers = [];
 	data = data.replace(/{{.*?}}/g, function(match) {
 		// Skip already protected helpers (5+ spaces)
-		if (/___PROTECTED_HELPER_\d+___/.test(match)) {
+		if (/XOXPROTECTEDHELPERXOX/.test(match)) {
 			return match;
 		}
 		var index = globalProtectedActiveHelpers.length;
 		globalProtectedActiveHelpers.push(match);
-		return '___ACTIVE_HELPER_' + index + '___';
+		return 'XOXACTIVEHELPERXOX' + index + 'XOXOX';
 	});
 
 	// Step 2: Convert Markdown to HTML (helpers are now protected)
-	if (/\.md$/.test(url)) {
+	// Match .md files, ignoring any hash fragments (#...)
+	if (/\.md($|#)/.test(url)) {
 		// Temporarily restore code blocks so markdown can process them
 		data = data.replace(/___PROTECTED_CODE_BLOCK_(\d+)___/g, function(match, index) {
 			return globalProtectedCodeBlocks[parseInt(index)];
@@ -924,7 +926,7 @@ function processPageContent(contentData, url, callback) {
 	}
 
 	// Step 3: Restore helpers so they can be processed
-	data = data.replace(/___ACTIVE_HELPER_(\d+)___/g, function(match, index) {
+	data = data.replace(/XOXACTIVEHELPERXOX(\d+)XOXOX/g, function(match, index) {
 		return globalProtectedActiveHelpers[parseInt(index)];
 	});
 
