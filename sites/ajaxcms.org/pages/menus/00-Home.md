@@ -64,7 +64,7 @@ AjaxCMS uses a Node.js server that provides JSON directory listings via API endp
 
 ## Open Source
 
-AjaxCMS is free and open source under the GPL v3 license.
+AjaxCMS is free and open source under the MIT license.
 
 **Source Code:** [github.com/bhoult/AjaxCMS](https://github.com/bhoult/AjaxCMS)
 **Demo Site:** [ajaxcms.org](http://ajaxcms.org)
