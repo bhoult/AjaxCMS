@@ -321,9 +321,10 @@ app.get('*/sitemap.xml', async (req, res) => {
     // Add each page with AJAX version and alternate link to static version
     for (const page of pages) {
       // AJAX version (primary) with alternate link to static HTML
+      // AJAX URLs need pages/ prefix, static URLs use the file path directly
       xml += '  <url>\n';
-      xml += `    <loc>${baseUrl}/?page=${page.url}</loc>\n`;
-      xml += `    <xhtml:link rel="alternate" hreflang="en" href="${baseUrl}/static/${page.url}" />\n`;
+      xml += `    <loc>${baseUrl}/?page=pages/${page.url}</loc>\n`;
+      xml += `    <xhtml:link rel="alternate" hreflang="en" href="${baseUrl}/static/pages/${page.url}" />\n`;
       xml += `    <lastmod>${page.lastmod}</lastmod>\n`;
       xml += '    <changefreq>weekly</changefreq>\n';
       xml += '    <priority>0.8</priority>\n';
