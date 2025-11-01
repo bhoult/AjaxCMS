@@ -447,13 +447,10 @@ app.get('*/static/*', async (req, res) => {
     <meta property="twitter:title" content="${title}">
     <meta property="twitter:description" content="${description}">
 
-    <!-- Redirect to full AJAX version for human visitors -->
-    <meta http-equiv="refresh" content="0;url=${canonicalUrl}">
+    <!-- Note: Static version for crawlers - no redirect -->
     <script>
-        // Immediate redirect for browsers
-        if (!navigator.userAgent.match(/bot|crawler|spider|crawling/i)) {
-            window.location.replace('${canonicalUrl}');
-        }
+        // No automatic redirect - this is the crawler-friendly version
+        // To view the full interactive site, click the link in the footer
     </script>
 
     <style>
