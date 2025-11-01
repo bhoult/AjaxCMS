@@ -887,35 +887,33 @@ function processPageContent(contentData, url, callback) {
 		return '___PROTECTED_HELPER_' + index + '___';
 	});
 
-	// Step 1: Process meta-helpers (like {{blog}} which generates {{insert}} helpers)
-	// Protected code blocks won't match {{}} patterns
+	// Step 1: Convert Markdown to HTML FIRST (before helper processing)
+	// This ensures Markdown headers and formatting work even when mixed with helpers
+	if (/\.md$/.test(url)) {
+		// Temporarily restore code blocks so markdown can process them
+		data = data.replace(/___PROTECTED_CODE_BLOCK_(\d+)___/g, function(match, index) {
+			return globalProtectedCodeBlocks[parseInt(index)];
+		});
+		globalProtectedCodeBlocks = [];
+
+		data = marked.parse(data);
+
+		// Re-protect code blocks after markdown processing
+		data = data.replace(/<pre>[\s\S]*?<\/pre>/gi, function(match) {
+			var index = globalProtectedCodeBlocks.length;
+			globalProtectedCodeBlocks.push(match);
+			return '___PROTECTED_CODE_BLOCK_' + index + '___';
+		});
+		data = data.replace(/<code>[\s\S]*?<\/code>/gi, function(match) {
+			var index = globalProtectedCodeBlocks.length;
+			globalProtectedCodeBlocks.push(match);
+			return '___PROTECTED_CODE_BLOCK_' + index + '___';
+		});
+	}
+
+	// Step 2: Process meta-helpers (like {{blog}} which generates {{insert}} helpers)
+	// This now happens AFTER markdown conversion, so HTML is already generated
 	data = pre_process_page(data);
-
-	// Step 1.5: Restore protected code blocks so markdown can process them
-	data = data.replace(/___PROTECTED_CODE_BLOCK_(\d+)___/g, function(match, index) {
-		return globalProtectedCodeBlocks[parseInt(index)];
-	});
-
-	// Reset the array since we'll re-protect after markdown
-	globalProtectedCodeBlocks = [];
-
-	// Step 2: Convert Markdown to HTML if this is a .md file
-	if (/\.md$/.test(url)){ data = marked.parse(data);}
-
-	// Step 2.5: Protect HTML <code> and <pre> tags AFTER markdown processing
-	// This prevents helpers inside code blocks from being processed
-	// First protect <pre> blocks (which may contain <code> tags)
-	data = data.replace(/<pre>[\s\S]*?<\/pre>/gi, function(match) {
-		var index = globalProtectedCodeBlocks.length;
-		globalProtectedCodeBlocks.push(match);
-		return '___PROTECTED_CODE_BLOCK_' + index + '___';
-	});
-	// Then protect standalone <code> tags (inline code, not inside <pre>)
-	data = data.replace(/<code>[\s\S]*?<\/code>/gi, function(match) {
-		var index = globalProtectedCodeBlocks.length;
-		globalProtectedCodeBlocks.push(match);
-		return '___PROTECTED_CODE_BLOCK_' + index + '___';
-	});
 
 	// Step 3: Recursively process all {{insert}} helpers
 	processInserts(function(){
