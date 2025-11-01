@@ -3,6 +3,13 @@ const fs = require('fs').promises;
 const fsSync = require('fs');
 const path = require('path');
 
+// Marked is an ES module, so we'll import it dynamically
+let marked = null;
+(async () => {
+  const markedModule = await import('marked');
+  marked = markedModule.marked;
+})();
+
 const app = express();
 const SITES_DIR = process.env.SITES_DIR || './sites';
 const ENABLE_SSL = process.env.ENABLE_SSL === 'true';
@@ -251,6 +258,227 @@ app.get('*/api/list-recursive', async (req, res) => {
   } catch (err) {
     console.error('Error listing directory recursively:', err);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// SEO: Generate XML sitemap for a site
+app.get('*/sitemap.xml', async (req, res) => {
+  try {
+    if (!req.sitePath) {
+      return res.status(400).send('No site specified');
+    }
+
+    const pagesPath = path.join(req.sitePath, 'pages');
+    const baseUrl = req.protocol + '://' + req.get('host') + (req.sitePrefix || '');
+
+    // Check if pages directory exists
+    try {
+      await fs.access(pagesPath);
+    } catch (err) {
+      return res.status(404).send('No pages directory found');
+    }
+
+    const pages = [];
+
+    // Recursively find all .html and .md files
+    async function walkDirectory(dir, basePath = '') {
+      const items = await fs.readdir(dir, { withFileTypes: true });
+
+      for (const item of items) {
+        const itemPath = path.join(basePath, item.name);
+        const fullItemPath = path.join(dir, item.name);
+
+        if (item.isDirectory()) {
+          await walkDirectory(fullItemPath, itemPath);
+        } else if (item.name.endsWith('.html') || item.name.endsWith('.md')) {
+          // Skip splash.html and layout.html
+          if (item.name !== 'splash.html' && item.name !== 'layout.html') {
+            const stats = await fs.stat(fullItemPath);
+            pages.push({
+              url: itemPath,
+              lastmod: stats.mtime.toISOString()
+            });
+          }
+        }
+      }
+    }
+
+    await walkDirectory(pagesPath);
+
+    // Generate XML sitemap
+    let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+    xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+
+    // Add homepage
+    xml += '  <url>\n';
+    xml += `    <loc>${baseUrl}/</loc>\n`;
+    xml += '    <changefreq>weekly</changefreq>\n';
+    xml += '    <priority>1.0</priority>\n';
+    xml += '  </url>\n';
+
+    // Add each page with both AJAX and static versions
+    for (const page of pages) {
+      // AJAX version (primary)
+      xml += '  <url>\n';
+      xml += `    <loc>${baseUrl}/?page=${page.url}</loc>\n`;
+      xml += `    <lastmod>${page.lastmod}</lastmod>\n`;
+      xml += '    <changefreq>weekly</changefreq>\n';
+      xml += '    <priority>0.8</priority>\n';
+      xml += '  </url>\n';
+
+      // Static HTML version (for crawlers)
+      xml += '  <url>\n';
+      xml += `    <loc>${baseUrl}/static/${page.url}</loc>\n`;
+      xml += `    <lastmod>${page.lastmod}</lastmod>\n`;
+      xml += '    <changefreq>weekly</changefreq>\n';
+      xml += '    <priority>0.6</priority>\n';
+      xml += '  </url>\n';
+    }
+
+    xml += '</urlset>';
+
+    res.header('Content-Type', 'application/xml');
+    res.send(xml);
+
+  } catch (err) {
+    console.error('Error generating sitemap:', err);
+    res.status(500).send('Error generating sitemap');
+  }
+});
+
+// SEO: Serve robots.txt
+app.get('*/robots.txt', (req, res) => {
+  const baseUrl = req.protocol + '://' + req.get('host') + (req.sitePrefix || '');
+  const robotsTxt = `User-agent: *
+Allow: /
+
+Sitemap: ${baseUrl}/sitemap.xml
+`;
+  res.header('Content-Type', 'text/plain');
+  res.send(robotsTxt);
+});
+
+// SEO: Server-side rendered static HTML version of pages
+app.get('*/static/*', async (req, res) => {
+  try {
+    if (!req.sitePath) {
+      return res.status(400).send('No site specified');
+    }
+
+    // Extract page path from URL
+    let pagePath = req.path;
+    if (req.sitePrefix) {
+      pagePath = pagePath.substring(req.sitePrefix.length);
+    }
+    pagePath = pagePath.replace(/^\/static\//, '');
+
+    const fullPath = path.join(req.sitePath, pagePath);
+
+    // Security check
+    if (!fullPath.startsWith(path.resolve(req.sitePath))) {
+      return res.status(403).send('Access denied');
+    }
+
+    // Read the page content
+    let content;
+    try {
+      content = await fs.readFile(fullPath, 'utf-8');
+    } catch (err) {
+      return res.status(404).send('Page not found');
+    }
+
+    // Convert markdown to HTML if needed
+    if (fullPath.endsWith('.md')) {
+      if (!marked) {
+        return res.status(503).send('Markdown processor is loading, please try again in a moment');
+      }
+      content = marked.parse(content);
+    }
+
+    // Extract title from content (first h1 or filename)
+    let title = 'AjaxCMS';
+    const h1Match = content.match(/<h1[^>]*>(.*?)<\/h1>/i);
+    if (h1Match) {
+      title = h1Match[1].replace(/<[^>]+>/g, ''); // Strip HTML tags
+    } else {
+      const mdH1Match = content.match(/^#\s+(.+)$/m);
+      if (mdH1Match) {
+        title = mdH1Match[1];
+      } else {
+        title = path.basename(pagePath, path.extname(pagePath)).replace(/^\d+-/, '').replace(/_/g, ' ');
+      }
+    }
+
+    // Extract description (first paragraph)
+    let description = '';
+    const pMatch = content.match(/<p[^>]*>(.*?)<\/p>/i);
+    if (pMatch) {
+      description = pMatch[1].replace(/<[^>]+>/g, '').substring(0, 160);
+    }
+
+    // Generate minimal SEO-friendly HTML
+    const baseUrl = req.protocol + '://' + req.get('host') + (req.sitePrefix || '');
+    const canonicalUrl = baseUrl + '/?page=' + pagePath;
+
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${title}</title>
+    <meta name="description" content="${description}">
+    <link rel="canonical" href="${canonicalUrl}">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="${canonicalUrl}">
+    <meta property="og:title" content="${title}">
+    <meta property="og:description" content="${description}">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary">
+    <meta property="twitter:url" content="${canonicalUrl}">
+    <meta property="twitter:title" content="${title}">
+    <meta property="twitter:description" content="${description}">
+
+    <!-- Redirect to full AJAX version for human visitors -->
+    <meta http-equiv="refresh" content="0;url=${canonicalUrl}">
+    <script>
+        // Immediate redirect for browsers
+        if (!navigator.userAgent.match(/bot|crawler|spider|crawling/i)) {
+            window.location.replace('${canonicalUrl}');
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        a { color: #0066cc; }
+        img { max-width: 100%; height: auto; }
+    </style>
+</head>
+<body>
+    <main>
+        ${content}
+    </main>
+    <footer>
+        <p><a href="${baseUrl}/">← Back to home</a> | <a href="${canonicalUrl}">View full site</a></p>
+    </footer>
+</body>
+</html>`;
+
+    res.header('Content-Type', 'text/html; charset=utf-8');
+    res.send(html);
+
+  } catch (err) {
+    console.error('Error rendering static page:', err);
+    res.status(500).send('Error rendering page');
   }
 });
 
