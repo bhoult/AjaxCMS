@@ -1,2 +1,4 @@
-{{blog|./pages/AjaxCMS_Blog}}
+# AjaxCMS Blog
+
+{{blog|./pages/AjaxCMS_Blog|0|5}}
 

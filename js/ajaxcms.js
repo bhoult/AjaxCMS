@@ -47,6 +47,9 @@ var data;           // Global variable holding current page content during proce
 // Directories to skip when loading images (special size variants)
 var SKIP_IMAGE_DIRS = ['icon/', 'thumb/', 'small/', 'medium/', 'large/'];
 
+// Cache for blog excerpts (persists across page loads)
+var blogExcerptCache = {};
+
 //////////////////////////////////////////////////////////////////////////////////
 
 /**
@@ -106,6 +109,50 @@ function mpIndex(m) {
 	return menu_pages.indexOf(m);
 }
 
+/**
+ * Check if both pages and images are loaded, then load the initial page
+ * This ensures the images array is populated before any page with {{i}} or {{carousel}} helpers loads
+ */
+function checkAndLoadInitialPage() {
+	// Only proceed when both pages and images are fully loaded
+	if (pages_count === 0 && images_count === 0) {
+		// Stuff to run after menu list is loaded.
+		menus = findMenus().sort();
+		makemenu();
+		just_pages = findPages().sort();
+		menu_pages = $.grep(just_pages, function(n,i){return /\/menus\/.+/.test(n)});
+
+		// if there is a splash page then display
+		if (pages.indexOf("./pages/splash.html") >= 0 && !param('page')) {
+			$.get("./pages/splash.html",function(data){
+				$(".container").before("<div id='splash' style='width:100%; position:absolute;'>"+data+"</div>");
+			}).fail(function(jqXHR, textStatus, errorThrown) {
+				console.error('Error loading splash page:', textStatus, errorThrown);
+			});
+
+			setTimeout(function(){
+				$('#splash').fadeOut(2000);
+				$('.container').fadeIn(1000);
+			},ajaxcms_splash_time);
+
+		} else {
+			$('.container').fadeIn(1000)
+		}
+
+		// Load the page in the params if specified, first menu page otherwise.
+		var p = param('page');
+		if (p) {
+			loadPage('./'+p, true);
+			current_page = p;
+		} else {
+			current_page = menu_pages[0];
+			// Store the URL of the current page in the history *** for some reason firefox needs this or it will break the splash animation.
+			var new_url = base_url+'?page='+current_page.replace(/^\.\//,'');
+			window.history.replaceState({page: new_url},'test',new_url);
+			loadPage(current_page, false); // Load the first page (home page) on init.
+		}
+	}
+}
 
 /**
  * Recursively load all pages from a directory via JSON API
@@ -143,44 +190,7 @@ function load_pages(url) {
 		console.error('Error loading pages from ' + url + ':', textStatus, errorThrown);
 	}).then(function(){
 		pages_count--;
-		if (pages_count === 0) {
-
-			// Stuff to run after menu list is loaded.
-			menus = findMenus().sort();
-			makemenu();
-			just_pages = findPages().sort();
-			menu_pages = $.grep(just_pages, function(n,i){return /\/menus\/.+/.test(n)});
-
-			// if there is a splash page then display
-			if (pages.indexOf("./pages/splash.html") >= 0 && !param('page')) {
-				$.get("./pages/splash.html",function(data){
-					$(".container").before("<div id='splash' style='width:100%; position:absolute;'>"+data+"</div>");
-				}).fail(function(jqXHR, textStatus, errorThrown) {
-					console.error('Error loading splash page:', textStatus, errorThrown);
-				});
-
-				setTimeout(function(){
-					$('#splash').fadeOut(2000);
-					$('.container').fadeIn(1000);
-				},ajaxcms_splash_time);
-
-			} else {
-				$('.container').fadeIn(1000)
-			}
-
-			// Load the page in the params if specified, first menu page otherwise.
-			var p = param('page');
-			if (p) {
-				loadPage('./'+p, true);
-				current_page = p;
-			} else {
-				current_page = menu_pages[0];
-				// Store the URL of the current page in the history *** for some reason firefox needs this or it will break the splash animation.
-				var new_url = base_url+'?page='+current_page.replace(/^\.\//,'');
-				window.history.replaceState({page: new_url},'test',new_url);
-				loadPage(current_page, false); // Load the first page (home page) on init.
-			}
-		}
+		checkAndLoadInitialPage();
 	});
 }
 
@@ -211,9 +221,7 @@ function load_images(url) {
 		console.error('Error loading images from ' + url + ':', textStatus, errorThrown);
 	}).then(function(){
 		images_count--;
-		if (images_count === 0) {
-			// All image directories loaded - reserved for future initialization
-		}
+		checkAndLoadInitialPage();
 	});
 }
 
@@ -558,16 +566,63 @@ function pre_process_page(sdata) {
 
 		// {{blog | directory | start | stop }}
 		if (parts[0] == 'blog' && parts.length > 1) {
-			var blog_list = processBlogList(parts);
+			var allBlogPosts = processBlogList([parts[0], parts[1]]); // Get all posts for pagination
+			var blog_list = processBlogList(parts); // Get current page of posts
 
-			// Make a div for each blog entry
+			// Extract pagination parameters
+			var start = parts[2] !== undefined ? parseInt(parts[2]) : 0;
+			var stop = parts[3] !== undefined ? parseInt(parts[3]) : allBlogPosts.length;
+			var postsPerPage = stop - start;
+			var totalPosts = allBlogPosts.length;
+
+			// Generate HTML for ALL blog entries (hidden by default)
 			var output = "";
-			for (var i=0; i < blog_list.length; i++){
-				output += "<div class='blog_entry' data-url='"+blog_list[i].url+"' onclick=\"loadPage('"+blog_list[i].url+"'); return false;\" style=\"cursor: pointer;\">"
-				output += "<h1>"+blog_list[i].name+"</h1><time>"+blog_list[i].date.toLocaleDateString()+"</time><div class='blog_content'>\n{{insert | "+blog_list[i].url+" | false}}\n</div></div>"
+			for (var i=0; i < allBlogPosts.length; i++){
+				var entryId = 'blog_entry_' + i;
+				var isVisible = (i >= start && i < stop);
+				output += "<div class='blog_entry' id='"+entryId+"' data-url='"+allBlogPosts[i].url+"' data-page-index='"+i+"' style='display: "+(isVisible ? 'block' : 'none')+"'>"
+				output += "<h1 onclick=\"toggleBlogEntry('"+entryId+"'); return false;\" style=\"cursor: pointer;\">"+allBlogPosts[i].name+"</h1>"
+				output += "<time>"+allBlogPosts[i].date.toLocaleDateString()+"</time>"
+				output += "<div class='blog_excerpt' onclick=\"toggleBlogEntry('"+entryId+"'); return false;\" style=\"cursor: pointer;\">"
+				output += "<p class='excerpt_text'>Loading excerpt...</p>"
+				output += "<a href='javascript:void(0);' class='read_more'>Read more...</a>"
+				output += "</div>"
+				output += "<div class='blog_content' style='display: none;'>\n{{insert | "+allBlogPosts[i].url+" | false}}\n"
+				output += "<a href='javascript:void(0);' class='read_less' onclick=\"toggleBlogEntry('"+entryId+"'); return false;\">Show less</a>"
+				output += "</div></div>"
 			}
 
-			return "<div "+attributes_string+" class='blog'>\n"+output+"</div>"
+			// Add pagination controls if there are multiple pages
+			if (totalPosts > postsPerPage) {
+				output += "<div class='blog_pagination'>";
+
+				// Previous button
+				if (start > 0) {
+					var prevStart = Math.max(0, start - postsPerPage);
+					var prevStop = start;
+					output += "<button class='blog_page_btn blog_prev' onclick=\"updateBlogPage("+prevStart+", "+prevStop+", "+postsPerPage+"); return false;\">← Previous</button>";
+				} else {
+					output += "<button class='blog_page_btn blog_prev' disabled>← Previous</button>";
+				}
+
+				// Page info
+				var currentPage = Math.floor(start / postsPerPage) + 1;
+				var totalPages = Math.ceil(totalPosts / postsPerPage);
+				output += "<span class='blog_page_info'>Page " + currentPage + " of " + totalPages + "</span>";
+
+				// Next button
+				if (stop < totalPosts) {
+					var nextStart = stop;
+					var nextStop = Math.min(totalPosts, stop + postsPerPage);
+					output += "<button class='blog_page_btn blog_next' onclick=\"updateBlogPage("+nextStart+", "+nextStop+", "+postsPerPage+"); return false;\">Next →</button>";
+				} else {
+					output += "<button class='blog_page_btn blog_next' disabled>Next →</button>";
+				}
+
+				output += "</div>";
+			}
+
+			return "<div "+attributes_string+" class='blog' data-total-posts='"+totalPosts+"' data-posts-per-page='"+postsPerPage+"'>\n"+output+"</div>"
 		}
 
 		// If all else fails return the original tag.
@@ -610,14 +665,26 @@ function loadInsert(fname,insert_location,allow_scripts,callback) {
 	$.get(fname,function(insert_contents){
 		var layout_url = lastLayout(fname);
 
-		// Protect helpers with 5+ spaces (legacy documentation compatibility)
-		var protectedHelpers = [];
-		var protectedCodeBlocks = [];
+		// Use GLOBAL protection arrays so all protections are restored together at the end
+		// Protect triple-backtick code blocks BEFORE markdown processing
+		insert_contents = insert_contents.replace(/^```[^\n]*$\n([\s\S]*?)^```$/gm, function(fullMatch, content) {
+			var index = globalProtectedCodeBlocks.length;
+			globalProtectedCodeBlocks.push(fullMatch);
+			return '___PROTECTED_CODE_BLOCK_' + index + '___';
+		});
 
+		// Protect inline code (single backticks)
+		insert_contents = insert_contents.replace(/`[^`\n]+`/g, function(match) {
+			var index = globalProtectedCodeBlocks.length;
+			globalProtectedCodeBlocks.push(match);
+			return '___PROTECTED_CODE_BLOCK_' + index + '___';
+		});
+
+		// Protect 5-space helpers (legacy)
 		insert_contents = insert_contents.replace(/{{[^}]*\s\s\s\s\s[^}]*}}/g, function(match) {
-			var index = protectedHelpers.length;
-			protectedHelpers.push(match);
-			return '___INSERT_PROTECTED_HELPER_' + index + '___';
+			var index = globalProtectedHelpers.length;
+			globalProtectedHelpers.push(match);
+			return '___PROTECTED_HELPER_' + index + '___';
 		});
 
 		// Check if layout exists before requesting it to avoid 404 errors
@@ -629,33 +696,30 @@ function loadInsert(fname,insert_location,allow_scripts,callback) {
 				})
 				.always(function( layout ) {
 
+					// Restore protected code blocks so markdown can process them
+					insert_contents = insert_contents.replace(/___PROTECTED_CODE_BLOCK_(\d+)___/g, function(match, index) {
+						return globalProtectedCodeBlocks[parseInt(index)];
+					});
+
 					// Run through markdown if the file ends in .md
 					if (/\.md$/.test(fname)){ insert_contents = marked.parse(insert_contents);	}
 
 					// Protect <code> and <pre> tags after markdown processing
 					// First protect <pre> blocks (which may contain <code> tags)
 					insert_contents = insert_contents.replace(/<pre>[\s\S]*?<\/pre>/gi, function(match) {
-						var index = protectedCodeBlocks.length;
-						protectedCodeBlocks.push(match);
-						return '___INSERT_PROTECTED_CODE_' + index + '___';
+						var index = globalProtectedCodeBlocks.length;
+						globalProtectedCodeBlocks.push(match);
+						return '___PROTECTED_CODE_BLOCK_' + index + '___';
 					});
 					// Then protect standalone <code> tags
 					insert_contents = insert_contents.replace(/<code>[\s\S]*?<\/code>/gi, function(match) {
-						var index = protectedCodeBlocks.length;
-						protectedCodeBlocks.push(match);
-						return '___INSERT_PROTECTED_CODE_' + index + '___';
+						var index = globalProtectedCodeBlocks.length;
+						globalProtectedCodeBlocks.push(match);
+						return '___PROTECTED_CODE_BLOCK_' + index + '___';
 					});
 
-					// Process any helpers in the inserted content (but not in code blocks)
-					// ... this happens later when it's merged into main data ...
-
-					// Restore protected code blocks and helpers before inserting
-					insert_contents = insert_contents.replace(/___INSERT_PROTECTED_CODE_(\d+)___/g, function(match, index) {
-						return protectedCodeBlocks[parseInt(index)];
-					});
-					insert_contents = insert_contents.replace(/___INSERT_PROTECTED_HELPER_(\d+)___/g, function(match, index) {
-						return protectedHelpers[parseInt(index)];
-					});
+					// NOTE: Do NOT restore protected content here!
+					// It will be restored at the END of processPageContent() after all helpers are processed
 
 					// If there is a layout then insert the data into the layout
 					if (typeof(layout) != "object") {
@@ -675,30 +739,30 @@ function loadInsert(fname,insert_location,allow_scripts,callback) {
 				});
 		} else {
 			// No layout, use content directly
+			// Restore protected code blocks so markdown can process them
+			insert_contents = insert_contents.replace(/___PROTECTED_CODE_BLOCK_(\d+)___/g, function(match, index) {
+				return globalProtectedCodeBlocks[parseInt(index)];
+			});
+
 			// Run through markdown if the file ends in .md
 			if (/\.md$/.test(fname)){ insert_contents = marked.parse(insert_contents);	}
 
 			// Protect <code> and <pre> tags after markdown processing
 			// First protect <pre> blocks (which may contain <code> tags)
 			insert_contents = insert_contents.replace(/<pre>[\s\S]*?<\/pre>/gi, function(match) {
-				var index = protectedCodeBlocks.length;
-				protectedCodeBlocks.push(match);
-				return '___INSERT_PROTECTED_CODE_' + index + '___';
+				var index = globalProtectedCodeBlocks.length;
+				globalProtectedCodeBlocks.push(match);
+				return '___PROTECTED_CODE_BLOCK_' + index + '___';
 			});
 			// Then protect standalone <code> tags
 			insert_contents = insert_contents.replace(/<code>[\s\S]*?<\/code>/gi, function(match) {
-				var index = protectedCodeBlocks.length;
-				protectedCodeBlocks.push(match);
-				return '___INSERT_PROTECTED_CODE_' + index + '___';
+				var index = globalProtectedCodeBlocks.length;
+				globalProtectedCodeBlocks.push(match);
+				return '___PROTECTED_CODE_BLOCK_' + index + '___';
 			});
 
-			// Restore protected code blocks and helpers before inserting
-			insert_contents = insert_contents.replace(/___INSERT_PROTECTED_CODE_(\d+)___/g, function(match, index) {
-				return protectedCodeBlocks[parseInt(index)];
-			});
-			insert_contents = insert_contents.replace(/___INSERT_PROTECTED_HELPER_(\d+)___/g, function(match, index) {
-				return protectedHelpers[parseInt(index)];
-			});
+			// NOTE: Do NOT restore protected content here!
+			// It will be restored at the END of processPageContent() after all helpers are processed
 
 			// Strip the scripts if specified
 			if (!allow_scripts) {insert_contents = removeScripts(insert_contents);}
@@ -893,6 +957,15 @@ function processPageContent(contentData, url, callback) {
 		if (typeof ga === 'function') {
 			ga('send', 'pageview', location.href);
 		}
+
+		// Step 9: Initialize blog excerpts if this page has blog entries
+		// Use setTimeout to ensure DOM is fully updated AND slide transition is complete
+		// Wait for TRANSITION_DURATION + 50ms buffer to ensure content is in final position
+		setTimeout(function() {
+			if (document.querySelector('.blog_entry')) {
+				initializeBlogExcerpts();
+			}
+		}, TRANSITION_DURATION + 50);
 
 		// Call completion callback if provided
 		if (callback && typeof(callback) === "function") {
@@ -1165,7 +1238,223 @@ $( document ).ready(function() {
 	};
 });
 
-// Expose loadPage to global scope so onclick handlers in generated HTML can call it
+/**
+ * Toggle blog entry between excerpt and full content
+ * @param {string} entryId - ID of the blog entry div
+ */
+function toggleBlogEntry(entryId) {
+	var entry = document.getElementById(entryId);
+	if (!entry) return;
+
+	var excerpt = entry.querySelector('.blog_excerpt');
+	var content = entry.querySelector('.blog_content');
+
+	if (content.style.display === 'none') {
+		// Expanding - show full content
+		excerpt.style.display = 'none';
+		content.style.display = 'block';
+	} else {
+		// Collapsing - show excerpt
+		content.style.display = 'none';
+		excerpt.style.display = 'block';
+	}
+}
+
+/**
+ * Initialize blog excerpts after page load
+ * Called after all blog entries are inserted
+ */
+function initializeBlogExcerpts() {
+	console.log('initializeBlogExcerpts called, cache:', blogExcerptCache);
+	// Find all blog entries in the active content div only (not in hidden transition divs)
+	// Use jQuery to check which div is visible
+	var activeDiv;
+	if ($('#a').is(':visible')) {
+		activeDiv = document.getElementById('a');
+	} else if ($('#b').is(':visible')) {
+		activeDiv = document.getElementById('b');
+	} else {
+		// Fallback to main for basic transitions
+		activeDiv = document.querySelector('main');
+	}
+
+	if (!activeDiv) {
+		console.log('No active content div found');
+		return;
+	}
+
+	var entries = activeDiv.querySelectorAll('.blog_entry');
+	console.log('Found', entries.length, 'blog entries in active div:', activeDiv.id);
+	entries.forEach(function(entry) {
+		var url = entry.getAttribute('data-url');
+		var entryId = entry.getAttribute('id');
+
+		// Check if we already have this excerpt cached
+		if (url && entryId) {
+			console.log('Checking entry', entryId, 'url:', url);
+			if (blogExcerptCache[url]) {
+				console.log('Using cached excerpt for', url);
+				// Use cached excerpt
+				var excerptPara = entry.querySelector('.excerpt_text');
+				if (excerptPara) {
+					excerptPara.textContent = blogExcerptCache[url];
+				}
+				entry.setAttribute('data-excerpt-loaded', 'true');
+			} else if (!entry.hasAttribute('data-excerpt-loaded')) {
+				console.log('Loading excerpt for first time:', url);
+				// Load excerpt for the first time
+				loadBlogExcerpt(url, entryId);
+			}
+		}
+	});
+}
+
+/**
+ * Update blog page to show different posts (pagination)
+ * @param {number} start - Start index
+ * @param {number} stop - Stop index
+ * @param {number} postsPerPage - Posts per page
+ */
+function updateBlogPage(start, stop, postsPerPage) {
+	// Store pagination state in URL hash for bookmarking
+	window.location.hash = 'blog-' + start + '-' + stop;
+
+	// Find the blog container
+	var blogContainer = document.querySelector('.blog');
+	if (!blogContainer) return;
+
+	var totalPosts = parseInt(blogContainer.getAttribute('data-total-posts'));
+
+	// Hide all blog entries
+	var allEntries = blogContainer.querySelectorAll('.blog_entry');
+	allEntries.forEach(function(entry) {
+		entry.style.display = 'none';
+	});
+
+	// Show only entries in the current range
+	for (var i = start; i < stop; i++) {
+		var entry = document.getElementById('blog_entry_' + i);
+		if (entry) {
+			entry.style.display = 'block';
+		}
+	}
+
+	// Update pagination controls
+	var currentPage = Math.floor(start / postsPerPage) + 1;
+	var totalPages = Math.ceil(totalPosts / postsPerPage);
+
+	// Update page info
+	var pageInfo = blogContainer.querySelector('.blog_page_info');
+	if (pageInfo) {
+		pageInfo.textContent = 'Page ' + currentPage + ' of ' + totalPages;
+	}
+
+	// Update Previous button
+	var prevBtn = blogContainer.querySelector('.blog_prev');
+	if (prevBtn) {
+		if (start > 0) {
+			var prevStart = Math.max(0, start - postsPerPage);
+			var prevStop = start;
+			prevBtn.disabled = false;
+			prevBtn.onclick = function() { updateBlogPage(prevStart, prevStop, postsPerPage); return false; };
+		} else {
+			prevBtn.disabled = true;
+		}
+	}
+
+	// Update Next button
+	var nextBtn = blogContainer.querySelector('.blog_next');
+	if (nextBtn) {
+		if (stop < totalPosts) {
+			var nextStart = stop;
+			var nextStop = Math.min(totalPosts, stop + postsPerPage);
+			nextBtn.disabled = false;
+			nextBtn.onclick = function() { updateBlogPage(nextStart, nextStop, postsPerPage); return false; };
+		} else {
+			nextBtn.disabled = true;
+		}
+	}
+
+	// Scroll to blog section
+	blogContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/**
+ * Load and cache the excerpt for a blog post
+ * @param {string} url - URL of the blog post
+ * @param {string} entryId - ID of the blog entry div
+ */
+function loadBlogExcerpt(url, entryId) {
+	console.log('loadBlogExcerpt called for', url, 'entry:', entryId);
+	$.get(url, function(data) {
+		console.log('AJAX response received for', url);
+		// Convert markdown to HTML if needed
+		if (/\.md$/.test(url)) {
+			data = marked.parse(data);
+		}
+
+		// Extract first paragraph or first 300 characters
+		var tempDiv = document.createElement('div');
+		tempDiv.innerHTML = data;
+
+		// Remove any headings to get to actual content
+		var headings = tempDiv.querySelectorAll('h1, h2, h3, h4, h5, h6');
+		headings.forEach(function(h) { h.remove(); });
+
+		// Try to get first paragraph
+		var firstP = tempDiv.querySelector('p');
+		var excerptText = '';
+
+		if (firstP) {
+			excerptText = firstP.textContent.trim();
+		} else {
+			// Fallback to all text content
+			excerptText = tempDiv.textContent.trim();
+		}
+
+		// Remove extra whitespace
+		excerptText = excerptText.replace(/\s+/g, ' ');
+
+		// Limit to 300 characters
+		if (excerptText.length > 300) {
+			excerptText = excerptText.substring(0, 300).trim() + '...';
+		}
+
+		// If still empty, use a default message
+		if (!excerptText) {
+			excerptText = 'Click to read more...';
+		}
+
+		// Cache the excerpt for future use
+		blogExcerptCache[url] = excerptText;
+		console.log('Cached excerpt for', url, ':', excerptText.substring(0, 50) + '...');
+
+		// Update excerpt text
+		var entry = document.getElementById(entryId);
+		if (entry) {
+			var excerptPara = entry.querySelector('.excerpt_text');
+			if (excerptPara) {
+				excerptPara.textContent = excerptText;
+			}
+			entry.setAttribute('data-excerpt-loaded', 'true');
+		}
+	}).fail(function(jqXHR, textStatus, errorThrown) {
+		console.error('Failed to load excerpt for', url, ':', textStatus, errorThrown);
+		// Set a fallback message
+		var entry = document.getElementById(entryId);
+		if (entry) {
+			var excerptPara = entry.querySelector('.excerpt_text');
+			if (excerptPara) {
+				excerptPara.textContent = 'Error loading excerpt. Click to read full post.';
+			}
+		}
+	});
+}
+
+// Expose functions to global scope so onclick handlers in generated HTML can call them
 window.loadPage = loadPage;
+window.toggleBlogEntry = toggleBlogEntry;
+window.initializeBlogExcerpts = initializeBlogExcerpts;
+window.updateBlogPage = updateBlogPage;
 
 })();

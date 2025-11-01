@@ -72,8 +72,6 @@ Creates an internal link that loads a page via AJAX without refreshing the brows
 **Why use this instead of `<a>`?**
 Regular HTML anchor tags (`<a href="...">`) cause full page reloads. The `{{a}}` helper creates links that load content via AJAX with smooth page transitions.
 
----
-
 ### Image
 
 **Syntax:** `{{i | image | alt_text}}`
@@ -104,8 +102,6 @@ Inserts an image from the `images/` directory. Uses partial matching, so you onl
 ```
 {{i | photo | class=>medium left}}
 ```
-
----
 
 ### Carousel (Slideshow)
 
@@ -142,8 +138,6 @@ Creates a Bootstrap 5 carousel slideshow with multiple images. Supports unlimite
 {{carousel:5000 | img1 | img2 | img3 | class=>carousel-fade}}
 ```
 
----
-
 ### Insert
 
 **Syntax:** `{{insert | page_name | allow_scripts}}`
@@ -174,8 +168,6 @@ Embeds the content of another page at the helper location. The inserted page inc
 </div>
 ```
 
----
-
 ### File List
 
 **Syntax:** `{{filelist | directory_path}}`
@@ -194,8 +186,6 @@ Generates a hierarchical menu from a directory and all its subdirectories. Uses 
 - Create vertical navigation menus
 - Display file/folder structures
 - Generate dynamic content indexes
-
----
 
 ### Blog
 
@@ -234,7 +224,6 @@ YYYY-MM-DD-n-Title.md  (n = optional number for multiple posts per day)
 - Clicking a post loads full content in place
 - Automatically sorts by date (newest first)
 
----
 
 ### Blog List
 
@@ -257,7 +246,6 @@ Displays a simple list of blog post titles with links. Similar to `{{blog}}` but
 
 **Use case:** Create a compact blog archive or sidebar widget
 
----
 
 ## Helper Reference Quick Guide
 

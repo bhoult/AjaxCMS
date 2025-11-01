@@ -1,11 +1,46 @@
-### New Feature: Splash Screen
-So I wanted to show off more of the graphical capabilities of AjaxCMS.  I have kept the page layout intentionally simple so that it would be easy for people to modify, but it looked a little dull and wordy compared to the home pages of other CMS systems.  I will be doing more to show off the capabilities of layouts and inserts in the future, but for now this will hopefully make it look a little more interesting.
+## Splash Screen Feature
+**Updated 2025:** The splash screen feature remains a great way to add visual interest and branding to your AjaxCMS site. This was one of the early features added to showcase the graphical capabilities of the platform.
 
-To create a splash screen you just have to create a file called "splash.html" in the pages folder.  There is also a variable "ajaxcms_splash_time" at the top of the index.html file that will set the duration of the splash screen.  5000 = 5 seconds.
+### How It Works
+AjaxCMS automatically detects and displays a splash screen before loading the main content, creating a polished first impression for visitors.
 
-The content of the file can be whatever you want.  In this case I made a logo using [Inkscape](https://inkscape.org), then animated it in javascript using [segment.js](http://lmgonzalves.github.io/segment/), and jquery.  When the time you specify has elapsed it will fade out the splash and fadein the home page.
+### Creating a Splash Screen
+1. **Create the file**: Add `pages/splash.html` to your site directory
+2. **Set the duration**: In `index.html`, configure the display time (in milliseconds):
+   ```html
+   <script>
+   var ajaxcms_splash_time = 5000; // 5 seconds
+   </script>
+   ```
+3. **Design your splash**: The content can be anything—HTML, CSS, SVG animations, canvas graphics, etc.
 
-If there is not a splash.html file then it will just immediately show the homepage as before.
+### Example Splash Content
+The ajaxcms.org splash uses:
+- **SVG logo** created in [Inkscape](https://inkscape.org)
+- **Path animation** using [segment.js](http://lmgonzalves.github.io/segment/)
+- **jQuery** for timing and transitions
+
+After the specified duration, the splash fades out (2 seconds) and the main content fades in (1 second), creating a smooth visual transition.
+
+### Implementation Details
+The splash detection logic in `js/ajaxcms.js` (lines 155-169):
+```javascript
+// if there is a splash page then display
+if (pages.indexOf("./pages/splash.html") >= 0 && !param('page')) {
+    $.get("./pages/splash.html",function(data){
+        $(".container").before("<div id='splash' style='width:100%; position:absolute;'>"+data+"</div>");
+    });
+
+    setTimeout(function(){
+        $('#splash').fadeOut(2000);
+        $('.container').fadeIn(1000);
+    }, ajaxcms_splash_time);
+} else {
+    $('.container').fadeIn(1000);
+}
+```
+
+**Note:** The splash only displays on the homepage. Direct links to specific pages bypass the splash screen.
 
 <div id="disqus_thread"></div>
 <script>

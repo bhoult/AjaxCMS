@@ -1,31 +1,65 @@
 Welcome to AjaxCMS.
 
-This is the initial release of the AjaxCMS platform.  We are releasing the core of AjaxCMS as an open source system and hope to support further development through the sales of "themes" or donations.  For more information or to purchase a theme please contact <brandon.hoult@softwyre.com>.
+AjaxCMS is a JavaScript-based front-end CMS with a minimal static file backend. The core of AjaxCMS is released as an open source project under the MIT license. For more information, visit our {{a | Home | Homepage}} or check out the [GitHub repository](https://github.com/bhoult/AjaxCMS).
 
-### Intro.  AjaxCMS v1.0
-AjaxCMS works kind of backwards from a traditional CMS such as Wordpress, Joomla, or Drupal.  In those systems you have content stored in a database which is then processed by code running on a server before being combined with static assets like images and sent to the browser as finished HTML.  The browser is mostly just used to display the HTML with JavaScript being used for minor effects. In AjaxCMS content is stored as static HTML or Markdown files on the server, there is no database, there is no server side code, all layout is done on the user's browser.  This results in a number of benefits such as speed, security, and the ability to create complex visual effects in JavaScript as well as page transitions.  For more information please read the {{a | Home | Homepage}} and the Documentation.
+### Introduction: A Different Approach to Content Management
+AjaxCMS takes a fundamentally different approach from traditional CMS platforms like WordPress, Joomla, or Drupal. Traditional systems store content in databases, process it with server-side code (PHP, Python, etc.), and send rendered HTML to the browser. The browser's role is mostly passive—just displaying the HTML with minimal JavaScript interactivity.
 
-### Does the world really need another CMS?
-If AjaxCMS functioned like a traditional CMS such as Wordpress, Joomla, or Drupal there would not be much point.  All these CMS systems were introduced many years ago and have gone through many iterations.  They are established, well known and mostly secure unless you start adding a bunch of untested plugins or modules.  They started out focused on a particular use but have since evolved into extremely complicated general purpose systems with hundreds of interrelated PHP files.  
+AjaxCMS flips this model: content is stored as static HTML or Markdown files on the server, with **no database required**. A lightweight Node.js server provides JSON directory listings, but all layout processing, helper expansion, and page rendering happens in the user's browser using JavaScript. This architecture delivers several key benefits:
 
-Since that time there have been many attempts to make a better CMS in a different, more powerful, more efficient language or framework. None have been successful because the community surrounding the early systems along with the thousands of plugins and modules they create make it nearly impossible to make anything comparable.  But in the last few years a lot of things have changed.
+- **Speed**: No database queries or server-side rendering delays
+- **Security**: Minimal server-side code reduces attack surface
+- **Simplicity**: No database to configure or maintain
+- **Rich Interactions**: Full JavaScript capabilities for animations and transitions
+- **Easy Deployment**: Static files can be hosted almost anywhere
 
-HTML5 and CSS3 along with the standardization of JavaScript have finally make the browser into a "platform".  A "platform" is a system of supporting technologies such as computers, operating systems, server-side languages, databases, and client side scripts that are needed to support a website.  As a developer you had to pick which set of technologies (stack) you wanted to invest in and hope that it remained relevant into the future. AjaxCMS tries to simplify this by requiring as little as possible on the server side and moving all the program logic to the client's browser.
+For detailed information, read the {{a | Home | Homepage}} and browse the Documentation section.
 
-This is made possible by a technology known as AJAX (Asynchronous JavaScript and XML).  AJAX allows a website to load and update pieces of a page instead of doing a full page refresh.  Because of this we are able to offload the parts of a website that require dynamic back ends to external services.  This replaces the need for proprietary and insecure plugins or modules, and allows us to focus on features that can be accomplished with nothing more than static files on the server. Examples of external services include [Disqus](https://disqus.com/) for comments, or [Google Forms](https://forms.google.com) for online forms.
+### Why Another CMS?
+Traditional CMS platforms like WordPress, Joomla, and Drupal have been around for decades and have massive communities. They're established, well-tested, and mostly secure (unless you add untested plugins). However, they've evolved into extremely complex systems with hundreds of interrelated server-side files, database dependencies, and security vulnerabilities.
 
-### Is it ready to use.
-Yes.  Although this is a first release and there will be bugs they will not impact the security of your site.  Most of the time when a new product is first introduced people are rightfully hesitant to use it until "the kinks have been worked out". Because everything that AjaxCMS does only runs in the users browser it is a little different.  We are confident that your site will not be hacked as a result of our code simply because none of our code runs on your server.  The only vulnerability that can exist is someone breaking into your hosting platform.
+Many attempts have been made to build "better" CMS platforms using different languages or frameworks, but few gain traction because the established systems have enormous plugin ecosystems that are nearly impossible to replicate. However, the web platform itself has fundamentally changed.
 
-AjaxCMS has been tested in all modern browsers for basic functionality and should work on both mobile and desktop devices.  We are continuing to add features and some aspects may change in the future, but upgrades will mostly involve just updating a single file "js/ajaxcms.js".  Unlike traditional CMS systems you don't have to upgrade for security reasons, so the only reason to do so is if there is a bug that has been fixed, or if you want to use new functionality in later versions.
+**Modern browsers are now true application platforms.** HTML5, CSS3, ES6+ JavaScript, and standardized APIs have transformed what's possible in the browser. The old paradigm of "server does everything, browser just displays" is outdated. AjaxCMS embraces this shift by:
 
-Any bugs will be limited to client side where they cannot cause any damage to other users.  Bugs will be limited to the few users that have not updated their browsers in the last several years and should not make the site unusable.  At some point we intend to create a fail-over version for ancient incompatible browsers or for screen readers for the visually impaired that cannot handle JavaScript.
+- **Minimizing server requirements**: A simple Node.js server provides directory listings via JSON API
+- **Maximizing browser capabilities**: All rendering, routing, and content processing happens client-side
+- **Using modern web standards**: ES6 modules, async/await, Bootstrap 5, marked.js for Markdown
+- **Leveraging external services**: Comments ([Disqus](https://disqus.com/)), forms ([Google Forms](https://forms.google.com)), analytics (Google Analytics)
 
-We will update this blog as new versions become available.
+AJAX (Asynchronous JavaScript and XML) enables loading page fragments without full refreshes, creating smooth single-page application experiences. Combined with modern JavaScript libraries and npm package management, AjaxCMS delivers a powerful yet simple content platform.
 
-### Conclusion.
+### Is It Production Ready?
+**Yes.** AjaxCMS has matured significantly since its initial release. The architecture's inherent security advantage—minimal server-side code—means most bugs are client-side rendering issues that can't compromise your server or other users.
 
-This has been the result of many months of work and I look forward to hearing any questions or suggestions you might have.  Feel free to contact me at <brandon.hoult@softwyre.com>.  The source code (install files) can be downloaded from https://github.com/bhoult/AjaxCMS.
+**Current Status (2025):**
+- Tested in all modern browsers (Chrome, Firefox, Safari, Edge)
+- Works on mobile and desktop devices
+- Production-ready with active development
+- Comprehensive documentation and examples
+- npm package management for dependencies
+- Multi-site hosting support with resource fallback
+
+**Upgrading:** Unlike traditional CMS platforms, you don't need to upgrade for security patches. Updates to `js/ajaxcms.js` are only necessary when you want new features or bug fixes. The system is designed for stability—existing sites continue working even without updates.
+
+**Browser Support:** AjaxCMS targets modern browsers (released in the last 3-5 years). Very old browsers may experience degraded functionality, but the core content remains accessible. We continue to improve accessibility and may add fallback modes for assistive technologies in future releases.
+
+### Get Started
+**Quick Start:**
+1. Clone the repository: `git clone https://github.com/bhoult/AjaxCMS.git`
+2. Install dependencies: `npm install`
+3. Create a site: `mkdir -p sites/mysite && cp -r index.html pages/ images/ sites/mysite/`
+4. Start the server: `npm start`
+5. Visit `http://localhost:3000`
+
+**Documentation:** Check out the {{a | 01-Getting_Started.md | Getting Started Guide}} for detailed setup instructions.
+
+**Contributing:** Found a bug or want to contribute? Visit our [GitHub Issues](https://github.com/bhoult/AjaxCMS/issues) page.
+
+### Conclusion
+AjaxCMS represents a modern approach to content management—embracing browser capabilities, minimizing server complexity, and delivering fast, secure websites. We continue to add features and improvements, and we welcome community feedback and contributions.
+
+The source code is available on [GitHub](https://github.com/bhoult/AjaxCMS) under the MIT license.
 
 <div id="disqus_thread"></div>
 <script>
