@@ -1148,27 +1148,33 @@ $( document ).ready(function() {
 		return false;
     });
 
-    // Swipe gesture navigation on touch devices
-	$("#a").on("swiperight",function(event){
-		// Swipe right = go to previous page
-		var currentIndex = mpIndex(current_page);
-		if (currentIndex > 0 && !in_transition){
-			var nextPage = menu_pages[currentIndex - 1];
-			if (nextPage) {
-				loadPage(nextPage, true);
+    // Swipe gesture navigation - only enable on touch-enabled devices
+	var isTouchDevice = ('ontouchstart' in window) ||
+	                    (navigator.maxTouchPoints > 0) ||
+	                    (navigator.msMaxTouchPoints > 0);
+
+	if (isTouchDevice) {
+		$("#a").on("swiperight",function(event){
+			// Swipe right = go to previous page
+			var currentIndex = mpIndex(current_page);
+			if (currentIndex > 0 && !in_transition){
+				var nextPage = menu_pages[currentIndex - 1];
+				if (nextPage) {
+					loadPage(nextPage, true);
+				}
 			}
-		}
-	});
-	$("#a").on("swipeleft",function(event){
-		// Swipe left = go to next page
-		var currentIndex = mpIndex(current_page);
-		if (currentIndex >= 0 && currentIndex < menu_pages.length - 1 && !in_transition){
-			var nextPage = menu_pages[currentIndex + 1];
-			if (nextPage) {
-				loadPage(nextPage, true);
+		});
+		$("#a").on("swipeleft",function(event){
+			// Swipe left = go to next page
+			var currentIndex = mpIndex(current_page);
+			if (currentIndex >= 0 && currentIndex < menu_pages.length - 1 && !in_transition){
+				var nextPage = menu_pages[currentIndex + 1];
+				if (nextPage) {
+					loadPage(nextPage, true);
+				}
 			}
-		}
-	});
+		});
+	}
 
 	// Browser back/forward button support
 	$(window).on("popstate", function(e) {
