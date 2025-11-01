@@ -930,6 +930,11 @@ function processPageContent(contentData, url, callback) {
 		return globalProtectedActiveHelpers[parseInt(index)];
 	});
 
+	// Step 3.5: Remove <p> tags that Markdown added around helper tokens
+	// Markdown wraps standalone lines in <p> tags, but helpers generate block elements
+	// This regex finds <p> tags that only contain a helper and removes the <p> wrapper
+	data = data.replace(/<p>({{.*?}})<\/p>/g, '$1');
+
 	// Step 4: Process meta-helpers (like {{blog}} which generates {{insert}} helpers)
 	data = pre_process_page(data);
 
