@@ -926,14 +926,20 @@ function processPageContent(contentData, url, callback) {
 	}
 
 	// Step 3: Restore helpers so they can be processed
+	// Convert => to =&gt; so parseHelper can recognize attributes
 	data = data.replace(/XOXACTIVEHELPERXOX(\d+)XOXOX/g, function(match, index) {
-		return globalProtectedActiveHelpers[parseInt(index)];
+		return globalProtectedActiveHelpers[parseInt(index)].replace(/=>/g, '=&gt;');
 	});
 
 	// Step 3.5: Remove <p> tags that Markdown added around helper tokens
 	// Markdown wraps standalone lines in <p> tags, but helpers generate block elements
 	// This regex finds <p> tags that only contain a helper and removes the <p> wrapper
+	var beforeRemove = data.match(/<p>{{.*?}}<\/p>/g);
+	if (beforeRemove) console.log('Found helpers in <p> tags:', beforeRemove);
 	data = data.replace(/<p>({{.*?}})<\/p>/g, '$1');
+	var afterRemove = data.match(/<p>{{.*?}}<\/p>/g);
+	if (afterRemove) console.log('Still in <p> tags after removal:', afterRemove);
+	else console.log('Successfully removed all <p> wrappers around helpers');
 
 	// Step 4: Process meta-helpers (like {{blog}} which generates {{insert}} helpers)
 	data = pre_process_page(data);
