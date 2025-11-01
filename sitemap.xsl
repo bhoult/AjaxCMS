@@ -77,6 +77,14 @@
             font-weight: bold;
             color: #0066cc;
           }
+          .section-header {
+            background: #f0f0f0;
+            font-weight: bold;
+            font-size: 1.1em;
+            padding: 15px 12px;
+            color: #333;
+            border-top: 2px solid #0066cc;
+          }
         </style>
       </head>
       <body>
@@ -97,24 +105,18 @@
             </tr>
           </thead>
           <tbody>
-            <xsl:for-each select="sitemap:urlset/sitemap:url">
+            <!-- Homepage -->
+            <xsl:for-each select="sitemap:urlset/sitemap:url[sitemap:priority='1.0']">
+              <tr class="section-header">
+                <td colspan="4">Homepage</td>
+              </tr>
               <tr>
                 <td class="url">
                   <a href="{sitemap:loc}">
                     <xsl:value-of select="sitemap:loc"/>
                   </a>
-                  <xsl:if test="xhtml:link[@rel='alternate']">
-                    <br/>
-                    <span class="alternate">
-                      Alternate: <a href="{xhtml:link[@rel='alternate']/@href}">
-                        <xsl:value-of select="xhtml:link[@rel='alternate']/@href"/>
-                      </a>
-                    </span>
-                  </xsl:if>
                 </td>
-                <td>
-                  <xsl:value-of select="sitemap:lastmod"/>
-                </td>
+                <td>-</td>
                 <td class="changefreq">
                   <xsl:value-of select="sitemap:changefreq"/>
                 </td>
@@ -123,6 +125,105 @@
                 </td>
               </tr>
             </xsl:for-each>
+
+            <!-- Menu Pages -->
+            <xsl:if test="sitemap:urlset/sitemap:url[contains(sitemap:loc, '/menus/')]">
+              <tr class="section-header">
+                <td colspan="4">Menu Pages</td>
+              </tr>
+              <xsl:for-each select="sitemap:urlset/sitemap:url[contains(sitemap:loc, '/menus/')]">
+                <tr>
+                  <td class="url">
+                    <a href="{sitemap:loc}">
+                      <xsl:value-of select="sitemap:loc"/>
+                    </a>
+                    <xsl:if test="xhtml:link[@rel='alternate']">
+                      <br/>
+                      <span class="alternate">
+                        Alternate: <a href="{xhtml:link[@rel='alternate']/@href}">
+                          <xsl:value-of select="xhtml:link[@rel='alternate']/@href"/>
+                        </a>
+                      </span>
+                    </xsl:if>
+                  </td>
+                  <td>
+                    <xsl:value-of select="sitemap:lastmod"/>
+                  </td>
+                  <td class="changefreq">
+                    <xsl:value-of select="sitemap:changefreq"/>
+                  </td>
+                  <td class="priority">
+                    <xsl:value-of select="sitemap:priority"/>
+                  </td>
+                </tr>
+              </xsl:for-each>
+            </xsl:if>
+
+            <!-- Blog Posts -->
+            <xsl:if test="sitemap:urlset/sitemap:url[contains(sitemap:loc, '_Blog/')]">
+              <tr class="section-header">
+                <td colspan="4">Blog Posts</td>
+              </tr>
+              <xsl:for-each select="sitemap:urlset/sitemap:url[contains(sitemap:loc, '_Blog/')]">
+                <tr>
+                  <td class="url">
+                    <a href="{sitemap:loc}">
+                      <xsl:value-of select="sitemap:loc"/>
+                    </a>
+                    <xsl:if test="xhtml:link[@rel='alternate']">
+                      <br/>
+                      <span class="alternate">
+                        Alternate: <a href="{xhtml:link[@rel='alternate']/@href}">
+                          <xsl:value-of select="xhtml:link[@rel='alternate']/@href"/>
+                        </a>
+                      </span>
+                    </xsl:if>
+                  </td>
+                  <td>
+                    <xsl:value-of select="sitemap:lastmod"/>
+                  </td>
+                  <td class="changefreq">
+                    <xsl:value-of select="sitemap:changefreq"/>
+                  </td>
+                  <td class="priority">
+                    <xsl:value-of select="sitemap:priority"/>
+                  </td>
+                </tr>
+              </xsl:for-each>
+            </xsl:if>
+
+            <!-- Other Pages -->
+            <xsl:if test="sitemap:urlset/sitemap:url[not(contains(sitemap:loc, '/menus/')) and not(contains(sitemap:loc, '_Blog/')) and sitemap:priority!='1.0']">
+              <tr class="section-header">
+                <td colspan="4">Other Pages</td>
+              </tr>
+              <xsl:for-each select="sitemap:urlset/sitemap:url[not(contains(sitemap:loc, '/menus/')) and not(contains(sitemap:loc, '_Blog/')) and sitemap:priority!='1.0']">
+                <tr>
+                  <td class="url">
+                    <a href="{sitemap:loc}">
+                      <xsl:value-of select="sitemap:loc"/>
+                    </a>
+                    <xsl:if test="xhtml:link[@rel='alternate']">
+                      <br/>
+                      <span class="alternate">
+                        Alternate: <a href="{xhtml:link[@rel='alternate']/@href}">
+                          <xsl:value-of select="xhtml:link[@rel='alternate']/@href"/>
+                        </a>
+                      </span>
+                    </xsl:if>
+                  </td>
+                  <td>
+                    <xsl:value-of select="sitemap:lastmod"/>
+                  </td>
+                  <td class="changefreq">
+                    <xsl:value-of select="sitemap:changefreq"/>
+                  </td>
+                  <td class="priority">
+                    <xsl:value-of select="sitemap:priority"/>
+                  </td>
+                </tr>
+              </xsl:for-each>
+            </xsl:if>
           </tbody>
         </table>
 
