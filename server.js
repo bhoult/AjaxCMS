@@ -307,7 +307,8 @@ app.get('*/sitemap.xml', async (req, res) => {
 
     // Generate XML sitemap
     let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
-    xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+    xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n';
+    xml += '        xmlns:xhtml="http://www.w3.org/1999/xhtml">\n';
 
     // Add homepage
     xml += '  <url>\n';
@@ -316,22 +317,15 @@ app.get('*/sitemap.xml', async (req, res) => {
     xml += '    <priority>1.0</priority>\n';
     xml += '  </url>\n';
 
-    // Add each page with both AJAX and static versions
+    // Add each page with AJAX version and alternate link to static version
     for (const page of pages) {
-      // AJAX version (primary)
+      // AJAX version (primary) with alternate link to static HTML
       xml += '  <url>\n';
       xml += `    <loc>${baseUrl}/?page=${page.url}</loc>\n`;
+      xml += `    <xhtml:link rel="alternate" hreflang="en" href="${baseUrl}/static/${page.url}" />\n`;
       xml += `    <lastmod>${page.lastmod}</lastmod>\n`;
       xml += '    <changefreq>weekly</changefreq>\n';
       xml += '    <priority>0.8</priority>\n';
-      xml += '  </url>\n';
-
-      // Static HTML version (for crawlers)
-      xml += '  <url>\n';
-      xml += `    <loc>${baseUrl}/static/${page.url}</loc>\n`;
-      xml += `    <lastmod>${page.lastmod}</lastmod>\n`;
-      xml += '    <changefreq>weekly</changefreq>\n';
-      xml += '    <priority>0.6</priority>\n';
       xml += '  </url>\n';
     }
 
