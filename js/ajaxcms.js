@@ -36,6 +36,7 @@ var menu_count = 0;     // Reserved for future use
 var pages_count = 0;    // Counter for pending page directory requests
 var images_count = 0;   // Counter for pending image directory requests
 var in_transition = false;  // Flag to prevent overlapping page transitions
+var theme_ready = false;  // Flag to track when theme initialization is complete
 
 // URL and page state management
 var base_url = window.location.href.replace(/\?.*/,'');  // Base URL without query params
@@ -110,12 +111,12 @@ function mpIndex(m) {
 }
 
 /**
- * Check if both pages and images are loaded, then load the initial page
- * This ensures the images array is populated before any page with {{i}} or {{carousel}} helpers loads
+ * Check if both pages and images are loaded and theme is ready, then load the initial page
+ * This ensures the images array is populated and theme is initialized before any page loads
  */
 function checkAndLoadInitialPage() {
-	// Only proceed when both pages and images are fully loaded
-	if (pages_count === 0 && images_count === 0) {
+	// Only proceed when pages, images, and theme are all ready
+	if (pages_count === 0 && images_count === 0 && theme_ready) {
 		// Stuff to run after menu list is loaded.
 		menus = findMenus().sort();
 		makemenu();
@@ -243,6 +244,40 @@ function imageMatch(s) {
 
 	console.warn('Image not found:', s);
 	return ''; // Return empty string instead of undefined
+}
+
+/**
+ * Find all images that match the search term (supports wildcards)
+ * @param {string} s - Search term with wildcards (* matches any characters)
+ * @returns {Array} Array of matching image URLs
+ */
+function imageMatchMultiple(s) {
+	if (!s || s.trim() === '') {
+		console.warn('imageMatchMultiple called with empty string');
+		return [];
+	}
+
+	// Convert wildcard pattern to regex
+	// Escape special regex characters except *
+	var pattern = s.replace(/[.+?^${}()|[\]\\]/g, '\\$&');
+	// Convert * to .*
+	pattern = pattern.replace(/\*/g, '.*');
+
+	var re = new RegExp(pattern, "i");  // Removed global flag to avoid lastIndex issues
+	var matches = [];
+
+	for (var i=0; i<images.length; i++) {
+		if (re.test(images[i])){
+			matches.push(images[i]);
+		}
+	}
+
+	if (matches.length === 0) {
+		console.warn('No images found matching pattern:', s, '(regex:', pattern, ')');
+		console.warn('Available images:', images.length > 0 ? images.slice(0, 5).join(', ') + '...' : 'none');
+	}
+
+	return matches;
 }
 
 /**
@@ -396,35 +431,158 @@ function process_page(sdata) {
 
 		// Images
 		if (parts[0]=='i' && parts.length == 2) {
+			// Check for wildcard pattern
+			if (parts[1].indexOf('*') !== -1) {
+				// Wildcard pattern - create a gallery with all matching images
+				var matchedImages = imageMatchMultiple(parts[1]);
+				if (matchedImages.length === 0) {
+					return "<p class=\"text-danger\">No images found matching pattern: " + parts[1] + "</p>";
+				}
+
+				// Default: 3 images per row (col-md-4 in Bootstrap's 12-column grid)
+				var per_row = 3;
+				var colClass = "col-md-4";
+
+				// Build the gallery using Bootstrap grid
+				var gallery = "<div class=\"row image-gallery\" "+attributes_string+">";
+				for (var ii=0; ii < matchedImages.length; ii++) {
+					// Extract filename for alt text
+					var imgAlt = matchedImages[ii].split('/').pop().replace(/\.[^/.]+$/, '');
+					gallery += "<div class=\""+colClass+" mb-3\">" +
+								"<img src=\""+ matchedImages[ii] +"\" alt=\""+ imgAlt  +"\" class=\"img-fluid\" onclick=\"openLightbox('"+ matchedImages[ii] +"')\">" +
+								"</div>";
+				}
+				gallery += "</div>";
+
+				return gallery;
+			}
 			return "<img "+attributes_string+" src=\"" + imageMatch(parts[1]) + "\" alt=\"" + parts[1] + "\">";
 		}
 		if (parts[0]=='i' && parts.length == 3) {
+			// Check for wildcard pattern
+			if (parts[1].indexOf('*') !== -1) {
+				// Wildcard pattern - create a gallery with all matching images
+				var matchedImages = imageMatchMultiple(parts[1]);
+				if (matchedImages.length === 0) {
+					return "<p class=\"text-danger\">No images found matching pattern: " + parts[1] + "</p>";
+				}
+
+				// Second parameter could be alt text OR per_row number
+				var per_row = 3;
+				var colClass = "col-md-4";
+				var useCustomAlt = true;
+
+				// Check if parts[2] is a number (per_row) or text (alt)
+				if (!isNaN(parts[2]) && parts[2].trim() !== '') {
+					per_row = parseInt(parts[2]);
+					useCustomAlt = false;
+					// Calculate Bootstrap column class based on per_row
+					// Bootstrap uses 12-column grid, so col size = 12 / per_row
+					var colSize = Math.floor(12 / per_row);
+					colClass = "col-md-" + colSize;
+				}
+
+				// Build the gallery using Bootstrap grid
+				var gallery = "<div class=\"row image-gallery\" "+attributes_string+">";
+				for (var ii=0; ii < matchedImages.length; ii++) {
+					// Use custom alt text if provided and not a number, otherwise use filename
+					var imgAlt;
+					if (useCustomAlt) {
+						imgAlt = parts[2];
+					} else {
+						imgAlt = matchedImages[ii].split('/').pop().replace(/\.[^/.]+$/, '');
+					}
+					gallery += "<div class=\""+colClass+" mb-3\">" +
+								"<img src=\""+ matchedImages[ii] +"\" alt=\""+ imgAlt  +"\" class=\"img-fluid\" onclick=\"openLightbox('"+ matchedImages[ii] +"')\">" +
+								"</div>";
+				}
+				gallery += "</div>";
+
+				return gallery;
+			}
+			return "<img "+attributes_string+" src=\"" + imageMatch(parts[1]) + "\" alt=\"" + parts[2] + "\">";
+		}
+		if (parts[0]=='i' && parts.length == 4) {
+			// Check for wildcard pattern
+			if (parts[1].indexOf('*') !== -1) {
+				// Wildcard pattern - create a gallery with all matching images
+				// {{i | pattern | alt_text | per_row}}
+				var matchedImages = imageMatchMultiple(parts[1]);
+				if (matchedImages.length === 0) {
+					return "<p class=\"text-danger\">No images found matching pattern: " + parts[1] + "</p>";
+				}
+
+				var per_row = 3;
+				var colClass = "col-md-4";
+
+				// Fourth parameter is per_row
+				if (!isNaN(parts[3]) && parts[3].trim() !== '') {
+					per_row = parseInt(parts[3]);
+					var colSize = Math.floor(12 / per_row);
+					colClass = "col-md-" + colSize;
+				}
+
+				// Build the gallery using Bootstrap grid
+				var gallery = "<div class=\"row image-gallery\" "+attributes_string+">";
+				for (var ii=0; ii < matchedImages.length; ii++) {
+					gallery += "<div class=\""+colClass+" mb-3\">" +
+								"<img src=\""+ matchedImages[ii] +"\" alt=\""+ parts[2]  +"\" class=\"img-fluid\" onclick=\"openLightbox('"+ matchedImages[ii] +"')\">" +
+								"</div>";
+				}
+				gallery += "</div>";
+
+				return gallery;
+			}
 			return "<img "+attributes_string+" src=\"" + imageMatch(parts[1]) + "\" alt=\"" + parts[2] + "\">";
 		}
 
 		// Carousel {{ carousel:speed | image1:alt1:caption1 | image2:alt2:caption2 | image3:alt3:caption3 }}
-		if (parts[0].includes('carousel') && parts.length > 2) {
+		if (parts[0].includes('carousel') && parts.length >= 2) {
 			var idn = Math.floor(Math.random() * 9999999999);
 			var carousel_images = parts.slice(1);
 			var carousel_speed = 5000;
 			if (parts[0].split(':').length == 2) {carousel_speed = parseInt(parts[0].split(':')[1])}
 
+			// Expand any wildcard patterns into individual images
+			var expanded_images = [];
+			for (var ii=0; ii < carousel_images.length; ii++) {
+				var image_parts = carousel_images[ii].split(':');
+				var slide_image = image_parts.length > 0 ? image_parts[0] : "";
+				var slide_alt = image_parts.length > 1 ? image_parts[1] : "";
+				var slide_caption = image_parts.length > 2 ? image_parts[2] : "";
+
+				// Check if this is a wildcard pattern
+				if (slide_image.indexOf('*') !== -1) {
+					var matchedImages = imageMatchMultiple(slide_image);
+					// Add each matched image with the same alt and caption
+					for (var jj=0; jj < matchedImages.length; jj++) {
+						// If no alt provided, use filename
+						var img_alt = slide_alt || matchedImages[jj].split('/').pop().replace(/\.[^/.]+$/, '');
+						expanded_images.push({
+							image: matchedImages[jj],
+							alt: img_alt,
+							caption: slide_caption
+						});
+					}
+				} else {
+					// Regular image (not a wildcard)
+					expanded_images.push({
+						image: imageMatch(slide_image),
+						alt: slide_alt,
+						caption: slide_caption
+					});
+				}
+			}
+
 			// Build the repeating parts of the carousel
 			var carousel_indicators = "";
 			var slides = "";
-			for (var ii=0; ii < carousel_images.length; ii++) {
+			for (var ii=0; ii < expanded_images.length; ii++) {
 				carousel_indicators += "<button type=\"button\" data-bs-target=\"#carousel_"+idn+"\" data-bs-slide-to=\""+ii+"\" class=\""+ (ii==0 ? 'active' : '') +"\" aria-current=\""+(ii==0 ? 'true' : 'false')+"\" aria-label=\"Slide "+(ii+1)+"\"></button>";
 
-				var image_parts = carousel_images[ii].split(':');
-				var slide_image;
-				var slide_caption;
-				var slide_alt;
-				(image_parts.length > 0) ? slide_image = image_parts[0] : slide_image = "";
-				(image_parts.length > 1) ? slide_alt = image_parts[1] : slide_alt = "";
-				(image_parts.length > 2) ? slide_caption = image_parts[2] : slide_caption = "";
 				slides += 	"<div class=\"carousel-item "+ (ii==0 ? 'active' : '') +"\">" +
-							"<img src=\""+ imageMatch(slide_image) +"\" alt=\""+ slide_alt  +"\" class=\"d-block w-100\">" +
-							"<div class=\"carousel-caption\">"+slide_caption+"</div></div>";
+							"<img src=\""+ expanded_images[ii].image +"\" alt=\""+ expanded_images[ii].alt  +"\" class=\"d-block w-100\">" +
+							"<div class=\"carousel-caption\">"+expanded_images[ii].caption+"</div></div>";
 			}
 
 			// Wait a second then start the carousel - use IIFE to capture variables
@@ -1140,6 +1298,15 @@ $( document ).ready(function() {
 	load_images('./images');
 	load_pages('./pages');
 
+	// Set a fallback timeout in case theme never signals ready
+	// This prevents the site from being stuck if a theme doesn't call themeReady()
+	setTimeout(function() {
+		if (!theme_ready) {
+			console.warn('Theme did not signal ready within 2 seconds, proceeding anyway');
+			themeReady();
+		}
+	}, 2000);
+
     // Navigate to home page when clicking the site logo/brand
     $('.navbar-brand').click(function(e){
     	e.preventDefault();
@@ -1433,10 +1600,79 @@ function loadBlogExcerpt(url, entryId) {
 	});
 }
 
+/**
+ * Open image in lightbox overlay
+ * @param {string} imageSrc - Image source URL
+ */
+function openLightbox(imageSrc) {
+	// Create lightbox if it doesn't exist
+	var lightbox = document.getElementById('image-lightbox');
+	if (!lightbox) {
+		lightbox = document.createElement('div');
+		lightbox.id = 'image-lightbox';
+		lightbox.className = 'image-lightbox';
+		lightbox.onclick = closeLightbox;
+
+		var img = document.createElement('img');
+		img.id = 'lightbox-img';
+		lightbox.appendChild(img);
+
+		document.body.appendChild(lightbox);
+	}
+
+	// Set image source and show lightbox
+	var img = document.getElementById('lightbox-img');
+	img.src = imageSrc;
+	lightbox.style.display = 'block';
+
+	// Trigger animation after a brief delay to allow display change to take effect
+	setTimeout(function() {
+		lightbox.classList.add('active');
+	}, 10);
+
+	// Prevent body scrolling when lightbox is open
+	document.body.style.overflow = 'hidden';
+}
+
+/**
+ * Close the lightbox overlay
+ */
+function closeLightbox() {
+	var lightbox = document.getElementById('image-lightbox');
+	if (lightbox) {
+		// Remove active class to trigger fade-out animation
+		lightbox.classList.remove('active');
+
+		// Hide lightbox after animation completes (300ms)
+		setTimeout(function() {
+			lightbox.style.display = 'none';
+		}, 300);
+	}
+
+	// Restore body scrolling
+	document.body.style.overflow = 'auto';
+}
+
+/**
+ * Signal that theme initialization is complete
+ * Themes should call this function (via window.themeReady()) when they finish loading
+ * If not called within 2 seconds, initialization proceeds anyway to prevent blocking
+ */
+function themeReady() {
+	if (!theme_ready) {
+		theme_ready = true;
+		console.log('Theme initialized and ready');
+		checkAndLoadInitialPage();
+	}
+}
+
 // Expose functions to global scope so onclick handlers in generated HTML can call them
 window.loadPage = loadPage;
 window.toggleBlogEntry = toggleBlogEntry;
 window.initializeBlogExcerpts = initializeBlogExcerpts;
 window.updateBlogPage = updateBlogPage;
+window.openLightbox = openLightbox;
+window.closeLightbox = closeLightbox;
+window.themeReady = themeReady;
 
 })();

@@ -79,7 +79,7 @@ Regular HTML anchor tags (`<a href="...">`) cause full page reloads. The `{{a}}`
 Inserts an image from the `images/` directory. Uses partial matching, so you only need enough of the filename to uniquely identify it.
 
 **Parameters:**
-- `image` (required) - Image filename or partial match (e.g., "logo" matches "./images/branding/logo.png")
+- `image` (required) - Image filename, partial match, or wildcard pattern (e.g., "logo", "vacation/*", "photos/2024-*")
 - `alt_text` (optional) - Alt attribute for accessibility
 
 **Examples:**
@@ -103,6 +103,34 @@ Inserts an image from the `images/` directory. Uses partial matching, so you onl
 {{i | photo | class=>medium left}}
 ```
 
+**Wildcard Support:**
+
+The image helper supports wildcards (`*`) to match multiple images. When a wildcard pattern is used, it automatically creates a responsive Bootstrap grid gallery.
+
+**Syntax:** `{{i | pattern | alt_text_or_per_row | per_row}}`
+
+**Parameters:**
+- `pattern` (required) - Image pattern with wildcard (e.g., `vacation/*`)
+- `alt_text_or_per_row` (optional) - Either alt text (string) OR images per row (number). Default: 3 per row
+- `per_row` (optional) - Number of images per row (1-12). Only used if second param is alt text
+
+**Wildcard examples:**
+```
+{{i | vacation/*}}                    ← Gallery with 3 images per row (default)
+{{i | vacation/* | 4}}                ← Gallery with 4 images per row
+{{i | vacation/* | Vacation Photos}}  ← Gallery with custom alt text, 3 per row
+{{i | vacation/* | Vacation Photos | 5}} ← Gallery with alt text and 5 per row
+```
+
+**How wildcards work:**
+- `*` matches any characters in the path
+- `vacation/*` matches all images in the `vacation/` directory
+- `vacation/test*` matches images starting with "test" in `vacation/` directory
+- Creates a responsive Bootstrap grid gallery using `row` and `col-md-*` classes
+- Default: 3 images per row (adjust with numeric parameter)
+- Images use `img-fluid` class for responsive sizing
+- If no images match the pattern, an error message is displayed
+
 ### Carousel (Slideshow)
 
 **Syntax:** `{{carousel:interval | image1:alt1:caption1 | image2:alt2:caption2 | ...}}`
@@ -112,7 +140,7 @@ Creates a Bootstrap 5 carousel slideshow with multiple images. Supports unlimite
 **Parameters:**
 - `interval` (optional) - Milliseconds between slides (e.g., `5000` = 5 seconds). If omitted, uses Bootstrap default (5000ms)
 - Each slide: `image:alt:caption` separated by `|`
-  - `image` (required) - Image filename or partial match
+  - `image` (required) - Image filename, partial match, or wildcard pattern
   - `alt` (optional) - Alt text for accessibility
   - `caption` (optional) - Text overlay (can include HTML like `<h3>Title</h3>`)
 
@@ -137,6 +165,24 @@ Creates a Bootstrap 5 carousel slideshow with multiple images. Supports unlimite
 ```
 {{carousel:5000 | img1 | img2 | img3 | class=>carousel-fade}}
 ```
+
+**Wildcard Support:**
+
+Individual slide parameters can use wildcards (`*`) to match multiple images. Each matched image becomes a separate slide.
+
+**Wildcard examples:**
+```
+{{carousel:5000 | vacation/*}}                               ← All images in vacation/ folder
+{{carousel:3000 | vacation/*:Vacation Photo}}                ← All with same alt text
+{{carousel:4000 | photos/2024-*::Trip to Europe}}            ← All with same caption
+{{carousel:5000 | vacation/* | photos/city* | nature.jpg}}   ← Mix wildcards and specific images
+```
+
+**How wildcards work:**
+- Each wildcard pattern expands into multiple slides
+- If you specify `alt` or `caption`, they apply to all images matched by that pattern
+- Wildcards can be combined with regular image specifications in the same carousel
+- Example: `vacation/*:My Vacation` creates one slide per image in `vacation/`, all with alt text "My Vacation"
 
 ### Insert
 

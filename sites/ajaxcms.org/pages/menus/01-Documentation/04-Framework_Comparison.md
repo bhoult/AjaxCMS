@@ -153,7 +153,7 @@ One of AjaxCMS's biggest advantages is **minimal server-side processing**. This 
 | **Concurrent Users** | ~10,000+ | ~50-100 |
 | **Requests/Second** | ~1,000-2,000 | ~10-50 |
 | **Bottleneck** | Network bandwidth | CPU + Memory |
-| **Server Type** | Static file server (Nginx) | Node.js/Application server |
+| **Server Type** | Node.js/Express (or Nginx) | Node.js/Application server |
 | **Memory per Request** | <1 KB | 5-20 MB |
 | **CPU per Request** | <0.1ms | 50-200ms |
 
@@ -192,7 +192,7 @@ One of AjaxCMS's biggest advantages is **minimal server-side processing**. This 
 
 | Solution | Server Type | Monthly Cost | Notes |
 |----------|-------------|--------------|-------|
-| **AjaxCMS** | $5 VPS + CDN | ~$10-15 | Nginx serving static files + free Cloudflare CDN |
+| **AjaxCMS** | $5 VPS + CDN | ~$10-15 | Node.js/Express or Nginx + free Cloudflare CDN |
 | **Vue/React (CSR)** | $5 VPS + CDN | ~$10-15 | Same as AjaxCMS |
 | **Nuxt/Next.js (SSR)** | $40-80 VPS | ~$40-80 | Need more powerful server, caching layer |
 | **WordPress** | $20-40 VPS + caching | ~$30-50 | Managed WordPress hosting or VPS with optimizations |
@@ -209,20 +209,23 @@ One of AjaxCMS's biggest advantages is **minimal server-side processing**. This 
 #### Why AjaxCMS Scales Better
 
 **1. Static File Serving is Extremely Efficient**
-- Nginx can serve 10,000+ requests/second on modest hardware
-- No CPU cycles wasted on rendering
+- Express.js static file middleware or Nginx can serve 10,000+ requests/second on modest hardware
+- No CPU cycles wasted on server-side rendering
 - Operating system file cache keeps hot files in RAM
+- AjaxCMS includes Node.js/Express server for development; production can use Nginx as reverse proxy
 
-**2. No Server-Side Processing**
-- No Markdown parsing on server
-- No template rendering on server
+**2. No Server-Side Processing (Except SEO Endpoints)**
+- No Markdown parsing on server for main content delivery
+- No template rendering on server (client-side only)
 - No database queries
 - No session management
+- SEO static HTML generation only runs when crawlers request `/static/*` URLs
 
 **3. Client Does the Heavy Lifting**
-- User's browser handles Markdown conversion
-- User's CPU renders animations
+- User's browser handles Markdown conversion with marked.js
+- User's CPU renders canvas animations
 - Processing distributed across all users
+- Server just delivers files and JSON directory listings
 
 **4. CDN-Friendly**
 - All content is static and cacheable
@@ -231,9 +234,10 @@ One of AjaxCMS's biggest advantages is **minimal server-side processing**. This 
 - Global distribution is simple and cheap
 
 **5. Minimal Memory Footprint**
-- Nginx uses ~10MB RAM baseline
+- Node.js/Express baseline ~30-50MB RAM (vs 100-500MB for SSR apps)
+- Nginx reverse proxy adds ~10MB if used
 - No growing memory per connection
-- No memory leaks from application code
+- No complex application state to manage
 
 #### When Server Load Matters
 

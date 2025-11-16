@@ -41,8 +41,25 @@
 		<!-- Load theme -->
 		<script>
 			theme = default_background;
-			$.getScript('themes/'+default_background+'/background.js');
-			$('<link>').appendTo('head').attr({type : 'text/css', rel : 'stylesheet'}).attr('href', 'themes/'+default_background+'/theme.css');
+			// Load theme CSS
+			$('<link>').appendTo('head').attr({type : 'text/css', rel : 'stylesheet'}).attr('href', 'themes/'+ default_background+'/theme.css?v=' + Date.now());
+			// Load theme background.js and signal when ready
+			$.getScript('themes/'+ default_background+'/background.js')
+				.done(function() {
+					// Theme script loaded, signal ready after a brief delay for initialization
+					setTimeout(function() {
+						if (window.themeReady) {
+							window.themeReady();
+						}
+					}, 100);
+				})
+				.fail(function(jqxhr, settings, exception) {
+					console.error('Error loading theme:', exception);
+					// Still signal ready so the site doesn't hang
+					if (window.themeReady) {
+						window.themeReady();
+					}
+				});
 		</script>
 		
 		<style>
@@ -235,6 +252,55 @@
 			@media (min-width: 992px) {  }
 			@media (min-width: 1200px) {  }
 			
+
+		/* Image gallery styling for wildcard galleries */
+		.image-gallery img {
+			width: 100%;
+			height: auto;
+			border-radius: 4px;
+			cursor: pointer;
+			transition: transform 0.2s;
+		}
+
+		.image-gallery img:hover {
+			transform: scale(1.05);
+		}
+
+		/* Lightbox for expanded images */
+		.image-lightbox {
+			display: none;
+			position: fixed;
+			z-index: 9999;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background-color: rgba(0, 0, 0, 0);
+			cursor: pointer;
+			transition: background-color 0.3s ease;
+		}
+
+		.image-lightbox.active {
+			background-color: rgba(0, 0, 0, 0.9);
+		}
+
+		.image-lightbox img {
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%) scale(0.8);
+			width: 100%;
+			height: auto;
+			max-height: 100vh;
+			object-fit: contain;
+			opacity: 0;
+			transition: all 0.3s ease;
+		}
+
+		.image-lightbox.active img {
+			transform: translate(-50%, -50%) scale(1);
+			opacity: 1;
+		}
 		</style>
 	</head>
 	
