@@ -500,6 +500,14 @@ app.get('*/static/*', async (req, res) => {
   }
 });
 
+// Redirect specific page to sites index
+app.get('/ajaxcms.org/', (req, res, next) => {
+  if (req.query.page === 'pages/menus/03-Themes.md') {
+    return res.redirect('/sites');
+  }
+  next();
+});
+
 // Serve sites index at /sites regardless of domain
 app.get('/sites', (req, res) => {
   sendFileWithCache(path.join(__dirname, 'sites-index.html'), req, res, () => {
