@@ -723,8 +723,8 @@ if (foregroundCanvas) {
         }
     });
 
-    // Track mouse for cursor change
-    foregroundCanvas.addEventListener('mousemove', (e) => {
+    // Track mouse for cursor change on document (since canvas has pointer-events:none by default)
+    document.addEventListener('mousemove', (e) => {
         const mouseX = e.clientX;
         const mouseY = e.clientY;
 
