@@ -20,6 +20,7 @@ const particles = [];
 const stars = [];
 const ufos = [];
 const ufoParticles = []; // Particles from UFO explosions (draw on foreground)
+const ufoParts = []; // Physical UFO parts that fly apart
 const gravity = 0.05;
 const fireworkChance = 0.04;
 let lastUfoSpawn = 0;
@@ -472,8 +473,55 @@ class UFO {
         const wobbleY = Math.sin(this.wobble) * 3;
         const y = this.y + wobbleY;
 
-        // Create colorful explosion particles
-        const particleCount = 100;
+        // Create UFO parts that fly apart
+        // Dome
+        ufoParts.push(new UFOPart(
+            this.x,
+            y - this.size * 0.2,
+            (Math.random() - 0.5) * 8,
+            -Math.random() * 8 - 5,
+            'dome',
+            this.size,
+            null
+        ));
+
+        // Body (saucer) - break into 3 pieces
+        for (let i = 0; i < 3; i++) {
+            const angle = (i / 3) * Math.PI * 2;
+            ufoParts.push(new UFOPart(
+                this.x + Math.cos(angle) * this.size * 0.3,
+                y,
+                Math.cos(angle) * 6 + (Math.random() - 0.5) * 3,
+                Math.sin(angle) * 3 - Math.random() * 5,
+                'body',
+                this.size * 0.6,
+                null
+            ));
+        }
+
+        // Lights
+        const lightColors = [
+            'rgba(255, 100, 100, 0.9)',
+            'rgba(100, 255, 100, 0.9)',
+            'rgba(100, 100, 255, 0.9)',
+            'rgba(255, 255, 100, 0.9)',
+            'rgba(255, 100, 255, 0.9)'
+        ];
+        for (let i = 0; i < 5; i++) {
+            const angle = (i / 5) * Math.PI * 2;
+            ufoParts.push(new UFOPart(
+                this.x + Math.cos(angle) * this.size * 0.8,
+                y + Math.sin(angle) * this.size * 0.24,
+                Math.cos(angle) * 10 + (Math.random() - 0.5) * 4,
+                Math.sin(angle) * 5 - Math.random() * 3,
+                'light',
+                4,
+                lightColors[i]
+            ));
+        }
+
+        // Create some explosion particles for effect
+        const particleCount = 50;
         const colorScheme = [
             [100, 200, 255], // Cyan
             [255, 100, 100], // Red
@@ -484,7 +532,7 @@ class UFO {
 
         for (let i = 0; i < particleCount; i++) {
             const angle = (Math.PI * 2 * i) / particleCount;
-            const speed = Math.random() * 6 + 3;
+            const speed = Math.random() * 8 + 4;
             const vx = Math.cos(angle) * speed;
             const vy = Math.sin(angle) * speed;
             ufoParticles.push(new Particle(this.x, y, vx, vy, colorScheme, false, false, false, false));
@@ -577,6 +625,88 @@ class UFO {
     }
 }
 
+// UFO Part - individual pieces that fly apart when UFO explodes
+class UFOPart {
+    constructor(x, y, vx, vy, type, size, color) {
+        this.x = x;
+        this.y = y;
+        this.vx = vx;
+        this.vy = vy;
+        this.type = type; // 'dome', 'body', 'light'
+        this.size = size;
+        this.color = color;
+        this.rotation = Math.random() * Math.PI * 2;
+        this.rotationSpeed = (Math.random() - 0.5) * 0.3;
+        this.alpha = 1;
+    }
+
+    update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.vy += gravity; // Apply gravity
+        this.rotation += this.rotationSpeed;
+
+        // Fade out as it falls
+        if (this.y > height * 0.7) {
+            this.alpha -= 0.02;
+        }
+    }
+
+    draw() {
+        if (!fgCtx) return;
+
+        fgCtx.save();
+        fgCtx.translate(this.x, this.y);
+        fgCtx.rotate(this.rotation);
+        fgCtx.globalAlpha = this.alpha;
+
+        if (this.type === 'dome') {
+            // Draw dome piece
+            fgCtx.fillStyle = 'rgba(150, 160, 170, 0.8)';
+            fgCtx.beginPath();
+            fgCtx.ellipse(0, 0, this.size * 0.5, this.size * 0.35, 0, 0, Math.PI * 2);
+            fgCtx.fill();
+
+            // Dome highlight
+            fgCtx.fillStyle = 'rgba(200, 220, 240, 0.4)';
+            fgCtx.beginPath();
+            fgCtx.ellipse(-this.size * 0.15, -this.size * 0.05, this.size * 0.2, this.size * 0.15, 0, 0, Math.PI * 2);
+            fgCtx.fill();
+        } else if (this.type === 'body') {
+            // Draw body piece
+            fgCtx.fillStyle = 'rgba(120, 130, 140, 0.9)';
+            fgCtx.beginPath();
+            fgCtx.ellipse(0, 0, this.size, this.size * 0.3, 0, 0, Math.PI * 2);
+            fgCtx.fill();
+
+            // Body edge
+            fgCtx.strokeStyle = 'rgba(180, 190, 200, 0.6)';
+            fgCtx.lineWidth = 2;
+            fgCtx.beginPath();
+            fgCtx.ellipse(0, 0, this.size, this.size * 0.3, 0, 0, Math.PI);
+            fgCtx.stroke();
+        } else if (this.type === 'light') {
+            // Draw light piece
+            fgCtx.fillStyle = this.color;
+            fgCtx.beginPath();
+            fgCtx.arc(0, 0, this.size, 0, Math.PI * 2);
+            fgCtx.fill();
+
+            // Light glow
+            fgCtx.fillStyle = this.color.replace(/[\d.]+\)/, '0.3)');
+            fgCtx.beginPath();
+            fgCtx.arc(0, 0, this.size * 2, 0, Math.PI * 2);
+            fgCtx.fill();
+        }
+
+        fgCtx.restore();
+    }
+
+    isDead() {
+        return this.y > height + 100 || this.alpha <= 0;
+    }
+}
+
 let time = 0;
 function animate() {
     time += 1;
@@ -633,6 +763,20 @@ function animate() {
         } else {
             particle.draw(fgCtx);
             k++;
+        }
+    }
+
+    // Update and draw UFO parts on foreground
+    let m = 0;
+    while (m < ufoParts.length) {
+        const part = ufoParts[m];
+        part.update();
+        if (part.isDead()) {
+            ufoParts[m] = ufoParts[ufoParts.length - 1];
+            ufoParts.pop();
+        } else {
+            part.draw();
+            m++;
         }
     }
 
