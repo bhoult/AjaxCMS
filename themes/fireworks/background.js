@@ -431,12 +431,13 @@ class UFO {
     constructor() {
         // UFOs fly from left to right or right to left
         this.direction = Math.random() > 0.5 ? 1 : -1;
-        this.x = this.direction > 0 ? -100 : width + 100;
+        this.x = this.direction > 0 ? -200 : width + 200;
         this.y = Math.random() * height * 0.3 + 50; // Upper third of screen
         this.speed = 2 + Math.random() * 2;
-        this.size = 20 + Math.random() * 15;
+        this.size = (20 + Math.random() * 15) * 2; // Double the size (40-70px)
         this.wobble = Math.random() * Math.PI * 2; // For wobbling motion
         this.lightPhase = Math.random() * Math.PI * 2; // For blinking lights
+        this.exploded = false;
     }
 
     update(frame) {
@@ -446,10 +447,44 @@ class UFO {
     }
 
     isAlive() {
+        if (this.exploded) return false;
         if (this.direction > 0) {
-            return this.x < width + 100;
+            return this.x < width + 200;
         } else {
-            return this.x > -100;
+            return this.x > -200;
+        }
+    }
+
+    containsPoint(px, py) {
+        const wobbleY = Math.sin(this.wobble) * 3;
+        const y = this.y + wobbleY;
+        // Simple circular hit detection using the UFO's size
+        const dx = px - this.x;
+        const dy = py - y;
+        return Math.sqrt(dx * dx + dy * dy) < this.size * 1.2; // Slightly larger hit area
+    }
+
+    explode() {
+        this.exploded = true;
+        const wobbleY = Math.sin(this.wobble) * 3;
+        const y = this.y + wobbleY;
+
+        // Create colorful explosion particles
+        const particleCount = 100;
+        const colorScheme = [
+            [100, 200, 255], // Cyan
+            [255, 100, 100], // Red
+            [100, 255, 100], // Green
+            [255, 255, 100], // Yellow
+            [200, 200, 200]  // White/gray
+        ];
+
+        for (let i = 0; i < particleCount; i++) {
+            const angle = (Math.PI * 2 * i) / particleCount;
+            const speed = Math.random() * 6 + 3;
+            const vx = Math.cos(angle) * speed;
+            const vy = Math.sin(angle) * speed;
+            particles.push(new Particle(this.x, y, vx, vy, colorScheme, false, false, false, false));
         }
     }
 
@@ -646,6 +681,48 @@ ctx.fillRect(0, 0, width, height);
 
 // Create stars
 createStars();
+
+// UFO click handling
+if (foregroundCanvas) {
+    let mouseX = 0;
+    let mouseY = 0;
+
+    // Track mouse position
+    foregroundCanvas.addEventListener('mousemove', (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+
+        // Check if mouse is over any UFO
+        let overUfo = false;
+        for (let i = 0; i < ufos.length; i++) {
+            if (!ufos[i].exploded && ufos[i].containsPoint(mouseX, mouseY)) {
+                overUfo = true;
+                break;
+            }
+        }
+
+        // Toggle pointer events based on UFO hover
+        if (overUfo) {
+            foregroundCanvas.classList.add('ufo-clickable');
+        } else {
+            foregroundCanvas.classList.remove('ufo-clickable');
+        }
+    });
+
+    // Click handler
+    foregroundCanvas.addEventListener('click', (e) => {
+        const clickX = e.clientX;
+        const clickY = e.clientY;
+
+        // Check if click hit any UFO
+        for (let i = 0; i < ufos.length; i++) {
+            if (!ufos[i].exploded && ufos[i].containsPoint(clickX, clickY)) {
+                ufos[i].explode();
+                break; // Only explode one UFO per click
+            }
+        }
+    });
+}
 
 // Start animation
 animate();
