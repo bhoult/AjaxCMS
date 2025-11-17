@@ -38,11 +38,10 @@ h1, h2, h3, h4, h5, h6 {
     -webkit-text-fill-color: transparent;
     background-clip: text;
     font-size: 3rem;
-    margin: -10px auto 2rem auto;
+    margin: -10px 0 2rem 0;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    padding: 2rem 3rem 1rem 3rem;
-    max-width: 900px;
+    padding: 2rem 1rem 1rem 1rem;
 }
 
 /* Navbar styling with arctic gradient */
@@ -139,11 +138,9 @@ h1, h2, h3, h4, h5, h6 {
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%2300d4ff' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
 }
 
-/* Content area with centered max-width container */
+/* Content area alignment with bevel */
 #main > div {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 0 3rem 2rem 3rem !important;
+    padding: 0 1rem 2rem 1rem !important;
 }
 
 /* Content styling */
