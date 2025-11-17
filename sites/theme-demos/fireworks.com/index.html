@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+		<meta charset="UTF-8">
+		<title>AjaxCMS</title>
+		
+		<!-- Configuration -->
+		<script>
+			var default_background = "fireworks";
+			var ajaxcms_google_analytics = 'UA-84079705-1';
+			var ajaxcms_splash_time = 3000;
+		</script>
+		
+		<!-- Jquery -->
+		<script src="node_modules/jquery/dist/jquery.min.js"></script>
+		<script src="node_modules/jquery-ui-dist/jquery-ui.min.js"></script>
+		<link href="node_modules/jquery-ui-dist/jquery-ui.min.css" rel="stylesheet">  
+		
+		<!-- Bootstrap -->
+		<link href="node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+		<script src="node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+		
+		<!-- Markdown parser -->
+		<script src="node_modules/marked/lib/marked.umd.js"></script>
+		
+		<!-- Polyfills -->
+		
+		<!-- Background Animation -->
+		<script src="js/victor.js"></script>
+		<script src="js/canvasstuff.js"></script>
+		<script src="js/jquery-mobile-swipe.js"></script>
+		<script src="node_modules/segment-js/dist/segment.min.js"></script>
+		
+		<!-- CMS Javascript -->
+		<script src="js/ajaxcms.js"></script>
+		
+		<!-- fonts.google.com - Fireworks theme fonts -->
+		<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Righteous&display=swap" rel="stylesheet">
+
+		<!-- Load theme -->
+		<script>
+			theme = default_background;
+			// Load theme CSS
+			$('<link>').appendTo('head').attr({type : 'text/css', rel : 'stylesheet'}).attr('href', 'themes/'+ default_background+'/theme.css?v=' + Date.now());
+			// Load theme background.js and signal when ready
+			$.getScript('themes/'+ default_background+'/background.js')
+				.done(function() {
+					// Theme script loaded, signal ready after a brief delay for initialization
+					setTimeout(function() {
+						if (window.themeReady) {
+							window.themeReady();
+						}
+					}, 100);
+				})
+				.fail(function(jqxhr, settings, exception) {
+					console.error('Error loading theme:', exception);
+					// Still signal ready so the site doesn't hang
+					if (window.themeReady) {
+						window.themeReady();
+					}
+				});
+		</script>
+		
+		<style>
+			body {
+				overflow-x: hidden;
+				padding-bottom: 100px;
+			}
+			
+			#background {
+			  position:fixed;
+			  z-index:-1;
+			  width:100%;
+			  height:100%;
+			  background: linear-gradient(#FFF, #225);
+			}
+			#background-div {
+			  position:fixed;
+			  z-index:0;
+			  width:100%;
+			  height:100%;
+			  overflow:hidden;
+			}
+			
+		nav.navbar {
+			margin-top:0px;
+			margin-bottom:0px;
+			z-index:1;
+			border-radius:0px 0px 10px 10px;
+			background-color: #f8f8f8;
+			border: 1px solid #e7e7e7;
+		}
+
+		/* Make navbar links white text */
+		.navbar-nav .nav-link {
+			color: #ffffff !important;
+			padding: 15px 1rem;
+			line-height: 20px;
+			display: flex;
+			align-items: center;
+			height: 50px;
+		}
+
+		.navbar-nav .nav-link:hover,
+		.navbar-nav .nav-link:focus {
+			color: #ffffff !important;
+			background-color: rgba(0, 0, 0, 0.1);
+		}
+
+		.navbar-nav .nav-item.active .nav-link {
+			color: #ffffff !important;
+			font-weight: bold;
+		}
+
+		/* Dropdown toggle styling */
+		.navbar-nav .dropdown-toggle {
+			color: #ffffff !important;
+		}
+
+		/* Bootstrap 5 navbar spacing fixes */
+		.navbar-nav .nav-item {
+			margin: 0;
+		}
+
+		.navbar-nav .dropdown-menu {
+			position: absolute;
+		}
+
+		/* Prevent menu items from shifting when dropdown opens */
+		.navbar-nav .dropdown {
+			position: relative;
+		}
+		/* Carousel indicator styling - consistent for all states */
+		.carousel-indicators button {
+			width: 30px;
+			height: 3px;
+			background-color: rgba(255, 255, 255, 0.5);
+			border: none;
+			margin: 0 3px;
+		}
+
+		.carousel-indicators button.active {
+			background-color: rgba(255, 255, 255, 1);
+			width: 30px;
+			height: 3px;
+		}
+
+
+			
+			.container {
+				margin-top:0px !important;
+				margin-bottom:0px !important;
+				margin-left:auto !important;
+				margin-right:auto !important;
+				padding:0px !important;
+				padding-bottom:100px !important;
+				border-radius:4px 4px 0px 0px;
+				color:black;
+			}
+			
+			#a, #b {
+				position:absolute; 
+				top: 0px;
+				width:100%;
+				z-index:0;
+				background-color:rgba(200,200,255,0.9);
+				border-radius:0px 0px 8px 8px;
+				color:black;
+				margin-bottom:50px;
+				padding-bottom:100px;
+			}
+			
+			#a, #b {
+				width:98%!important;
+				max-width:530px;
+				margin: 0 auto;
+				margin-left: 13px !important;
+			}
+
+			@media (min-width: 768px) {
+				#a, #b {
+					max-width:706px;
+				}
+			}
+			@media (min-width: 992px) {
+				#a, #b {
+					max-width:941px;
+				}
+			}
+			@media (min-width: 1200px) {
+				#a, #b {
+					max-width:1117px;
+				}
+			}
+			@media (min-width: 1400px) {
+				#a, #b {
+					max-width:1294px;
+				}
+			}
+			
+			#main>div {
+				padding: 0px 10px 20px 10px;
+			}
+			
+			#main img {
+				margin:10px;
+			}
+			#main .carousel img {
+				margin:0px;
+			}
+			img.thumb {
+				width:20px;
+			}
+			img.icon {
+				width:70px;
+			}
+			img.small {
+				width:300px;
+			}
+			img.medium {
+				width:600px;
+			}
+			img.large {
+				width:900px;
+			}
+			img.left {
+				float:left;
+			}
+			img.right {
+				float:right;
+			}
+			
+			.carousel {
+				padding:0px;
+			}
+			
+			ul.filelist li {
+				list-style-type:none;
+			}
+			ul.filelist li a.folder:hover {
+				text-decoration:none;
+			}
+			
+			footer {   
+				position:fixed;
+				left:0px;
+				bottom:0px;
+				width:100%;
+				background:white;
+				color:black;
+				text-align:center;
+				padding:5px;
+				font-size:2vw;
+			}
+			footer a {color:blue;}
+			footer a:hover {color:#55F;}
+			.blog .blog_entry {
+				border:1px solid black;
+				border-radius:10px;
+				margin:10px;
+				padding:5px;
+				background-color:rgba(255,255,255,0.8);
+				position:relative;
+				cursor: pointer; 
+			}
+			.blog .blog_entry h1 {
+				margin-top:0px;
+				font-size:150%;
+			}
+			.blog .blog_entry time {
+				position:absolute;
+				top:5px;
+				right:5px;
+			}
+			
+			
+			@media (min-width: 544px) {  }
+			@media (min-width: 768px) { footer {font-size:14px;} }
+			@media (min-width: 992px) {  }
+			@media (min-width: 1200px) {  }
+			
+
+		/* Image gallery styling for wildcard galleries */
+		.image-gallery img {
+			width: 100%;
+			height: auto;
+			border-radius: 4px;
+			cursor: pointer;
+			transition: transform 0.2s;
+		}
+
+		.image-gallery img:hover {
+			transform: scale(1.05);
+		}
+
+		/* Lightbox for expanded images */
+		.image-lightbox {
+			display: none;
+			position: fixed;
+			z-index: 9999;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background-color: rgba(0, 0, 0, 0);
+			cursor: pointer;
+			transition: background-color 0.3s ease;
+		}
+
+		.image-lightbox.active {
+			background-color: rgba(0, 0, 0, 0.9);
+		}
+
+		.image-lightbox img {
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%) scale(0.8);
+			width: 100%;
+			height: auto;
+			max-height: 100vh;
+			object-fit: contain;
+			opacity: 0;
+			transition: all 0.3s ease;
+		}
+
+		.image-lightbox.active img {
+			transform: translate(-50%, -50%) scale(1);
+			opacity: 1;
+		}
+		</style>
+	</head>
+	
+	<body>
+		<canvas id="background"></canvas>
+		<div id="background-div"></div>
+		<div class="container" style="display:none;">
+			<header>
+			</header>
+			
+			<!-- Static navbar -->
+			<nav class="navbar navbar-expand-lg navbar-light bg-light">
+				<div class="container-fluid">
+				    <a class="navbar-brand" href="javascript:void(0);" style="width:200px;"><img src='images/ajaxcms.svg' style="position:relative; top: -20px; z-index:2; width:100%;"></a>
+				    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+				      <span class="navbar-toggler-icon"></span>
+				    </button>
+				  <div class="collapse navbar-collapse" id="navbar">
+				    <ul id='menu' class="navbar-nav me-auto mb-2 mb-lg-0">
+				    	<!-- Pages get inserted here to make menu -->
+				    </ul>
+				  </div><!--/.navbar-collapse -->
+				</div><!--/.container-fluid -->
+			</nav>
+			
+			<main id="main" style="position:relative; width:100%;">
+				<!-- Content gets inserted here, a and b are for making page style transitions. -->
+				<div id='a' style=""></div>
+				<div id='b' style="display:none;"></div>
+			</main>
+			
+			<footer>
+				<div>
+					&#9400; AjaxCMS 2016 All Rights Reserved. Email: <a href="mailto:brandon.hoult@softwyre.com">brandon.hoult@softwyre.com</a> for more information. Powered by AjaxCMS (MIT License) 
+				</div>
+			</footer>
+		</div>
+		
+		<!-- Google Analytics -->
+		<script>
+		  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+		
+		  ga('create', ajaxcms_google_analytics, 'auto');
+		  //ga('send', 'pageview');
+		</script>
+	</body>
+
+</html>
