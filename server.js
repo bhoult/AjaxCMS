@@ -625,6 +625,45 @@ if (require.main === module) {
 
       console.log('Discovered site domains:', siteDomains.length > 0 ? siteDomains.join(', ') : 'none');
 
+      // Update greenlock config file with discovered domains
+      if (siteDomains.length > 0) {
+        const configPath = path.join(__dirname, 'greenlock.d', 'config.json');
+        try {
+          // Read existing config or create new one
+          let config = {
+            defaults: {
+              subscriberEmail: MAINTAINER_EMAIL,
+              agreeToTerms: true
+            },
+            sites: []
+          };
+
+          try {
+            const existingConfig = await fs.readFile(configPath, 'utf-8');
+            config = JSON.parse(existingConfig);
+          } catch (err) {
+            // Config doesn't exist, use defaults
+          }
+
+          // Add discovered domains to config
+          const existingSites = new Set(config.sites.map(s => s.subject));
+          for (const domain of siteDomains) {
+            if (!existingSites.has(domain)) {
+              config.sites.push({
+                subject: domain,
+                altnames: [domain, 'www.' + domain]
+              });
+              console.log(`Added ${domain} to SSL configuration`);
+            }
+          }
+
+          // Write updated config
+          await fs.writeFile(configPath, JSON.stringify(config, null, 2));
+        } catch (err) {
+          console.error('Error updating greenlock config:', err);
+        }
+      }
+
       greenlockExpress
         .init({
           packageRoot: __dirname,
@@ -642,14 +681,6 @@ if (require.main === module) {
           console.log('  - HTTPS: port 443');
           console.log('\nSSL certificates will be automatically provisioned via Let\'s Encrypt');
           console.log('Maintainer email:', MAINTAINER_EMAIL);
-
-          // Note about adding domains
-          if (siteDomains.length > 0) {
-            console.log('\nTo add SSL certificates for your domains, run:');
-            siteDomains.forEach(domain => {
-              console.log(`  npx greenlock add --subject ${domain} --altnames ${domain},www.${domain}`);
-            });
-          }
         });
     })();
   } else {
