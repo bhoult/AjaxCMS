@@ -29,20 +29,51 @@ body {
 h1, h2, h3, h4, h5, h6 {
     font-family: 'Inter', sans-serif;
     font-weight: 700;
+    line-height: 1.3;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    color: var(--network-dark);
+    text-align: left;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-/* Centered header with gradient text */
-#main h2:first-of-type {
-    text-align: center;
-    background: var(--gradient-primary);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    font-size: 3rem;
-    margin: -10px 0 2rem 0;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    padding: 2rem 1rem 1rem 1rem;
+#main h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(to right, var(--network-accent), transparent);
+    padding: 0.5rem 1rem;
+    margin-left: -1rem;
+    margin-right: -1rem;
+}
+
+#main h2 {
+    font-size: 2rem;
+    margin-top: 2.5rem;
+}
+
+.blog_entry h2 {
+    margin-top: 8px !important;
+    margin-bottom: 8px !important;
+}
+
+#main h3 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+}
+
+#main h4 {
+    font-size: 1.25rem;
+    margin-top: 1.5rem;
+}
+
+#main h5 {
+    font-size: 1.1rem;
+    margin-top: 1.5rem;
+}
+
+#main h6 {
+    font-size: 1rem;
+    margin-top: 1.5rem;
 }
 
 /* Navbar styling with network gradient */
@@ -80,7 +111,7 @@ nav.navbar .navbar-nav .nav-link {
 nav.navbar .navbar-nav .nav-link:hover,
 nav.navbar .navbar-nav .nav-link:focus {
     color: var(--network-cyan) !important;
-    background-color: rgba(0, 212, 255, 0.1);
+    background-color: #253664;
 }
 
 /* Use ::before for underline to avoid conflict with dropdown ::after caret */
@@ -146,28 +177,59 @@ nav.navbar .navbar-nav .dropdown.show .nav-link::before {
 
 /* Dropdown menu styling */
 .navbar-nav .dropdown-menu {
-    background: var(--gradient-dark);
-    border: 1px solid var(--network-blue);
-    box-shadow: 0 8px 30px var(--network-glow);
-    border-radius: 8px;
-    margin-top: 0.5rem;
-    text-align: center;
+    background: #253664;
+    border: none;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    border-radius: 0;
+    margin-top: 0;
+    padding: 0.5rem 0;
+    min-width: 220px;
+    backdrop-filter: blur(10px);
 }
 
-.navbar-nav .dropdown-item {
-    color: var(--network-light);
+nav.navbar .navbar-nav .dropdown-menu .dropdown-item,
+nav.navbar .navbar-nav .dropdown-menu a.dropdown-item,
+nav .dropdown-menu .dropdown-item,
+.navbar .dropdown-item {
+    color: #ffffff !important;
     font-family: 'Open Sans', sans-serif;
-    font-weight: 500;
+    font-weight: 600;
+    font-size: 0.85rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     padding: 0.75rem 1.5rem;
     transition: all 0.3s ease;
+    border-left: 3px solid transparent;
+    text-align: left;
+    position: relative;
+}
+
+.navbar-nav .dropdown-item::before {
+    content: '▶';
+    position: absolute;
+    left: 0.5rem;
+    opacity: 0;
+    transition: all 0.3s ease;
+    color: var(--network-cyan);
+    font-size: 0.7rem;
 }
 
 .navbar-nav .dropdown-item:hover,
 .navbar-nav .dropdown-item:focus {
-    color: var(--network-cyan);
-    background-color: rgba(0, 212, 255, 0.15);
+    color: var(--network-cyan) !important;
+    background: #253664;
+    border-left-color: var(--network-cyan);
+    transform: translateX(2px);
+}
+
+.navbar-nav .dropdown-item:hover::before {
+    left: 0.75rem;
+    opacity: 1;
+}
+
+.navbar-nav .dropdown-divider {
+    border-top: 1px solid rgba(0, 212, 255, 0.3);
+    margin: 0.5rem 0;
 }
 
 /* Dropdown arrow styling */
@@ -193,6 +255,7 @@ nav.navbar .navbar-nav .dropdown.show .nav-link::before {
 /* Main content area */
 #main {
     position: relative;
+    padding: 0 1rem;
 }
 
 /* Content styling */
@@ -200,6 +263,17 @@ nav.navbar .navbar-nav .dropdown.show .nav-link::before {
     line-height: 1.8;
     margin-bottom: 1.2rem;
     color: #333;
+}
+
+#main img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Fix gallery row extending beyond content area */
+#main .row.image-gallery {
+    margin-left: 0;
+    margin-right: 0;
 }
 
 #main a {
@@ -260,7 +334,7 @@ nav.navbar .navbar-nav .dropdown.show .nav-link::before {
 .btn-primary {
     background: var(--gradient-primary);
     border: none;
-    color: white;
+    color: white !important;
     font-family: 'Open Sans', sans-serif;
     font-weight: 700;
     text-transform: uppercase;
@@ -268,11 +342,13 @@ nav.navbar .navbar-nav .dropdown.show .nav-link::before {
     padding: 0.75rem 2rem;
     transition: all 0.3s ease;
     box-shadow: 0 4px 15px var(--network-glow);
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .btn-primary:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px var(--network-glow);
+    color: white !important;
 }
 
 /* Carousel styling */

@@ -729,7 +729,7 @@ function pre_process_page(sdata) {
 				var entryId = 'blog_entry_' + i;
 				var isVisible = (i >= start && i < stop);
 				output += "<div class='blog_entry' id='"+entryId+"' data-url='"+allBlogPosts[i].url+"' data-page-index='"+i+"' style='display: "+(isVisible ? 'block' : 'none')+"'>"
-				output += "<h1 onclick=\"toggleBlogEntry('"+entryId+"'); return false;\" style=\"cursor: pointer;\">"+allBlogPosts[i].name+"</h1>"
+				output += "<h2 onclick=\"toggleBlogEntry('"+entryId+"'); return false;\" style=\"cursor: pointer;\">"+allBlogPosts[i].name+"</h2>"
 				output += "<time>"+allBlogPosts[i].date.toLocaleDateString()+"</time>"
 				output += "<div class='blog_excerpt' onclick=\"toggleBlogEntry('"+entryId+"'); return false;\" style=\"cursor: pointer;\">"
 				output += "<p class='excerpt_text'>Loading excerpt...</p>"
@@ -1273,7 +1273,7 @@ function makemenu() {
 	    		// It is a file
 	    		var parts = filename.split('/');
 	    		if (parts.length > 1) {
-	    			$('#'+parts[0]+'\\\/').append('<li class="file '+classname+'"><a href="javascript:void(0);" onclick="loadPage(\''+file.replace(/\//g,'\\\/')+'\'); return false;">'+parts[1].replace(/\d+\-/,'')+'</a></li>');
+	    			$('#'+parts[0]+'\\\/').append('<li class="file '+classname+'"><a class="dropdown-item" href="javascript:void(0);" onclick="loadPage(\''+file.replace(/\//g,'\\\/')+'\'); return false;">'+parts[1].replace(/\d+\-/,'')+'</a></li>');
 	    		} else {
 					$('#menu').append('<li class="nav-item '+classname+'"><a class="nav-link" href="javascript:void(0);" onclick="loadPage(\''+file.replace(/\//g,'\\\/')+'\'); return false;">'+filename+'</a></li>');
 	    		}
