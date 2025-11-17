@@ -12,8 +12,10 @@ canvas.height = height;
 const fireworks = [];
 const particles = [];
 const stars = [];
+const ufos = [];
 const gravity = 0.05;
 const fireworkChance = 0.04;
+let lastUfoSpawn = 0;
 
 // Firework colors - vibrant combinations
 const colorSchemes = [
@@ -418,6 +420,117 @@ class Particle {
     }
 }
 
+// UFO object (from night_city theme)
+class UFO {
+    constructor() {
+        // UFOs fly from left to right or right to left
+        this.direction = Math.random() > 0.5 ? 1 : -1;
+        this.x = this.direction > 0 ? -100 : width + 100;
+        this.y = Math.random() * height * 0.3 + 50; // Upper third of screen
+        this.speed = 2 + Math.random() * 2;
+        this.size = 20 + Math.random() * 15;
+        this.wobble = Math.random() * Math.PI * 2; // For wobbling motion
+        this.lightPhase = Math.random() * Math.PI * 2; // For blinking lights
+    }
+
+    update(frame) {
+        this.x += this.speed * this.direction;
+        this.wobble = frame * 0.05;
+        this.lightPhase = frame * 0.1;
+    }
+
+    isAlive() {
+        if (this.direction > 0) {
+            return this.x < width + 100;
+        } else {
+            return this.x > -100;
+        }
+    }
+
+    draw(frame) {
+        const wobbleY = Math.sin(this.wobble) * 3;
+        const y = this.y + wobbleY;
+
+        // UFO shadow/glow underneath
+        const glowGradient = ctx.createRadialGradient(this.x, y + this.size * 0.5, 0, this.x, y + this.size * 0.5, this.size * 1.5);
+        glowGradient.addColorStop(0, 'rgba(100, 200, 255, 0.3)');
+        glowGradient.addColorStop(1, 'rgba(100, 200, 255, 0)');
+        ctx.fillStyle = glowGradient;
+        ctx.beginPath();
+        ctx.arc(this.x, y + this.size * 0.5, this.size * 1.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // UFO dome (top)
+        ctx.fillStyle = 'rgba(150, 160, 170, 0.8)';
+        ctx.beginPath();
+        ctx.ellipse(this.x, y - this.size * 0.2, this.size * 0.5, this.size * 0.35, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Dome highlight
+        ctx.fillStyle = 'rgba(200, 220, 240, 0.4)';
+        ctx.beginPath();
+        ctx.ellipse(this.x - this.size * 0.15, y - this.size * 0.25, this.size * 0.2, this.size * 0.15, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // UFO body (saucer)
+        ctx.fillStyle = 'rgba(120, 130, 140, 0.9)';
+        ctx.beginPath();
+        ctx.ellipse(this.x, y, this.size, this.size * 0.3, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Body edge highlight
+        ctx.strokeStyle = 'rgba(180, 190, 200, 0.6)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.ellipse(this.x, y, this.size, this.size * 0.3, 0, 0, Math.PI);
+        ctx.stroke();
+
+        // Colored lights around the rim
+        const numLights = 5;
+        for (let i = 0; i < numLights; i++) {
+            const angle = (i / numLights) * Math.PI * 2 + this.lightPhase;
+            const lightX = this.x + Math.cos(angle) * this.size * 0.8;
+            const lightY = y + Math.sin(angle) * this.size * 0.24;
+
+            // Alternate between colors
+            const brightness = Math.sin(this.lightPhase + i) * 0.3 + 0.7;
+            const colors = [
+                'rgba(255, 100, 100, ' + brightness + ')',
+                'rgba(100, 255, 100, ' + brightness + ')',
+                'rgba(100, 100, 255, ' + brightness + ')',
+                'rgba(255, 255, 100, ' + brightness + ')'
+            ];
+            const color = colors[i % colors.length];
+
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(lightX, lightY, 2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Light glow
+            ctx.fillStyle = color.replace(/[\d.]+\)/, '0.2)');
+            ctx.beginPath();
+            ctx.arc(lightX, lightY, 4, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Beam underneath (occasionally)
+        if (Math.sin(this.lightPhase * 0.5) > 0.6) {
+            const beamGradient = ctx.createLinearGradient(this.x, y + this.size * 0.3, this.x, y + this.size * 3);
+            beamGradient.addColorStop(0, 'rgba(200, 255, 255, 0.2)');
+            beamGradient.addColorStop(1, 'rgba(200, 255, 255, 0)');
+            ctx.fillStyle = beamGradient;
+            ctx.beginPath();
+            ctx.moveTo(this.x - this.size * 0.3, y + this.size * 0.3);
+            ctx.lineTo(this.x + this.size * 0.3, y + this.size * 0.3);
+            ctx.lineTo(this.x + this.size * 0.8, y + this.size * 3);
+            ctx.lineTo(this.x - this.size * 0.8, y + this.size * 3);
+            ctx.closePath();
+            ctx.fill();
+        }
+    }
+}
+
 let time = 0;
 function animate() {
     time += 1;
@@ -436,6 +549,25 @@ function animate() {
         ctx.beginPath();
         ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
         ctx.fill();
+    }
+
+    // Spawn UFO every 10 seconds (600 frames at 60fps)
+    if (time - lastUfoSpawn >= 600) {
+        ufos.push(new UFO());
+        lastUfoSpawn = time;
+    }
+
+    // Update and draw UFOs
+    let j = 0;
+    while (j < ufos.length) {
+        ufos[j].update(time);
+        if (!ufos[j].isAlive()) {
+            ufos[j] = ufos[ufos.length - 1];
+            ufos.pop();
+        } else {
+            ufos[j].draw(time);
+            j++;
+        }
     }
 
     // Randomly launch new fireworks
