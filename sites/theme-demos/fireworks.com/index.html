@@ -438,13 +438,15 @@
 
 				// Create stars
 				for (let i = 0; i < starCount; i++) {
+					const colorIndex = Math.floor(Math.random() * colors.length);
 					stars.push({
 						x: Math.random() * canvas.width,
 						y: Math.random() * canvas.height,
 						size: Math.random() * 0.5 + 0.2, // Start much smaller (0.2-0.7px)
 						speed: (Math.random() * 2 + 1) * 0.7, // 30% slower (multiply by 0.7)
 						baseOpacity: Math.random() * 0.5 + 0.5, // Store base opacity
-						color: colors[Math.floor(Math.random() * colors.length)],
+						colorPrefix: colors[colorIndex], // Store color prefix
+						hasOutline: colorIndex !== 1, // true for red (0) and blue (2), false for white (1)
 						rotation: Math.random() * Math.PI * 2, // Random starting rotation
 						rotationSpeed: (Math.random() - 0.5) * 0.02 // Random spin direction and speed
 					});
@@ -480,18 +482,32 @@
 					}
 				}
 
-				function animate() {
-					ctx.clearRect(0, 0, canvas.width, canvas.height);
+				// Pre-calculate canvas bounds for faster checks
+				let canvasWidthCached = canvas.width;
+				let canvasHeightCached = canvas.height;
 
-					// Update global opacity for fade-in
-					const elapsed = Date.now() - fadeInStart;
-					if (elapsed < fadeInDuration) {
-						globalOpacity = elapsed / fadeInDuration; // 0 to 1 over 2 seconds
-					} else {
-						globalOpacity = 1;
+				window.addEventListener('resize', function() {
+					canvasWidthCached = canvas.width;
+					canvasHeightCached = canvas.height;
+				});
+
+				function animate() {
+					ctx.clearRect(0, 0, canvasWidthCached, canvasHeightCached);
+
+					// Update global opacity for fade-in (only during fade-in period)
+					if (globalOpacity < 1) {
+						const elapsed = Date.now() - fadeInStart;
+						if (elapsed < fadeInDuration) {
+							globalOpacity = elapsed / fadeInDuration; // 0 to 1 over 2 seconds
+						} else {
+							globalOpacity = 1;
+						}
 					}
 
-					stars.forEach(star => {
+					const starsLen = stars.length;
+					for (let i = 0; i < starsLen; i++) {
+						const star = stars[i];
+
 						// Move star to the right
 						star.x += star.speed;
 
@@ -500,35 +516,36 @@
 
 						// Calculate size based on position across the width
 						// Size grows linearly from 0.2px at left edge to 45px at right edge (75% of 60)
-						const progress = (star.x + 10) / (canvas.width + 20); // 0 to 1
+						const progress = (star.x + 10) / (canvasWidthCached + 20); // 0 to 1
 						star.size = 0.2 + (progress * 44.8); // 0.2 to 45
 
 						// If star goes completely off right edge (including its size), respawn on left
-						if (star.x > canvas.width + star.size) {
+						if (star.x > canvasWidthCached + star.size) {
 							star.x = -50; // Start further left so size calculation makes it small
-							star.y = Math.random() * canvas.height;
+							star.y = Math.random() * canvasHeightCached;
 						}
 
 						// Apply global fade-in to star opacity
 						const finalOpacity = star.baseOpacity * globalOpacity;
 
-						// Check if this is a blue or red star
-						const isBlue = star.color === 'rgba(0, 63, 135, ';
-						const isRed = star.color === 'rgba(178, 34, 52, ';
+						// Build color string once
+						const fillColor = star.colorPrefix + finalOpacity + ')';
 
-						// Draw star with glow and rotation
+						// Set shadow properties
 						ctx.shadowBlur = star.size * 2;
-						ctx.shadowColor = star.color + finalOpacity + ')';
+						ctx.shadowColor = fillColor;
 
-						// Set stroke style for blue and red stars
-						if (isBlue || isRed) {
+						// Set stroke style for outlined stars (red and blue)
+						if (star.hasOutline) {
 							ctx.strokeStyle = 'rgba(255, 255, 255, ' + finalOpacity + ')';
 							ctx.lineWidth = star.size * 0.08; // Outline width proportional to star size
 						}
 
-						drawStar(star.x, star.y, star.size, star.color + finalOpacity + ')', star.rotation, isBlue || isRed);
-						ctx.shadowBlur = 0;
-					});
+						drawStar(star.x, star.y, star.size, fillColor, star.rotation, star.hasOutline);
+					}
+
+					// Reset shadow once at the end
+					ctx.shadowBlur = 0;
 
 					requestAnimationFrame(animate);
 				}

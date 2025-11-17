@@ -74,22 +74,23 @@ class Firework {
 
     draw() {
         if (!this.exploded) {
-            // Draw trail
-            ctx.strokeStyle = `rgba(255, 255, 200, 0.5)`;
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            for (let i = 0; i < this.trail.length; i++) {
-                const point = this.trail[i];
-                if (i === 0) {
-                    ctx.moveTo(point.x, point.y);
-                } else {
+            const trailLen = this.trail.length;
+            if (trailLen > 0) {
+                // Draw trail
+                ctx.strokeStyle = 'rgba(255,255,200,0.5)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                const first = this.trail[0];
+                ctx.moveTo(first.x, first.y);
+                for (let i = 1; i < trailLen; i++) {
+                    const point = this.trail[i];
                     ctx.lineTo(point.x, point.y);
                 }
+                ctx.stroke();
             }
-            ctx.stroke();
 
             // Draw rocket
-            ctx.fillStyle = 'rgba(255, 255, 200, 0.8)';
+            ctx.fillStyle = 'rgba(255,255,200,0.8)';
             ctx.beginPath();
             ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
             ctx.fill();
@@ -315,6 +316,7 @@ class Particle {
         this.trail = [];
         this.hasExploded = false;
         this.colorScheme = colorScheme;
+        this.dead = false; // Add dead flag to avoid splice
 
         // Particles will explode only if their parent firework allows it (and they're not secondary/tertiary)
         this.willExplode = !isSecondary && !isTertiary && fireworkHasExplosions && Math.random() < 0.33;
@@ -375,12 +377,14 @@ class Particle {
     }
 
     draw() {
-        // Draw trail for streamers
-        if (this.isStreamer && this.trail.length > 0) {
-            for (let i = 0; i < this.trail.length; i++) {
+        // Draw trail for streamers (skip if too many particles for performance)
+        if (this.isStreamer && this.trail.length > 0 && particles.length < 500) {
+            const trailLen = this.trail.length;
+            const invTrailLen = 1 / trailLen;
+            for (let i = 0; i < trailLen; i++) {
                 const point = this.trail[i];
-                const trailAlpha = point.alpha * (i / this.trail.length) * 0.5;
-                ctx.fillStyle = `rgba(${this.color[0]}, ${this.color[1]}, ${this.color[2]}, ${trailAlpha})`;
+                const trailAlpha = point.alpha * (i * invTrailLen) * 0.5;
+                ctx.fillStyle = 'rgba(' + this.color[0] + ',' + this.color[1] + ',' + this.color[2] + ',' + trailAlpha + ')';
                 ctx.beginPath();
                 ctx.arc(point.x, point.y, this.size * 0.5, 0, Math.PI * 2);
                 ctx.fill();
@@ -401,12 +405,12 @@ class Particle {
         }
 
         ctx.shadowBlur = glow;
-        ctx.shadowColor = `rgba(${particleColor[0]}, ${particleColor[1]}, ${particleColor[2]}, ${this.alpha})`;
-        ctx.fillStyle = `rgba(${particleColor[0]}, ${particleColor[1]}, ${particleColor[2]}, ${this.alpha})`;
+        const colorStr = 'rgba(' + particleColor[0] + ',' + particleColor[1] + ',' + particleColor[2] + ',' + this.alpha + ')';
+        ctx.shadowColor = colorStr;
+        ctx.fillStyle = colorStr;
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         ctx.fill();
-        ctx.shadowBlur = 0;
     }
 
     isDead() {
@@ -422,11 +426,13 @@ function animate() {
     ctx.fillStyle = 'rgba(10, 10, 30, 0.1)';
     ctx.fillRect(0, 0, width, height);
 
-    // Draw twinkling stars
-    for (let star of stars) {
+    // Draw twinkling stars (use traditional for loop)
+    const starsLen = stars.length;
+    for (let i = 0; i < starsLen; i++) {
+        const star = stars[i];
         const twinkle = Math.sin(time * star.twinkleSpeed + star.twinkleOffset) * 0.5 + 0.5;
         const brightness = star.brightness * twinkle;
-        ctx.fillStyle = `rgba(255, 255, 255, ${brightness})`;
+        ctx.fillStyle = 'rgba(255,255,255,' + brightness + ')';
         ctx.beginPath();
         ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
         ctx.fill();
@@ -439,23 +445,38 @@ function animate() {
         fireworks.push(new Firework(x, targetY));
     }
 
-    // Update and draw fireworks
-    for (let i = fireworks.length - 1; i >= 0; i--) {
+    // Update and draw fireworks - use swap-and-pop for removal
+    let i = 0;
+    while (i < fireworks.length) {
         fireworks[i].update();
         fireworks[i].draw();
         if (fireworks[i].exploded) {
-            fireworks.splice(i, 1);
+            // Swap with last element and pop (much faster than splice)
+            fireworks[i] = fireworks[fireworks.length - 1];
+            fireworks.pop();
+        } else {
+            i++;
         }
     }
 
-    // Update and draw particles
-    for (let i = particles.length - 1; i >= 0; i--) {
-        particles[i].update();
-        particles[i].draw();
-        if (particles[i].isDead()) {
-            particles.splice(i, 1);
+    // Update and draw particles - batch removal for performance
+    i = 0;
+    while (i < particles.length) {
+        const particle = particles[i];
+        particle.update();
+        if (particle.isDead()) {
+            particle.dead = true;
+            // Swap with last element and pop
+            particles[i] = particles[particles.length - 1];
+            particles.pop();
+        } else {
+            particle.draw();
+            i++;
         }
     }
+
+    // Reset shadow blur once at end
+    ctx.shadowBlur = 0;
 
     requestAnimationFrame(animate);
 }
