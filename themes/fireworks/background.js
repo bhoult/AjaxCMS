@@ -12,10 +12,8 @@ canvas.height = height;
 const fireworks = [];
 const particles = [];
 const stars = [];
-const smoke = [];
 const gravity = 0.05;
 const fireworkChance = 0.02;
-const windSpeed = 0.3;
 
 // Firework colors - vibrant combinations
 const colorSchemes = [
@@ -98,11 +96,6 @@ class Firework {
     }
 
     explode() {
-        // Generate smoke puffs
-        for (let i = 0; i < 15; i++) {
-            smoke.push(new Smoke(this.x, this.y));
-        }
-
         let particleCount = Math.random() * 100 + 150;
 
         if (this.type < 0.15) {
@@ -172,24 +165,70 @@ class Firework {
             }
         }
 
-        // Add secondary explosions for some fireworks
-        if (Math.random() < 0.3) {
+        // Add secondary explosions for some fireworks (50% chance)
+        if (Math.random() < 0.5) {
+            const delay = Math.random() * 400 + 300;
             setTimeout(() => {
-                const secondaryCount = 30;
-                for (let i = 0; i < secondaryCount; i++) {
-                    const angle = (Math.PI * 2 * i) / secondaryCount;
-                    const speed = Math.random() * 3 + 2;
+                const secondaryCount = Math.floor(Math.random() * 40) + 30;
+                const secondaryType = Math.random();
+
+                if (secondaryType < 0.33) {
+                    // Ring secondary
+                    for (let i = 0; i < secondaryCount; i++) {
+                        const angle = (Math.PI * 2 * i) / secondaryCount;
+                        const speed = Math.random() * 3 + 2;
+                        const vx = Math.cos(angle) * speed;
+                        const vy = Math.sin(angle) * speed;
+                        particles.push(new Particle(this.x, this.y, vx, vy, this.colorScheme, true));
+                    }
+                } else if (secondaryType < 0.66) {
+                    // Burst secondary
+                    for (let i = 0; i < secondaryCount; i++) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const speed = Math.random() * 5 + 1;
+                        const vx = Math.cos(angle) * speed;
+                        const vy = Math.sin(angle) * speed;
+                        particles.push(new Particle(this.x, this.y, vx, vy, this.colorScheme, true));
+                    }
+                } else {
+                    // Mini clusters secondary
+                    const clusters = 5;
+                    for (let c = 0; c < clusters; c++) {
+                        const clusterAngle = (Math.PI * 2 * c) / clusters;
+                        const cx = this.x + Math.cos(clusterAngle) * 20;
+                        const cy = this.y + Math.sin(clusterAngle) * 20;
+
+                        for (let i = 0; i < 10; i++) {
+                            const angle = Math.random() * Math.PI * 2;
+                            const speed = Math.random() * 3 + 1;
+                            const vx = Math.cos(angle) * speed;
+                            const vy = Math.sin(angle) * speed;
+                            particles.push(new Particle(cx, cy, vx, vy, this.colorScheme, true));
+                        }
+                    }
+                }
+            }, delay);
+        }
+
+        // Add tertiary explosions for extra spectacular fireworks (20% chance)
+        if (Math.random() < 0.2) {
+            const delay = Math.random() * 600 + 700;
+            setTimeout(() => {
+                const tertiaryCount = 20;
+                for (let i = 0; i < tertiaryCount; i++) {
+                    const angle = (Math.PI * 2 * i) / tertiaryCount;
+                    const speed = Math.random() * 2 + 1;
                     const vx = Math.cos(angle) * speed;
                     const vy = Math.sin(angle) * speed;
                     particles.push(new Particle(this.x, this.y, vx, vy, this.colorScheme, true));
                 }
-            }, 500);
+            }, delay);
         }
     }
 }
 
 class Particle {
-    constructor(x, y, vx, vy, colorScheme, isSecondary = false, isWillow = false) {
+    constructor(x, y, vx, vy, colorScheme, isSecondary = false, isWillow = false, isTertiary = false) {
         this.x = x;
         this.y = y;
         this.vx = vx;
@@ -199,8 +238,15 @@ class Particle {
         this.color = colorScheme[Math.floor(Math.random() * colorScheme.length)];
         this.isSecondary = isSecondary;
         this.isWillow = isWillow;
-        this.size = isSecondary ? 1.5 : 2.5;
+        this.isTertiary = isTertiary;
+        this.size = isTertiary ? 1 : (isSecondary ? 1.5 : 2.5);
         this.trail = [];
+        this.hasExploded = false;
+        this.colorScheme = colorScheme;
+
+        // Some primary particles will explode (15% chance, but not secondaries or tertiaries)
+        this.willExplode = !isSecondary && !isTertiary && Math.random() < 0.15;
+        this.explodeThreshold = Math.random() * 0.3 + 0.3; // Explode when alpha is between 0.3-0.6
 
         // Streamer effect - some particles last longer
         if (Math.random() < 0.1) {
@@ -220,10 +266,28 @@ class Particle {
         this.vy *= 0.98;
         this.alpha -= this.decay;
 
+        // Check if particle should explode
+        if (this.willExplode && !this.hasExploded && this.alpha <= this.explodeThreshold) {
+            this.explode();
+            this.hasExploded = true;
+        }
+
         // Trail for streamers
         if (this.isStreamer || this.isWillow) {
             this.trail.push({ x: this.x, y: this.y, alpha: this.alpha });
             if (this.trail.length > 15) this.trail.shift();
+        }
+    }
+
+    explode() {
+        // Create smaller particles bursting out from this particle
+        const particleCount = Math.floor(Math.random() * 8) + 6; // 6-14 smaller particles
+        for (let i = 0; i < particleCount; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = Math.random() * 3 + 1;
+            const vx = Math.cos(angle) * speed;
+            const vy = Math.sin(angle) * speed;
+            particles.push(new Particle(this.x, this.y, vx, vy, this.colorScheme, false, false, true));
         }
     }
 
@@ -256,39 +320,6 @@ class Particle {
     }
 }
 
-class Smoke {
-    constructor(x, y) {
-        this.x = x + (Math.random() - 0.5) * 20;
-        this.y = y + (Math.random() - 0.5) * 20;
-        this.vx = windSpeed + (Math.random() - 0.5) * 0.5;
-        this.vy = -Math.random() * 0.5 - 0.2; // Rises slowly
-        this.size = Math.random() * 15 + 10;
-        this.alpha = 0.3;
-        this.decay = 0.002;
-        this.expansion = 0.5;
-    }
-
-    update() {
-        this.x += this.vx;
-        this.y += this.vy;
-        this.size += this.expansion;
-        this.alpha -= this.decay;
-        this.vx *= 0.99; // Slow down drift
-        this.vy *= 0.99;
-    }
-
-    draw() {
-        ctx.fillStyle = `rgba(200, 200, 200, ${this.alpha})`;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.fill();
-    }
-
-    isDead() {
-        return this.alpha <= 0;
-    }
-}
-
 let time = 0;
 function animate() {
     time += 1;
@@ -305,15 +336,6 @@ function animate() {
         ctx.beginPath();
         ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
         ctx.fill();
-    }
-
-    // Update and draw smoke
-    for (let i = smoke.length - 1; i >= 0; i--) {
-        smoke[i].update();
-        smoke[i].draw();
-        if (smoke[i].isDead()) {
-            smoke.splice(i, 1);
-        }
     }
 
     // Randomly launch new fireworks

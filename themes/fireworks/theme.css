@@ -1,33 +1,68 @@
 /**
  * Fireworks Theme - Bootstrap 5 Styling
- * Festive color palette with vibrant celebration colors
+ * Patriotic USA color palette with red, white, and blue
  */
 
 :root {
-    /* Fireworks color palette */
-    --network-blue: #ff6b35;
-    --network-purple: #c73e1d;
-    --network-cyan: #ffd23f;
+    /* Patriotic USA color palette */
+    --network-blue: #003f87;
+    --network-purple: #b22234;
+    --network-cyan: #ffffff;
     --network-dark: #1a1a2e;
     --network-light: #f5f5f5;
-    --network-accent: #ff4757;
-    --network-glow: rgba(255, 107, 53, 0.3);
+    --network-accent: #c8102e;
+    --network-glow: rgba(178, 34, 52, 0.3);
 
     /* Gradient definitions */
     --gradient-primary: linear-gradient(135deg, var(--network-purple) 0%, var(--network-blue) 100%);
-    --gradient-dark: linear-gradient(135deg, var(--network-dark) 0%, var(--network-purple) 100%);
+    --gradient-dark: linear-gradient(135deg, var(--network-dark) 0%, var(--network-blue) 100%);
     --gradient-light: linear-gradient(135deg, var(--network-light) 0%, #ffffff 100%);
+    --gradient-stripes: repeating-linear-gradient(
+        0deg,
+        var(--network-purple) 0px,
+        var(--network-purple) 15px,
+        #ffffff 15px,
+        #ffffff 30px
+    );
+    --gradient-flag: linear-gradient(
+        to bottom,
+        var(--network-purple) 0%,
+        var(--network-purple) 7.7%,
+        #ffffff 7.7%,
+        #ffffff 15.4%,
+        var(--network-purple) 15.4%,
+        var(--network-purple) 23.1%,
+        #ffffff 23.1%,
+        #ffffff 30.8%,
+        var(--network-purple) 30.8%,
+        var(--network-purple) 38.5%,
+        #ffffff 38.5%,
+        #ffffff 46.2%,
+        var(--network-purple) 46.2%,
+        var(--network-purple) 53.9%,
+        #ffffff 53.9%,
+        #ffffff 61.6%,
+        var(--network-purple) 61.6%,
+        var(--network-purple) 69.3%,
+        #ffffff 69.3%,
+        #ffffff 77%,
+        var(--network-purple) 77%,
+        var(--network-purple) 84.7%,
+        #ffffff 84.7%,
+        #ffffff 92.4%,
+        var(--network-purple) 92.4%
+    );
 }
 
-/* Typography - Poppins & Righteous fonts */
+/* Typography - Libre Franklin & Oswald fonts */
 body {
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Libre Franklin', sans-serif;
     font-weight: 400;
     font-size: 18px;
 }
 
 h1, h2, h3, h4, h5, h6 {
-    font-family: 'Righteous', sans-serif;
+    font-family: 'Oswald', sans-serif;
     font-weight: 700;
     line-height: 1.3;
     margin-top: 2rem;
@@ -40,15 +75,53 @@ h1, h2, h3, h4, h5, h6 {
 #main h1 {
     font-size: 2.5rem;
     margin-bottom: 1.5rem;
-    background: linear-gradient(to right, var(--network-accent), transparent);
+    background: var(--gradient-primary);
     padding: 0.5rem 1rem;
     margin-left: -1rem;
     margin-right: -1rem;
+    color: white !important;
+    position: relative;
+    overflow: hidden;
+}
+
+#main h1::before {
+    content: '★';
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 2rem;
+    color: white;
+    opacity: 0.3;
+}
+
+#main h1::after {
+    content: '★ ★ ★';
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1rem;
+    color: white;
+    opacity: 0.3;
+    letter-spacing: 5px;
 }
 
 #main h2 {
     font-size: 2rem;
     margin-top: 2.5rem;
+    padding-left: 2rem;
+    position: relative;
+}
+
+#main h2::before {
+    content: '★';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.5rem;
+    color: var(--network-accent);
 }
 
 .blog_entry h2 {
@@ -76,12 +149,27 @@ h1, h2, h3, h4, h5, h6 {
     margin-top: 1.5rem;
 }
 
-/* Navbar styling with network gradient */
+/* Navbar styling with patriotic gradient */
 .navbar {
     background: var(--gradient-dark) !important;
     backdrop-filter: blur(10px);
-    border-bottom: 2px solid var(--network-blue);
+    border-bottom: 5px solid var(--network-accent);
+    border-image: var(--gradient-stripes) 1;
+    border-image-slice: 1;
     box-shadow: 0 4px 20px var(--network-glow);
+    position: relative;
+}
+
+.navbar::after {
+    content: '★ ★ ★ ★ ★';
+    position: absolute;
+    bottom: -3px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: white;
+    font-size: 0.6rem;
+    letter-spacing: 10px;
+    opacity: 0.5;
 }
 
 .navbar-brand {
@@ -99,7 +187,7 @@ h1, h2, h3, h4, h5, h6 {
 /* Navbar links */
 nav.navbar .navbar-nav .nav-link {
     color: var(--network-light) !important;
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Open Sans', sans-serif;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -192,7 +280,7 @@ nav.navbar .navbar-nav .dropdown-menu a.dropdown-item,
 nav .dropdown-menu .dropdown-item,
 .navbar .dropdown-item {
     color: #ffffff !important;
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Open Sans', sans-serif;
     font-weight: 600;
     font-size: 0.85rem;
     text-transform: uppercase;
@@ -255,7 +343,6 @@ nav .dropdown-menu .dropdown-item,
 /* Main content area */
 #main {
     position: relative;
-    padding: 0 1rem;
 }
 
 /* Content styling */
@@ -302,14 +389,26 @@ nav .dropdown-menu .dropdown-item,
     font-weight: 700;
 }
 
-/* Card styling */
+/* Card styling with patriotic elements */
 .card {
     background: var(--gradient-light);
-    border: 1px solid var(--network-accent);
+    border: 3px solid var(--network-accent);
     border-radius: 12px;
     box-shadow: 0 4px 15px var(--network-glow);
     margin-bottom: 1.5rem;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 6px;
+    background: var(--gradient-stripes);
 }
 
 .card:hover {
@@ -320,22 +419,33 @@ nav .dropdown-menu .dropdown-item,
 .card-header {
     background: var(--gradient-primary);
     color: white;
-    font-family: 'Righteous', sans-serif;
+    font-family: 'Oswald', sans-serif;
     font-weight: 700;
     border-bottom: 2px solid var(--network-blue);
     padding: 1rem 1.5rem;
+    position: relative;
+}
+
+.card-header::after {
+    content: '★';
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.5rem;
+    opacity: 0.3;
 }
 
 .card-body {
     padding: 1.5rem;
 }
 
-/* Button styling */
+/* Button styling with stars */
 .btn-primary {
     background: var(--gradient-primary);
-    border: none;
+    border: 2px solid white;
     color: white !important;
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Oswald', sans-serif;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -343,12 +453,39 @@ nav .dropdown-menu .dropdown-item,
     transition: all 0.3s ease;
     box-shadow: 0 4px 15px var(--network-glow);
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    position: relative;
+}
+
+.btn-primary::before {
+    content: '★';
+    position: absolute;
+    left: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1rem;
+    opacity: 0.5;
+}
+
+.btn-primary::after {
+    content: '★';
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1rem;
+    opacity: 0.5;
 }
 
 .btn-primary:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px var(--network-glow);
     color: white !important;
+    border-color: var(--network-cyan);
+}
+
+.btn-primary:hover::before,
+.btn-primary:hover::after {
+    opacity: 1;
 }
 
 /* Carousel styling */
@@ -431,7 +568,7 @@ nav .dropdown-menu .dropdown-item,
 /* Badge styling */
 .badge {
     background: var(--gradient-primary);
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Open Sans', sans-serif;
     font-weight: 600;
 }
 
