@@ -27,6 +27,8 @@ Think of it as a static site generator that runs in real-time, with the flexibil
 
 ## Quick Start
 
+### Development Mode (HTTP only, port 3000)
+
 ```bash
 # 1. Install dependencies
 npm install
@@ -35,11 +37,37 @@ npm install
 mkdir -p sites/mysite.com
 cp -r index.html pages/ sites/mysite.com/
 
-# 3. Start the server
-npm start
+# 3. Start the development server
+./start-dev.sh
 ```
 
-Visit `http://localhost:3000` and click on your site!
+Visit `http://localhost:3000` to see the sites index!
+
+### Production Mode (SSL with Let's Encrypt, ports 80 & 443)
+
+```bash
+# 1. Install dependencies
+npm install
+npm install -g pm2
+
+# 2. Edit the SSL startup script with your email
+nano start-ssl.sh
+# Change MAINTAINER_EMAIL="your@email.com" to your actual email
+
+# 3. Make sure your domain DNS points to your server's IP
+
+# 4. Start with SSL (requires sudo for ports 80/443)
+sudo ./start-ssl.sh
+```
+
+Visit `http://yourdomain.com` (redirects to HTTPS automatically)
+
+**Features:**
+- ✅ Automatic SSL certificate provisioning via Let's Encrypt
+- ✅ Auto-discovers and registers all site domains from `sites/` directory
+- ✅ HTTP (port 80) automatically redirects to HTTPS (port 443)
+- ✅ Certificates auto-renew before expiration
+- ✅ Sites index available at `/sites` on any domain
 
 ## How It Works
 
@@ -176,14 +204,38 @@ Access via:
 
 ## Production Deployment
 
-Deploy with PM2, systemd, or nginx reverse proxy. Full instructions in [QUICKSTART.md](QUICKSTART.md).
+### Option 1: Built-in SSL (Recommended)
+
+Use the included `start-ssl.sh` script for automatic SSL with Let's Encrypt:
 
 ```bash
-# Using PM2
-npm install -g pm2
-pm2 start server.js --name ajaxcms
-pm2 save
+# Edit email in start-ssl.sh, then run:
+sudo ./start-ssl.sh
 ```
+
+This automatically:
+- Discovers all site domains from `sites/` directory
+- Provisions SSL certificates via Let's Encrypt
+- Sets up pm2 to restart on boot
+- Listens on ports 80 (HTTP → HTTPS redirect) and 443 (HTTPS)
+
+### Option 2: Reverse Proxy with Nginx
+
+See `nginx-ajaxcms.conf` for a sample nginx configuration.
+
+### Option 3: Manual PM2 Setup
+
+```bash
+# Development mode (port 3000)
+./start-dev.sh
+
+# Or customize manually:
+PORT=3000 pm2 start server.js --name ajaxcms
+pm2 save
+pm2 startup
+```
+
+Full deployment instructions in [QUICKSTART.md](QUICKSTART.md).
 
 ## Requirements
 
