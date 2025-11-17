@@ -133,13 +133,24 @@ app.use((req, res, next) => {
   }
 
   // Domain-based routing: Map hostnames to directories
-  // localhost -> serve the index page
-  if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    req.siteName = null; // No specific site, will show index
+  // Check if hostname corresponds to a site directory
+  const hostSitePath = path.join(sitesPath, hostname);
+  try {
+    const indexPath = path.join(hostSitePath, 'index.html');
+    const stat = require('fs').statSync(indexPath);
+    if (stat.isFile()) {
+      // Hostname matches a site directory
+      req.siteName = hostname;
+      req.sitePath = hostSitePath;
+    } else {
+      // No site found for this hostname, show index
+      req.siteName = null;
+      req.sitePath = null;
+    }
+  } catch (err) {
+    // No site directory for this hostname, show index
+    req.siteName = null;
     req.sitePath = null;
-  } else {
-    req.siteName = hostname;
-    req.sitePath = path.join(sitesPath, hostname);
   }
 
   next();
