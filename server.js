@@ -80,6 +80,9 @@ function sendFileWithCache(filePath, req, res, next) {
     res.setHeader('ETag', etag);
     res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
 
+    // Mark that logging is already handled (prevent double logging in middleware)
+    res._loggedBySendFileWithCache = true;
+
     // Send the file
     res.sendFile(filePath, (sendErr) => {
       if (sendErr) {
@@ -230,12 +233,15 @@ app.use((req, res, next) => {
 
   // Override sendFile to capture file size
   res.sendFile = function(filePath, options, callback) {
-    try {
-      const stats = fsSync.statSync(filePath);
-      contentLength = stats.size;
-      logRequest(req.siteName, req, statusCode, contentLength);
-    } catch (err) {
-      // File doesn't exist, will be handled by sendFile
+    // Skip logging if already handled by sendFileWithCache
+    if (!res._loggedBySendFileWithCache) {
+      try {
+        const stats = fsSync.statSync(filePath);
+        contentLength = stats.size;
+        logRequest(req.siteName, req, statusCode, contentLength);
+      } catch (err) {
+        // File doesn't exist, will be handled by sendFile
+      }
     }
     return originalSendFile.call(this, filePath, options, callback);
   };
