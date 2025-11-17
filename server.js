@@ -591,24 +591,75 @@ if (require.main === module) {
       process.exit(1);
     }
 
-    greenlockExpress
-      .init({
-        packageRoot: __dirname,
-        configDir: './greenlock.d',
-        maintainerEmail: MAINTAINER_EMAIL,
-        cluster: false
-      })
-      .ready((glx) => {
-        // Serves on 80 and 443
-        glx.serveApp(app);
-        console.log('AjaxCMS Multi-Site Server with SSL');
-        console.log(`Sites directory: ${path.resolve(__dirname, SITES_DIR)}`);
-        console.log('\nListening on:');
-        console.log('  - HTTP:  port 80 (redirects to HTTPS)');
-        console.log('  - HTTPS: port 443');
-        console.log('\nSSL certificates will be automatically provisioned via Let\'s Encrypt');
-        console.log('Maintainer email:', MAINTAINER_EMAIL);
-      });
+    // Automatically discover all site domains from the sites directory
+    async function discoverSiteDomains() {
+      const sitesPath = path.join(__dirname, SITES_DIR);
+      const domains = [];
+
+      try {
+        const items = await fs.readdir(sitesPath, { withFileTypes: true });
+
+        for (const item of items) {
+          if (item.isDirectory()) {
+            const indexPath = path.join(sitesPath, item.name, 'index.html');
+            try {
+              await fs.access(indexPath);
+              // This directory has an index.html, so it's a site
+              // Use the directory name as the domain
+              domains.push(item.name);
+            } catch (err) {
+              // No index.html, skip this directory
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Error discovering site domains:', err);
+      }
+
+      return domains;
+    }
+
+    // Initialize greenlock with discovered domains
+    (async () => {
+      const siteDomains = await discoverSiteDomains();
+
+      console.log('Discovered site domains:', siteDomains.length > 0 ? siteDomains.join(', ') : 'none');
+
+      greenlockExpress
+        .init({
+          packageRoot: __dirname,
+          configDir: './greenlock.d',
+          maintainerEmail: MAINTAINER_EMAIL,
+          cluster: false
+        })
+        .ready(async (glx) => {
+          // Add all discovered domains to greenlock
+          if (siteDomains.length > 0) {
+            for (const domain of siteDomains) {
+              try {
+                await glx.manager.add({
+                  subject: domain,
+                  altnames: [domain, 'www.' + domain]
+                });
+                console.log(`Added domain to SSL: ${domain}, www.${domain}`);
+              } catch (err) {
+                // Domain might already be added, or there might be another error
+                console.log(`Note: Could not add ${domain} (may already exist):`, err.message);
+              }
+            }
+          }
+
+          // Serves on 80 and 443
+          glx.serveApp(app);
+          console.log('\nAjaxCMS Multi-Site Server with SSL');
+          console.log(`Sites directory: ${path.resolve(__dirname, SITES_DIR)}`);
+          console.log('\nListening on:');
+          console.log('  - HTTP:  port 80 (redirects to HTTPS)');
+          console.log('  - HTTPS: port 443');
+          console.log('\nSSL certificates will be automatically provisioned via Let\'s Encrypt');
+          console.log('Maintainer email:', MAINTAINER_EMAIL);
+        });
+    })();
   } else {
     // Development mode - HTTP only
     app.listen(HTTP_PORT, () => {
