@@ -31,7 +31,6 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Centered header with gradient text */
-#main h1:first-of-type,
 #main h2:first-of-type {
     text-align: center;
     background: var(--gradient-primary);
@@ -39,9 +38,10 @@ h1, h2, h3, h4, h5, h6 {
     -webkit-text-fill-color: transparent;
     background-clip: text;
     font-size: 3rem;
-    margin: 2rem 0;
+    margin: -10px 0 2rem 0;
     text-transform: uppercase;
     letter-spacing: 0.1em;
+    padding: 2rem 0 1rem 0;
 }
 
 /* Navbar styling with arctic gradient */
