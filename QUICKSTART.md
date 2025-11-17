@@ -20,11 +20,13 @@ cp -r index.html pages/ sites/blog.local/
 echo "My personal portfolio" > sites/mysite.com/description.md
 echo "My coding blog" > sites/blog.local/description.md
 
-# 4. Start the server
-npm start
+# 4. Start the development server
+./start-dev.sh
 ```
 
 Visit `http://localhost:3000` to see the sites index!
+
+**Note:** For production deployment with SSL, see the Production Deployment section below.
 
 **Note:** All sites automatically share `js/`, `themes/`, and `images/` from the main directory. No need to copy them unless you want site-specific overrides.
 
@@ -96,40 +98,49 @@ SITES_DIR=/path/to/sites npm start
 **Prerequisites:**
 - Domain names pointing to your server's IP address
 - Ports 80 and 443 open in firewall
+- PM2 installed globally: `npm install -g pm2`
 
-**1. Install PM2 globally:**
+### Development Mode (HTTP only, port 3000)
 
-```bash
-npm install -g pm2
-```
-
-**2. Deploy to production location:**
+Use the included startup script:
 
 ```bash
-# Clone or copy AjaxCMS to production location
-mkdir -p /var/www/AjaxCMS
-cp -r * /var/www/AjaxCMS/
-cd /var/www/AjaxCMS
-
-# Install dependencies
-npm install --production
+./start-dev.sh
 ```
 
-**3. Start AjaxCMS with PM2 and SSL:**
+This starts the server in development mode on `http://localhost:3000`.
 
+### Production Mode (HTTPS with Let's Encrypt)
+
+**Automatic SSL with built-in Let's Encrypt support:**
+
+**1. Edit the SSL startup script:**
 ```bash
-# Set your email address for Let's Encrypt
-ENABLE_SSL=true MAINTAINER_EMAIL=admin@example.com pm2 start server.js --name ajaxcms
-
-# Save PM2 configuration
-pm2 save
-
-# Configure PM2 to start on boot
-pm2 startup
-# Follow the command that PM2 outputs
+nano start-ssl.sh
+# Change MAINTAINER_EMAIL="your@email.com" to your actual email
 ```
 
-**4. Manage the server:**
+**2. Make sure your domain DNS points to your server's IP address**
+
+**3. Run the SSL startup script:**
+```bash
+sudo ./start-ssl.sh
+```
+
+**What this does:**
+- ✅ Auto-discovers all site domains from `sites/` directory
+- ✅ Automatically registers domains with Let's Encrypt
+- ✅ Provisions SSL certificates for all discovered sites
+- ✅ Serves on port 80 (HTTP → HTTPS redirect) and 443 (HTTPS)
+- ✅ Auto-renews certificates before expiration
+- ✅ Sets up PM2 to restart on server boot
+
+**After setup:**
+- Access sites at `https://yourdomain.com`
+- Sites index available at `/sites` from any domain
+- Changes to content files appear immediately (no restart needed)
+
+**Manage the server:**
 
 ```bash
 # View status
@@ -143,18 +154,6 @@ pm2 restart ajaxcms
 
 # Stop
 pm2 stop ajaxcms
-```
-
-**SSL certificates are automatically provisioned!** The server will:
-- Listen on ports 80 (HTTP) and 443 (HTTPS)
-- Automatically provision Let's Encrypt certificates for all domains
-- Redirect HTTP to HTTPS
-- Auto-renew certificates before expiration
-
-**For local testing without SSL:**
-```bash
-pm2 start server.js --name ajaxcms
-# This runs on port 3000 without SSL
 ```
 
 **Content updates are automatic!**
