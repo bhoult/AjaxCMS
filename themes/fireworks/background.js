@@ -24,7 +24,7 @@ const ufoParts = []; // Physical UFO parts that fly apart
 const gravity = 0.05;
 const fireworkChance = 0.04;
 let lastUfoSpawn = 0;
-let nextUfoSpawnTime = (60 + Math.random() * 60) * 60; // Random 1-2 minutes in frames (at 60fps)
+let nextUfoSpawnTime = (18 + Math.random() * 18) * 60; // Random 18-36 seconds in frames (at 60fps) - 70% more frequent
 
 // Firework colors - vibrant combinations
 const colorSchemes = [
@@ -755,12 +755,12 @@ function animate() {
         ctx.fill();
     }
 
-    // Spawn UFO randomly every 1-2 minutes
+    // Spawn UFO randomly every 18-36 seconds
     if (time - lastUfoSpawn >= nextUfoSpawnTime) {
         ufos.push(new UFO());
         lastUfoSpawn = time;
-        // Set next random spawn time (1-2 minutes)
-        nextUfoSpawnTime = (60 + Math.random() * 60) * 60; // 3600-7200 frames at 60fps
+        // Set next random spawn time (18-36 seconds)
+        nextUfoSpawnTime = (18 + Math.random() * 18) * 60; // 1080-2160 frames at 60fps
     }
 
     // Update and draw UFOs
