@@ -1,28 +1,32 @@
 ## Suspension Theme
 
-Welcome to the Suspension theme demonstration site for AjaxCMS. This theme features unique animated backgrounds that create a distinctive aesthetic perfect for portfolios and creative websites.
+Float in **weightless wonder** with particles suspended in perfect equilibrium. Experience the serene beauty of objects defying gravity in eternal suspension.
 
 ### About This Theme
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+Suspension captures the magical moment when things hang motionless in air - that brief instant between rise and fall. This theme extends that moment infinitely, creating a meditative space where particles drift without destination.
 
-Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+**Suspended Animation:**
+- **Zero Gravity Feel** - Particles float as if weightless
+- **Gentle Drifting** - Slow, purposeful movement without urgency
+- **Balanced Composition** - Visual equilibrium creates harmony
+- **Meditative Pace** - Calming motion perfect for focus
 
-### Features
+### The Art of Balance
 
-Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.
+True suspension exists only in that perfect balance point - the apex of a throw, the peak of a jump, the moment before descent. This theme captures that fleeting instant and makes it eternal.
 
-- **Animated Background**: Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit
-- **Responsive Design**: Sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt
-- **Smooth Transitions**: Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet
-- **Customizable Colors**: Consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt
+### Technical Marvel
 
-### Technical Details
+Advanced particle physics simulation creates realistic weight and momentum. Each particle responds to subtle forces, creating natural movement that feels tangible despite existing only as light and code.
 
-At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident.
+### Perfect For
 
-Similique sunt in culpa qui officia deserunt mollitia animi, id est laborum et dolorum fuga. Et harum quidem rerum facilis est et expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod maxime placeat facere possimus.
+- Minimalist portfolios
+- Meditation and mindfulness sites
+- Science and physics demonstrations
+- Abstract art galleries
+- Technology showcases
+- Clean, modern corporate sites
 
-### Get Started
-
-Omnis voluptas assumenda est, omnis dolor repellendus. Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet ut et voluptates repudiandae sint et molestiae non recusandae. Itaque earum rerum hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus maiores alias consequatur aut perferendis doloribus asperiores repellat.
+Experience the zen of eternal suspension.

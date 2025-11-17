@@ -1,28 +1,32 @@
-## Ribbons Theme
+## Flowing Ribbons Theme
 
-Welcome to the Ribbons theme demonstration site for AjaxCMS. This theme features unique animated backgrounds that create a distinctive aesthetic perfect for portfolios and creative websites.
+Experience **graceful elegance in motion** as silky ribbons flow and dance across your screen. Watch mesmerizing streams of color weave through space in an endless ballet of fluid dynamics.
 
 ### About This Theme
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+Ribbons capture the essence of smooth, continuous motion - like silk scarves caught in a gentle breeze or streamers flowing through water. This theme brings that fluid grace to your website with ribbons that twist, turn, and gracefully navigate the canvas.
 
-Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+**Visual Flow:**
+- **Smooth Ribbon Paths** - Bezier curves create naturally flowing lines
+- **Gradient Colors** - Each ribbon transitions through a spectrum of hues
+- **Layered Depth** - Multiple ribbons interweave at different speeds
+- **Elegant Movement** - Choreographed motion that's both dynamic and calming
 
-### Features
+### The Beauty of Fluid Motion
 
-Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.
+Each ribbon follows a mathematically-defined path that creates organic, natural movement. The paths never fully repeat, ensuring your background remains fresh and engaging. The interplay of multiple ribbons creates moments of beautiful complexity as they cross and merge.
 
-- **Animated Background**: Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit
-- **Responsive Design**: Sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt
-- **Smooth Transitions**: Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet
-- **Customizable Colors**: Consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt
+### Design Philosophy
 
-### Technical Details
+Ribbons represent flow, connection, and continuity - perfect metaphors for modern web experiences. They guide the eye without demanding attention, creating a sophisticated backdrop that enhances content without overwhelming it.
 
-At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident.
+### Perfect For
 
-Similique sunt in culpa qui officia deserunt mollitia animi, id est laborum et dolorum fuga. Et harum quidem rerum facilis est et expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod maxime placeat facere possimus.
+- Fashion and design portfolios
+- Creative agencies and studios
+- Elegant corporate websites
+- Arts and culture organizations
+- Event planning and celebration sites
+- Any project valuing sophistication and grace
 
-### Get Started
-
-Omnis voluptas assumenda est, omnis dolor repellendus. Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet ut et voluptates repudiandae sint et molestiae non recusandae. Itaque earum rerum hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus maiores alias consequatur aut perferendis doloribus asperiores repellat.
+Let flowing ribbons add a touch of elegance to your digital presence.

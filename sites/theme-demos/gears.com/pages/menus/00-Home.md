@@ -1,28 +1,32 @@
-## Gears Theme
+## Mechanical Gears Theme
 
-Welcome to the Gears theme demonstration site for AjaxCMS. This theme features animated mechanical gears that create a dynamic, industrial aesthetic perfect for technical portfolios and engineering-focused websites.
+Watch **precision-engineered gears** mesh and turn in perfect mechanical harmony. Experience the satisfying beauty of industrial clockwork in perpetual motion.
 
 ### About This Theme
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+Gears represent human ingenuity - the ability to transfer motion and power through elegant mechanical design. This theme celebrates that engineering beauty with interlocking gears that turn with satisfying precision.
 
-Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+**Mechanical Beauty:**
+- **Perfect Gear Meshing** - Authentic gear ratios and tooth engagement
+- **Multiple Sizes** - Various gear diameters create visual hierarchy
+- **Metallic Aesthetics** - Industrial color palette evokes real machinery
+- **Perpetual Motion** - Endless turning creates hypnotic rhythm
 
-### Features
+### Engineering Elegance
 
-Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.
+Each gear's movement is mathematically calculated to ensure proper meshing with its neighbors. The result is not just visually appealing but mechanically accurate - a working demonstration of gear train principles.
 
-- **Animated Background**: Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit
-- **Responsive Design**: Sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt
-- **Smooth Transitions**: Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet
-- **Customizable Colors**: Consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt
+### From Antikythera to Today
 
-### Technical Details
+Gears have been central to human technology for over 2,000 years. The Antikythera mechanism, an ancient Greek analog computer, used complex gear trains to predict astronomical positions. Today, gears remain essential in everything from watches to wind turbines.
 
-At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident.
+### Perfect For
 
-Similique sunt in culpa qui officia deserunt mollitia animi, id est laborum et dolorum fuga. Et harum quidem rerum facilis est et expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod maxime placeat facere possimus.
+- Engineering and industrial sites
+- Manufacturing and mechanical companies
+- Tech portfolios and showcases
+- Maker and DIY communities
+- STEM education
+- Anyone appreciating mechanical beauty
 
-### Get Started
-
-Omnis voluptas assumenda est, omnis dolor repellendus. Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet ut et voluptates repudiandae sint et molestiae non recusandae. Itaque earum rerum hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus maiores alias consequatur aut perferendis doloribus asperiores repellat.
+Experience the precision of perpetual machinery.

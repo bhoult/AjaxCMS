@@ -1,28 +1,32 @@
 ## Starter Theme
 
-Welcome to the Starter theme demonstration site for AjaxCMS. This theme features unique animated backgrounds that create a distinctive aesthetic perfect for portfolios and creative websites.
+Begin your journey with a **clean, versatile foundation** perfect for any project. This minimal theme provides the perfect canvas for your content to shine.
 
 ### About This Theme
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+Sometimes simplicity is the ultimate sophistication. The Starter theme offers a refined, understated background that enhances rather than competes with your content.
 
-Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+**Minimalist Excellence:**
+- **Clean Design** - Uncluttered visuals let content take center stage
+- **Subtle Animation** - Gentle movement adds life without distraction
+- **Universal Appeal** - Works for virtually any type of content
+- **Professional Polish** - Refined aesthetics convey credibility
 
-### Features
+### The Power of Simplicity
 
-Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.
+In a world of visual noise, sometimes the most impactful choice is restraint. This theme provides sophisticated backdrop that elevates professional content while maintaining approachability.
 
-- **Animated Background**: Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit
-- **Responsive Design**: Sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt
-- **Smooth Transitions**: Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet
-- **Customizable Colors**: Consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt
+### Versatile Foundation
 
-### Technical Details
+Whether you're building a portfolio, corporate site, blog, or documentation, the Starter theme adapts seamlessly. It's the digital equivalent of a little black dress - always appropriate, endlessly elegant.
 
-At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident.
+### Perfect For
 
-Similique sunt in culpa qui officia deserunt mollitia animi, id est laborum et dolorum fuga. Et harum quidem rerum facilis est et expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod maxime placeat facere possimus.
+- Professional portfolios
+- Corporate communications
+- Documentation and guides
+- Clean content-focused sites
+- Projects requiring universal appeal
+- Anyone preferring understated elegance
 
-### Get Started
-
-Omnis voluptas assumenda est, omnis dolor repellendus. Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet ut et voluptates repudiandae sint et molestiae non recusandae. Itaque earum rerum hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus maiores alias consequatur aut perferendis doloribus asperiores repellat.
+Start with simplicity, achieve sophistication.

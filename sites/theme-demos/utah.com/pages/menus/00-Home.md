@@ -1,28 +1,32 @@
-## Utah Theme
+## Utah Landscape Theme
 
-Welcome to the Utah theme demonstration site for AjaxCMS. This theme features unique animated backgrounds that create a distinctive aesthetic perfect for portfolios and creative websites.
+Explore the **majestic beauty of Utah's iconic landscapes** through sweeping vistas and natural wonder. Experience the grandeur of the American Southwest in digital form.
 
 ### About This Theme
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+Utah is home to five national parks - "The Mighty 5" - and countless natural wonders. This theme captures the essence of that dramatic landscape with warm earth tones and expansive visual space that evokes the state's iconic red rock country.
 
-Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+**Desert Majesty:**
+- **Warm Earth Tones** - Reds, oranges, and browns of desert landscapes
+- **Expansive Feel** - Open space reflects Utah's vast horizons
+- **Natural Patterns** - Organic shapes inspired by rock formations
+- **Timeless Beauty** - Classic aesthetic that never goes out of style
 
-### Features
+### Geological Wonder
 
-Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.
+Utah's landscapes tell a story millions of years in the making. Each layer of rock, each carved canyon, represents epochs of geological time. This theme honors that natural artistry with patterns that feel both ancient and modern.
 
-- **Animated Background**: Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit
-- **Responsive Design**: Sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt
-- **Smooth Transitions**: Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet
-- **Customizable Colors**: Consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt
+### The Mighty 5
 
-### Technical Details
+Arches, Bryce Canyon, Canyonlands, Capitol Reef, and Zion - Utah's five national parks attract millions of visitors annually. Each offers unique geological features that have become icons of American natural beauty.
 
-At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident.
+### Perfect For
 
-Similique sunt in culpa qui officia deserunt mollitia animi, id est laborum et dolorum fuga. Et harum quidem rerum facilis est et expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod maxime placeat facere possimus.
+- Tourism and travel sites
+- Outdoor recreation businesses
+- Regional Utah companies
+- Adventure and exploration brands
+- Natural and eco-friendly products
+- Anyone celebrating natural beauty
 
-### Get Started
-
-Omnis voluptas assumenda est, omnis dolor repellendus. Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet ut et voluptates repudiandae sint et molestiae non recusandae. Itaque earum rerum hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus maiores alias consequatur aut perferendis doloribus asperiores repellat.
+Bring the grandeur of Utah to your digital presence.

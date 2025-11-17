@@ -1,28 +1,32 @@
 ## Bubbles Theme
 
-Welcome to the Bubbles theme demonstration site for AjaxCMS. This theme features unique animated backgrounds that create a distinctive aesthetic perfect for portfolios and creative websites.
+Drift away on a sea of **floating iridescent bubbles** that rise, shimmer, and pop in delightful patterns. Experience childlike wonder with every gentle bounce and burst.
 
 ### About This Theme
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+Bubbles are pure joy in physical form - temporary, beautiful, and impossible not to watch. This theme captures that magic with realistic bubble physics and gorgeous iridescent coloring.
 
-Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+**Bubble Magic:**
+- **Realistic Physics** - Bubbles float, bounce, and pop naturally
+- **Iridescent Shimmer** - Rainbow reflections create visual delight
+- **Playful Movement** - Unpredictable paths keep things interesting
+- **Joyful Aesthetics** - Instantly creates a cheerful, welcoming mood
 
-### Features
+### The Science of Soap Bubbles
 
-Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.
+Real bubbles display interference patterns as light waves bounce between the thin soap film's surfaces. Our digital bubbles replicate this optical phenomenon, creating the same rainbow shimmer that makes physical bubbles so captivating.
 
-- **Animated Background**: Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit
-- **Responsive Design**: Sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt
-- **Smooth Transitions**: Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet
-- **Customizable Colors**: Consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt
+### Universal Appeal
 
-### Technical Details
+From infants to adults, humans are universally drawn to bubbles. They represent fleeting beauty, playfulness, and the simple pleasures of life - making them perfect for creating positive emotional connections.
 
-At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident.
+### Perfect For
 
-Similique sunt in culpa qui officia deserunt mollitia animi, id est laborum et dolorum fuga. Et harum quidem rerum facilis est et expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod maxime placeat facere possimus.
+- Playful brand identities
+- Children's products and services
+- Fun, approachable businesses
+- Creative agencies with personality
+- Celebration and event sites
+- Anyone wanting to add joy
 
-### Get Started
-
-Omnis voluptas assumenda est, omnis dolor repellendus. Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet ut et voluptates repudiandae sint et molestiae non recusandae. Itaque earum rerum hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus maiores alias consequatur aut perferendis doloribus asperiores repellat.
+Let bubbles bring smiles to your visitors.

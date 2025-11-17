@@ -1,28 +1,32 @@
-## Iceworms Theme
+## Ice Worms Theme
 
-Welcome to the Iceworms theme demonstration site for AjaxCMS. This theme features unique animated backgrounds that create a distinctive aesthetic perfect for portfolios and creative websites.
+Journey into a **frozen digital landscape** where luminous worms slither through arctic blue depths. Watch mesmerizing trails of light snake across your screen in hypnotic patterns.
 
 ### About This Theme
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+Ice worms are real creatures that thrive in glacial ice, and this theme brings their mysterious existence to digital life. Glowing trails wind through a cool blue environment, creating patterns that are both alien and beautiful.
 
-Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+**Arctic Aesthetics:**
+- **Cool Blue Palette** - Evokes frozen landscapes and glacial ice
+- **Sinuous Movement** - Worm-like creatures with realistic serpentine motion
+- **Luminous Trails** - Glowing paths mark each worm's journey
+- **Alien Beauty** - Otherworldly patterns emerge from simple creatures
 
-### Features
+### Organic Algorithms
 
-Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.
+Each worm follows behavioral rules that create emergent complexity. They turn, curve, and navigate the space using algorithms inspired by real organism behavior, resulting in movement that feels genuinely alive.
 
-- **Animated Background**: Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit
-- **Responsive Design**: Sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt
-- **Smooth Transitions**: Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet
-- **Customizable Colors**: Consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt
+### The Mystery of Ice Worms
 
-### Technical Details
+Real ice worms (Mesenchytraeus solifugus) survive in glacial ice where they feed on algae and pollen. They're one of nature's most extreme specialists, and this theme celebrates their strange beauty.
 
-At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident.
+### Perfect For
 
-Similique sunt in culpa qui officia deserunt mollitia animi, id est laborum et dolorum fuga. Et harum quidem rerum facilis est et expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod maxime placeat facere possimus.
+- Science and biology sites
+- Arctic and climate research
+- Experimental digital art
+- Unique creative portfolios
+- Technology and innovation showcases
+- Anyone seeking something truly different
 
-### Get Started
-
-Omnis voluptas assumenda est, omnis dolor repellendus. Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet ut et voluptates repudiandae sint et molestiae non recusandae. Itaque earum rerum hic tenetur a sapiente delectus, ut aut reiciendis voluptatibus maiores alias consequatur aut perferendis doloribus asperiores repellat.
+Embrace the chill and watch the ice worms dance.
