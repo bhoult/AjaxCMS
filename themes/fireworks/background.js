@@ -19,6 +19,7 @@ const fireworks = [];
 const particles = [];
 const stars = [];
 const ufos = [];
+const ufoParticles = []; // Particles from UFO explosions (draw on foreground)
 const gravity = 0.05;
 const fireworkChance = 0.04;
 let lastUfoSpawn = 0;
@@ -384,7 +385,9 @@ class Particle {
         }
     }
 
-    draw() {
+    draw(context) {
+        const drawCtx = context || ctx;
+
         // Draw trail for streamers (skip if too many particles for performance)
         if (this.isStreamer && this.trail.length > 0 && particles.length < 500) {
             const trailLen = this.trail.length;
@@ -392,10 +395,10 @@ class Particle {
             for (let i = 0; i < trailLen; i++) {
                 const point = this.trail[i];
                 const trailAlpha = point.alpha * (i * invTrailLen) * 0.5;
-                ctx.fillStyle = 'rgba(' + this.color[0] + ',' + this.color[1] + ',' + this.color[2] + ',' + trailAlpha + ')';
-                ctx.beginPath();
-                ctx.arc(point.x, point.y, this.size * 0.5, 0, Math.PI * 2);
-                ctx.fill();
+                drawCtx.fillStyle = 'rgba(' + this.color[0] + ',' + this.color[1] + ',' + this.color[2] + ',' + trailAlpha + ')';
+                drawCtx.beginPath();
+                drawCtx.arc(point.x, point.y, this.size * 0.5, 0, Math.PI * 2);
+                drawCtx.fill();
             }
         }
 
@@ -412,13 +415,13 @@ class Particle {
             }
         }
 
-        ctx.shadowBlur = glow;
+        drawCtx.shadowBlur = glow;
         const colorStr = 'rgba(' + particleColor[0] + ',' + particleColor[1] + ',' + particleColor[2] + ',' + this.alpha + ')';
-        ctx.shadowColor = colorStr;
-        ctx.fillStyle = colorStr;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.fill();
+        drawCtx.shadowColor = colorStr;
+        drawCtx.fillStyle = colorStr;
+        drawCtx.beginPath();
+        drawCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        drawCtx.fill();
     }
 
     isDead() {
@@ -484,7 +487,7 @@ class UFO {
             const speed = Math.random() * 6 + 3;
             const vx = Math.cos(angle) * speed;
             const vy = Math.sin(angle) * speed;
-            particles.push(new Particle(this.x, y, vx, vy, colorScheme, false, false, false, false));
+            ufoParticles.push(new Particle(this.x, y, vx, vy, colorScheme, false, false, false, false));
         }
     }
 
@@ -618,6 +621,21 @@ function animate() {
         }
     }
 
+    // Update and draw UFO explosion particles on foreground
+    let k = 0;
+    while (k < ufoParticles.length) {
+        const particle = ufoParticles[k];
+        particle.update();
+        if (particle.isDead()) {
+            particle.dead = true;
+            ufoParticles[k] = ufoParticles[ufoParticles.length - 1];
+            ufoParticles.pop();
+        } else {
+            particle.draw(fgCtx);
+            k++;
+        }
+    }
+
     // Randomly launch new fireworks
     if (Math.random() < fireworkChance) {
         const x = Math.random() * width;
@@ -686,74 +704,34 @@ createStars();
 if (foregroundCanvas) {
     console.log('Setting up UFO click handlers');
 
-    // Click handler - check if UFO was hit, otherwise pass through
-    foregroundCanvas.addEventListener('mousedown', (e) => {
+    // Click handler - check if UFO was hit, otherwise let event pass through
+    foregroundCanvas.addEventListener('click', (e) => {
         const clickX = e.clientX;
         const clickY = e.clientY;
 
         console.log('Click at:', clickX, clickY, 'UFOs:', ufos.length);
 
         // Check if click hit any UFO
-        let hitUfo = false;
         for (let i = 0; i < ufos.length; i++) {
             if (!ufos[i].exploded && ufos[i].containsPoint(clickX, clickY)) {
                 console.log('UFO hit! Exploding UFO', i);
                 ufos[i].explode();
-                hitUfo = true;
                 e.preventDefault();
                 e.stopPropagation();
-                break; // Only explode one UFO per click
+                return; // Stop processing - we hit a UFO
             }
         }
 
-        // If we didn't hit a UFO, pass the click through to elements below
-        if (!hitUfo) {
-            // Temporarily disable pointer events on canvas
-            foregroundCanvas.style.pointerEvents = 'none';
+        // If we didn't hit a UFO, temporarily hide canvas to let click through
+        foregroundCanvas.style.pointerEvents = 'none';
+        const elementBelow = document.elementFromPoint(e.clientX, e.clientY);
+        foregroundCanvas.style.pointerEvents = 'auto';
 
-            // Re-dispatch the click to the element underneath
-            const elementBelow = document.elementFromPoint(e.clientX, e.clientY);
-            if (elementBelow) {
-                elementBelow.dispatchEvent(new MouseEvent('mousedown', {
-                    bubbles: true,
-                    cancelable: true,
-                    clientX: e.clientX,
-                    clientY: e.clientY,
-                    button: e.button
-                }));
-            }
-
-            // Re-enable pointer events after a brief delay
-            setTimeout(() => {
-                foregroundCanvas.style.pointerEvents = 'auto';
-            }, 0);
-        }
-    });
-
-    // Also handle click events
-    foregroundCanvas.addEventListener('click', (e) => {
-        const clickX = e.clientX;
-        const clickY = e.clientY;
-
-        // Check if click hit any UFO
-        let hitUfo = false;
-        for (let i = 0; i < ufos.length; i++) {
-            if (!ufos[i].exploded && ufos[i].containsPoint(clickX, clickY)) {
-                hitUfo = true;
-                break;
-            }
-        }
-
-        // If we didn't hit a UFO, pass the click through
-        if (!hitUfo) {
-            foregroundCanvas.style.pointerEvents = 'none';
-            const elementBelow = document.elementFromPoint(e.clientX, e.clientY);
-            if (elementBelow) {
-                elementBelow.click();
-            }
-            setTimeout(() => {
-                foregroundCanvas.style.pointerEvents = 'auto';
-            }, 0);
+        if (elementBelow && elementBelow !== foregroundCanvas) {
+            // Prevent default on canvas, let the real click happen on element below
+            e.preventDefault();
+            e.stopPropagation();
+            elementBelow.click();
         }
     });
 
