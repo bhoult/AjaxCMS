@@ -442,6 +442,26 @@ class UFO {
         this.wobble = Math.random() * Math.PI * 2; // For wobbling motion
         this.lightPhase = Math.random() * Math.PI * 2; // For blinking lights
         this.exploded = false;
+
+        // Pre-calculate size multipliers
+        this.sizeHalf = this.size * 0.5;
+        this.size02 = this.size * 0.2;
+        this.size025 = this.size * 0.25;
+        this.size03 = this.size * 0.3;
+        this.size035 = this.size * 0.35;
+        this.size015 = this.size * 0.15;
+        this.size024 = this.size * 0.24;
+        this.size08 = this.size * 0.8;
+        this.size15 = this.size * 1.5;
+        this.size3 = this.size * 3;
+
+        // Pre-build light color arrays
+        this.lightColors = [
+            { r: 255, g: 100, b: 100 },
+            { r: 100, g: 255, b: 100 },
+            { r: 100, g: 100, b: 255 },
+            { r: 255, g: 255, b: 100 }
+        ];
     }
 
     update(frame) {
@@ -544,81 +564,83 @@ class UFO {
 
         const wobbleY = Math.sin(this.wobble) * 3;
         const y = this.y + wobbleY;
+        const yPlusHalf = y + this.sizeHalf;
 
         // UFO shadow/glow underneath
-        const glowGradient = fgCtx.createRadialGradient(this.x, y + this.size * 0.5, 0, this.x, y + this.size * 0.5, this.size * 1.5);
+        const glowGradient = fgCtx.createRadialGradient(this.x, yPlusHalf, 0, this.x, yPlusHalf, this.size15);
         glowGradient.addColorStop(0, 'rgba(100, 200, 255, 0.3)');
         glowGradient.addColorStop(1, 'rgba(100, 200, 255, 0)');
         fgCtx.fillStyle = glowGradient;
         fgCtx.beginPath();
-        fgCtx.arc(this.x, y + this.size * 0.5, this.size * 1.5, 0, Math.PI * 2);
+        fgCtx.arc(this.x, yPlusHalf, this.size15, 0, Math.PI * 2);
         fgCtx.fill();
 
         // UFO dome (top)
         fgCtx.fillStyle = 'rgba(150, 160, 170, 0.8)';
         fgCtx.beginPath();
-        fgCtx.ellipse(this.x, y - this.size * 0.2, this.size * 0.5, this.size * 0.35, 0, 0, Math.PI * 2);
+        fgCtx.ellipse(this.x, y - this.size02, this.sizeHalf, this.size035, 0, 0, Math.PI * 2);
         fgCtx.fill();
 
         // Dome highlight
         fgCtx.fillStyle = 'rgba(200, 220, 240, 0.4)';
         fgCtx.beginPath();
-        fgCtx.ellipse(this.x - this.size * 0.15, y - this.size * 0.25, this.size * 0.2, this.size * 0.15, 0, 0, Math.PI * 2);
+        fgCtx.ellipse(this.x - this.size015, y - this.size025, this.size02, this.size015, 0, 0, Math.PI * 2);
         fgCtx.fill();
 
         // UFO body (saucer)
         fgCtx.fillStyle = 'rgba(120, 130, 140, 0.9)';
         fgCtx.beginPath();
-        fgCtx.ellipse(this.x, y, this.size, this.size * 0.3, 0, 0, Math.PI * 2);
+        fgCtx.ellipse(this.x, y, this.size, this.size03, 0, 0, Math.PI * 2);
         fgCtx.fill();
 
         // Body edge highlight
         fgCtx.strokeStyle = 'rgba(180, 190, 200, 0.6)';
         fgCtx.lineWidth = 2;
         fgCtx.beginPath();
-        fgCtx.ellipse(this.x, y, this.size, this.size * 0.3, 0, 0, Math.PI);
+        fgCtx.ellipse(this.x, y, this.size, this.size03, 0, 0, Math.PI);
         fgCtx.stroke();
 
         // Colored lights around the rim
-        const numLights = 5;
-        for (let i = 0; i < numLights; i++) {
-            const angle = (i / numLights) * Math.PI * 2 + this.lightPhase;
-            const lightX = this.x + Math.cos(angle) * this.size * 0.8;
-            const lightY = y + Math.sin(angle) * this.size * 0.24;
+        const twoPi = Math.PI * 2;
+        const lightFraction = twoPi / 5;
+        for (let i = 0; i < 5; i++) {
+            const angle = i * lightFraction + this.lightPhase;
+            const cosAngle = Math.cos(angle);
+            const sinAngle = Math.sin(angle);
+            const lightX = this.x + cosAngle * this.size08;
+            const lightY = y + sinAngle * this.size024;
 
             // Alternate between colors
             const brightness = Math.sin(this.lightPhase + i) * 0.3 + 0.7;
-            const colors = [
-                'rgba(255, 100, 100, ' + brightness + ')',
-                'rgba(100, 255, 100, ' + brightness + ')',
-                'rgba(100, 100, 255, ' + brightness + ')',
-                'rgba(255, 255, 100, ' + brightness + ')'
-            ];
-            const color = colors[i % colors.length];
+            const colorObj = this.lightColors[i % 4];
+            const colorStr = 'rgba(' + colorObj.r + ',' + colorObj.g + ',' + colorObj.b + ',' + brightness + ')';
+            const glowStr = 'rgba(' + colorObj.r + ',' + colorObj.g + ',' + colorObj.b + ',0.2)';
 
-            fgCtx.fillStyle = color;
+            fgCtx.fillStyle = colorStr;
             fgCtx.beginPath();
-            fgCtx.arc(lightX, lightY, 2, 0, Math.PI * 2);
+            fgCtx.arc(lightX, lightY, 2, 0, twoPi);
             fgCtx.fill();
 
             // Light glow
-            fgCtx.fillStyle = color.replace(/[\d.]+\)/, '0.2)');
+            fgCtx.fillStyle = glowStr;
             fgCtx.beginPath();
-            fgCtx.arc(lightX, lightY, 4, 0, Math.PI * 2);
+            fgCtx.arc(lightX, lightY, 4, 0, twoPi);
             fgCtx.fill();
         }
 
         // Beam underneath (occasionally)
         if (Math.sin(this.lightPhase * 0.5) > 0.6) {
-            const beamGradient = fgCtx.createLinearGradient(this.x, y + this.size * 0.3, this.x, y + this.size * 3);
+            const yBeamTop = y + this.size03;
+            const yBeamBottom = y + this.size3;
+            const beamGradient = fgCtx.createLinearGradient(this.x, yBeamTop, this.x, yBeamBottom);
             beamGradient.addColorStop(0, 'rgba(200, 255, 255, 0.2)');
             beamGradient.addColorStop(1, 'rgba(200, 255, 255, 0)');
             fgCtx.fillStyle = beamGradient;
             fgCtx.beginPath();
-            fgCtx.moveTo(this.x - this.size * 0.3, y + this.size * 0.3);
-            fgCtx.lineTo(this.x + this.size * 0.3, y + this.size * 0.3);
-            fgCtx.lineTo(this.x + this.size * 0.8, y + this.size * 3);
-            fgCtx.lineTo(this.x - this.size * 0.8, y + this.size * 3);
+            fgCtx.moveTo(this.x - this.size03, yBeamTop);
+            fgCtx.lineTo(this.x + this.size03, yBeamTop);
+            fgCtx.lineTo(this.x + this.size08, yBeamBottom);
+            fgCtx.lineTo(this.x - this.size08, yBeamBottom);
             fgCtx.closePath();
             fgCtx.fill();
         }
@@ -868,13 +890,20 @@ if (foregroundCanvas) {
     });
 
     // Track mouse for cursor change on document (since canvas has pointer-events:none by default)
+    // Throttle to avoid checking on every pixel movement
+    let lastMouseCheck = 0;
     document.addEventListener('mousemove', (e) => {
+        const now = performance.now();
+        if (now - lastMouseCheck < 16) return; // Throttle to ~60fps
+        lastMouseCheck = now;
+
         const mouseX = e.clientX;
         const mouseY = e.clientY;
 
         // Check if mouse is over any UFO
         let overUfo = false;
-        for (let i = 0; i < ufos.length; i++) {
+        const ufoLen = ufos.length;
+        for (let i = 0; i < ufoLen; i++) {
             if (!ufos[i].exploded && ufos[i].containsPoint(mouseX, mouseY)) {
                 overUfo = true;
                 break;
