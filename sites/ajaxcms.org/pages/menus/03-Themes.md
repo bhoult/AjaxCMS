@@ -2,7 +2,7 @@
 
 View all available AjaxCMS themes in action. Each theme includes an animated canvas background and coordinated color scheme.
 
-<a href="/" class="btn btn-primary btn-lg">Browse All Themes</a>
+<a href="/sites" class="btn btn-primary btn-lg">Browse All Themes</a>
 
 ## Available Themes
 
