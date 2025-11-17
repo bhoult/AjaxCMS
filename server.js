@@ -625,48 +625,14 @@ if (require.main === module) {
 
       console.log('Discovered site domains:', siteDomains.length > 0 ? siteDomains.join(', ') : 'none');
 
-      // Create sites array for greenlock configuration
-      const sites = siteDomains.map(domain => ({
-        subject: domain,
-        altnames: [domain, 'www.' + domain]
-      }));
-
       greenlockExpress
         .init({
           packageRoot: __dirname,
           configDir: './greenlock.d',
           maintainerEmail: MAINTAINER_EMAIL,
-          cluster: false,
-          // Notify function to handle greenlock events
-          notify: function (event, details) {
-            if ('error' === event) {
-              console.error('Greenlock error:', details);
-            }
-          }
+          cluster: false
         })
-        .ready(async (glx) => {
-          // Add sites using the sites manager
-          if (sites.length > 0) {
-            const Greenlock = require('greenlock');
-            const greenlock = Greenlock.create({
-              configDir: './greenlock.d',
-              packageRoot: __dirname,
-              maintainerEmail: MAINTAINER_EMAIL
-            });
-
-            for (const site of sites) {
-              try {
-                await greenlock.sites.add(site);
-                console.log(`Added domain to SSL: ${site.subject}, www.${site.subject}`);
-              } catch (err) {
-                // Domain might already be added
-                if (err.code !== 'E_DUPLICATE') {
-                  console.log(`Note: Could not add ${site.subject}:`, err.message);
-                }
-              }
-            }
-          }
-
+        .ready((glx) => {
           // Serves on 80 and 443
           glx.serveApp(app);
           console.log('\nAjaxCMS Multi-Site Server with SSL');
@@ -676,6 +642,14 @@ if (require.main === module) {
           console.log('  - HTTPS: port 443');
           console.log('\nSSL certificates will be automatically provisioned via Let\'s Encrypt');
           console.log('Maintainer email:', MAINTAINER_EMAIL);
+
+          // Note about adding domains
+          if (siteDomains.length > 0) {
+            console.log('\nTo add SSL certificates for your domains, run:');
+            siteDomains.forEach(domain => {
+              console.log(`  npx greenlock add --subject ${domain} --altnames ${domain},www.${domain}`);
+            });
+          }
         });
     })();
   } else {
