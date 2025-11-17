@@ -500,6 +500,19 @@ app.get('*/static/*', async (req, res) => {
   }
 });
 
+// Serve sites index at /sites regardless of domain
+app.get('/sites', (req, res) => {
+  sendFileWithCache(path.join(__dirname, 'sites-index.html'), req, res, () => {
+    res.status(404).send('Sites index not found');
+  });
+});
+
+app.get('/sites/', (req, res) => {
+  sendFileWithCache(path.join(__dirname, 'sites-index.html'), req, res, () => {
+    res.status(404).send('Sites index not found');
+  });
+});
+
 // Serve index page for root or site root
 app.get('/', (req, res, next) => {
   if (!req.siteName) {
