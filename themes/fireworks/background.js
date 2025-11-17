@@ -11,8 +11,11 @@ canvas.height = height;
 // Firework configuration
 const fireworks = [];
 const particles = [];
+const stars = [];
+const smoke = [];
 const gravity = 0.05;
 const fireworkChance = 0.02;
+const windSpeed = 0.3;
 
 // Firework colors - vibrant combinations
 const colorSchemes = [
@@ -22,7 +25,23 @@ const colorSchemes = [
     [[50, 255, 50], [150, 255, 150], [200, 255, 200]], // Green
     [[200, 50, 255], [150, 100, 255], [220, 180, 255]], // Purple
     [[255, 255, 50], [255, 200, 50], [255, 150, 50]], // Gold
+    [[255, 255, 255], [200, 200, 255], [255, 200, 200]], // White-Silver
 ];
+
+// Create stars
+function createStars() {
+    const starCount = 200;
+    for (let i = 0; i < starCount; i++) {
+        stars.push({
+            x: Math.random() * width,
+            y: Math.random() * height,
+            size: Math.random() * 2,
+            twinkleSpeed: Math.random() * 0.02 + 0.01,
+            brightness: Math.random(),
+            twinkleOffset: Math.random() * Math.PI * 2
+        });
+    }
+}
 
 class Firework {
     constructor(x, y) {
@@ -34,6 +53,7 @@ class Firework {
         this.exploded = false;
         this.colorScheme = colorSchemes[Math.floor(Math.random() * colorSchemes.length)];
         this.trail = [];
+        this.type = Math.random(); // Determines explosion type
     }
 
     update() {
@@ -78,30 +98,78 @@ class Firework {
     }
 
     explode() {
-        const particleCount = Math.random() * 100 + 150;
-        const explosionType = Math.random();
+        // Generate smoke puffs
+        for (let i = 0; i < 15; i++) {
+            smoke.push(new Smoke(this.x, this.y));
+        }
 
-        for (let i = 0; i < particleCount; i++) {
-            let angle, speed;
+        let particleCount = Math.random() * 100 + 150;
 
-            if (explosionType < 0.3) {
-                // Circular burst
-                angle = (Math.PI * 2 * i) / particleCount;
-                speed = Math.random() * 5 + 3;
-            } else if (explosionType < 0.6) {
-                // Random burst
-                angle = Math.random() * Math.PI * 2;
-                speed = Math.random() * 8 + 2;
-            } else {
-                // Ring burst
-                angle = (Math.PI * 2 * i) / particleCount;
-                speed = Math.random() * 2 + 6;
+        if (this.type < 0.15) {
+            // Willow - Drooping effect
+            particleCount = 200;
+            for (let i = 0; i < particleCount; i++) {
+                const angle = (Math.PI * 2 * i) / particleCount;
+                const speed = Math.random() * 4 + 2;
+                const vx = Math.cos(angle) * speed;
+                const vy = Math.sin(angle) * speed * 0.5; // Less vertical spread
+                particles.push(new Particle(this.x, this.y, vx, vy, this.colorScheme, false, true));
             }
+        } else if (this.type < 0.3) {
+            // Palm - Rising particles
+            particleCount = 150;
+            for (let i = 0; i < particleCount; i++) {
+                const angle = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI / 3;
+                const speed = Math.random() * 6 + 4;
+                const vx = Math.cos(angle) * speed;
+                const vy = Math.sin(angle) * speed;
+                particles.push(new Particle(this.x, this.y, vx, vy, this.colorScheme));
+            }
+        } else if (this.type < 0.45) {
+            // Chrysanthemum - Dense circular burst
+            particleCount = 300;
+            for (let i = 0; i < particleCount; i++) {
+                const angle = (Math.PI * 2 * i) / particleCount;
+                const speed = Math.random() * 3 + 5;
+                const vx = Math.cos(angle) * speed;
+                const vy = Math.sin(angle) * speed;
+                particles.push(new Particle(this.x, this.y, vx, vy, this.colorScheme));
+            }
+        } else if (this.type < 0.6) {
+            // Crossette - Breaks into clusters
+            const clusters = 8;
+            for (let c = 0; c < clusters; c++) {
+                const clusterAngle = (Math.PI * 2 * c) / clusters;
+                const clusterSpeed = 6;
+                const cx = this.x + Math.cos(clusterAngle) * 30;
+                const cy = this.y + Math.sin(clusterAngle) * 30;
 
-            const vx = Math.cos(angle) * speed;
-            const vy = Math.sin(angle) * speed;
-
-            particles.push(new Particle(this.x, this.y, vx, vy, this.colorScheme));
+                for (let i = 0; i < 25; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = Math.random() * 4 + 2;
+                    const vx = Math.cos(angle) * speed;
+                    const vy = Math.sin(angle) * speed;
+                    particles.push(new Particle(cx, cy, vx, vy, this.colorScheme));
+                }
+            }
+        } else if (this.type < 0.75) {
+            // Ring burst
+            for (let i = 0; i < particleCount; i++) {
+                const angle = (Math.PI * 2 * i) / particleCount;
+                const speed = Math.random() * 2 + 6;
+                const vx = Math.cos(angle) * speed;
+                const vy = Math.sin(angle) * speed;
+                particles.push(new Particle(this.x, this.y, vx, vy, this.colorScheme));
+            }
+        } else {
+            // Random burst
+            for (let i = 0; i < particleCount; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 8 + 2;
+                const vx = Math.cos(angle) * speed;
+                const vy = Math.sin(angle) * speed;
+                particles.push(new Particle(this.x, this.y, vx, vy, this.colorScheme));
+            }
         }
 
         // Add secondary explosions for some fireworks
@@ -121,7 +189,7 @@ class Firework {
 }
 
 class Particle {
-    constructor(x, y, vx, vy, colorScheme, isSecondary = false) {
+    constructor(x, y, vx, vy, colorScheme, isSecondary = false, isWillow = false) {
         this.x = x;
         this.y = y;
         this.vx = vx;
@@ -130,6 +198,7 @@ class Particle {
         this.decay = Math.random() * 0.015 + 0.01;
         this.color = colorScheme[Math.floor(Math.random() * colorScheme.length)];
         this.isSecondary = isSecondary;
+        this.isWillow = isWillow;
         this.size = isSecondary ? 1.5 : 2.5;
         this.trail = [];
 
@@ -143,7 +212,8 @@ class Particle {
     }
 
     update() {
-        this.vy += gravity * 0.3; // Less gravity for particles
+        // Willow particles have stronger gravity
+        this.vy += gravity * (this.isWillow ? 0.5 : 0.3);
         this.x += this.vx;
         this.y += this.vy;
         this.vx *= 0.98; // Air resistance
@@ -151,7 +221,7 @@ class Particle {
         this.alpha -= this.decay;
 
         // Trail for streamers
-        if (this.isStreamer) {
+        if (this.isStreamer || this.isWillow) {
             this.trail.push({ x: this.x, y: this.y, alpha: this.alpha });
             if (this.trail.length > 15) this.trail.shift();
         }
@@ -186,10 +256,65 @@ class Particle {
     }
 }
 
+class Smoke {
+    constructor(x, y) {
+        this.x = x + (Math.random() - 0.5) * 20;
+        this.y = y + (Math.random() - 0.5) * 20;
+        this.vx = windSpeed + (Math.random() - 0.5) * 0.5;
+        this.vy = -Math.random() * 0.5 - 0.2; // Rises slowly
+        this.size = Math.random() * 15 + 10;
+        this.alpha = 0.3;
+        this.decay = 0.002;
+        this.expansion = 0.5;
+    }
+
+    update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.size += this.expansion;
+        this.alpha -= this.decay;
+        this.vx *= 0.99; // Slow down drift
+        this.vy *= 0.99;
+    }
+
+    draw() {
+        ctx.fillStyle = `rgba(200, 200, 200, ${this.alpha})`;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    isDead() {
+        return this.alpha <= 0;
+    }
+}
+
+let time = 0;
 function animate() {
+    time += 1;
+
     // Fade previous frame for trail effect
     ctx.fillStyle = 'rgba(10, 10, 30, 0.1)';
     ctx.fillRect(0, 0, width, height);
+
+    // Draw twinkling stars
+    for (let star of stars) {
+        const twinkle = Math.sin(time * star.twinkleSpeed + star.twinkleOffset) * 0.5 + 0.5;
+        const brightness = star.brightness * twinkle;
+        ctx.fillStyle = `rgba(255, 255, 255, ${brightness})`;
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Update and draw smoke
+    for (let i = smoke.length - 1; i >= 0; i--) {
+        smoke[i].update();
+        smoke[i].draw();
+        if (smoke[i].isDead()) {
+            smoke.splice(i, 1);
+        }
+    }
 
     // Randomly launch new fireworks
     if (Math.random() < fireworkChance) {
@@ -225,11 +350,16 @@ window.addEventListener('resize', () => {
     height = window.innerHeight;
     canvas.width = width;
     canvas.height = height;
+    stars.length = 0; // Clear stars
+    createStars(); // Recreate stars for new dimensions
 });
 
 // Initialize with dark sky
 ctx.fillStyle = 'rgba(10, 10, 30, 1)';
 ctx.fillRect(0, 0, width, height);
+
+// Create stars
+createStars();
 
 // Start animation
 animate();
