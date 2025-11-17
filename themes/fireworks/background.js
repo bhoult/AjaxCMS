@@ -2,11 +2,17 @@
 
 const canvas = document.getElementById('background');
 const ctx = canvas.getContext('2d');
+const foregroundCanvas = document.getElementById('foreground');
+const fgCtx = foregroundCanvas ? foregroundCanvas.getContext('2d') : null;
 
 let width = window.innerWidth;
 let height = window.innerHeight;
 canvas.width = width;
 canvas.height = height;
+if (foregroundCanvas) {
+    foregroundCanvas.width = width;
+    foregroundCanvas.height = height;
+}
 
 // Firework configuration
 const fireworks = [];
@@ -448,42 +454,44 @@ class UFO {
     }
 
     draw(frame) {
+        if (!fgCtx) return; // Skip if no foreground canvas
+
         const wobbleY = Math.sin(this.wobble) * 3;
         const y = this.y + wobbleY;
 
         // UFO shadow/glow underneath
-        const glowGradient = ctx.createRadialGradient(this.x, y + this.size * 0.5, 0, this.x, y + this.size * 0.5, this.size * 1.5);
+        const glowGradient = fgCtx.createRadialGradient(this.x, y + this.size * 0.5, 0, this.x, y + this.size * 0.5, this.size * 1.5);
         glowGradient.addColorStop(0, 'rgba(100, 200, 255, 0.3)');
         glowGradient.addColorStop(1, 'rgba(100, 200, 255, 0)');
-        ctx.fillStyle = glowGradient;
-        ctx.beginPath();
-        ctx.arc(this.x, y + this.size * 0.5, this.size * 1.5, 0, Math.PI * 2);
-        ctx.fill();
+        fgCtx.fillStyle = glowGradient;
+        fgCtx.beginPath();
+        fgCtx.arc(this.x, y + this.size * 0.5, this.size * 1.5, 0, Math.PI * 2);
+        fgCtx.fill();
 
         // UFO dome (top)
-        ctx.fillStyle = 'rgba(150, 160, 170, 0.8)';
-        ctx.beginPath();
-        ctx.ellipse(this.x, y - this.size * 0.2, this.size * 0.5, this.size * 0.35, 0, 0, Math.PI * 2);
-        ctx.fill();
+        fgCtx.fillStyle = 'rgba(150, 160, 170, 0.8)';
+        fgCtx.beginPath();
+        fgCtx.ellipse(this.x, y - this.size * 0.2, this.size * 0.5, this.size * 0.35, 0, 0, Math.PI * 2);
+        fgCtx.fill();
 
         // Dome highlight
-        ctx.fillStyle = 'rgba(200, 220, 240, 0.4)';
-        ctx.beginPath();
-        ctx.ellipse(this.x - this.size * 0.15, y - this.size * 0.25, this.size * 0.2, this.size * 0.15, 0, 0, Math.PI * 2);
-        ctx.fill();
+        fgCtx.fillStyle = 'rgba(200, 220, 240, 0.4)';
+        fgCtx.beginPath();
+        fgCtx.ellipse(this.x - this.size * 0.15, y - this.size * 0.25, this.size * 0.2, this.size * 0.15, 0, 0, Math.PI * 2);
+        fgCtx.fill();
 
         // UFO body (saucer)
-        ctx.fillStyle = 'rgba(120, 130, 140, 0.9)';
-        ctx.beginPath();
-        ctx.ellipse(this.x, y, this.size, this.size * 0.3, 0, 0, Math.PI * 2);
-        ctx.fill();
+        fgCtx.fillStyle = 'rgba(120, 130, 140, 0.9)';
+        fgCtx.beginPath();
+        fgCtx.ellipse(this.x, y, this.size, this.size * 0.3, 0, 0, Math.PI * 2);
+        fgCtx.fill();
 
         // Body edge highlight
-        ctx.strokeStyle = 'rgba(180, 190, 200, 0.6)';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.ellipse(this.x, y, this.size, this.size * 0.3, 0, 0, Math.PI);
-        ctx.stroke();
+        fgCtx.strokeStyle = 'rgba(180, 190, 200, 0.6)';
+        fgCtx.lineWidth = 2;
+        fgCtx.beginPath();
+        fgCtx.ellipse(this.x, y, this.size, this.size * 0.3, 0, 0, Math.PI);
+        fgCtx.stroke();
 
         // Colored lights around the rim
         const numLights = 5;
@@ -502,31 +510,31 @@ class UFO {
             ];
             const color = colors[i % colors.length];
 
-            ctx.fillStyle = color;
-            ctx.beginPath();
-            ctx.arc(lightX, lightY, 2, 0, Math.PI * 2);
-            ctx.fill();
+            fgCtx.fillStyle = color;
+            fgCtx.beginPath();
+            fgCtx.arc(lightX, lightY, 2, 0, Math.PI * 2);
+            fgCtx.fill();
 
             // Light glow
-            ctx.fillStyle = color.replace(/[\d.]+\)/, '0.2)');
-            ctx.beginPath();
-            ctx.arc(lightX, lightY, 4, 0, Math.PI * 2);
-            ctx.fill();
+            fgCtx.fillStyle = color.replace(/[\d.]+\)/, '0.2)');
+            fgCtx.beginPath();
+            fgCtx.arc(lightX, lightY, 4, 0, Math.PI * 2);
+            fgCtx.fill();
         }
 
         // Beam underneath (occasionally)
         if (Math.sin(this.lightPhase * 0.5) > 0.6) {
-            const beamGradient = ctx.createLinearGradient(this.x, y + this.size * 0.3, this.x, y + this.size * 3);
+            const beamGradient = fgCtx.createLinearGradient(this.x, y + this.size * 0.3, this.x, y + this.size * 3);
             beamGradient.addColorStop(0, 'rgba(200, 255, 255, 0.2)');
             beamGradient.addColorStop(1, 'rgba(200, 255, 255, 0)');
-            ctx.fillStyle = beamGradient;
-            ctx.beginPath();
-            ctx.moveTo(this.x - this.size * 0.3, y + this.size * 0.3);
-            ctx.lineTo(this.x + this.size * 0.3, y + this.size * 0.3);
-            ctx.lineTo(this.x + this.size * 0.8, y + this.size * 3);
-            ctx.lineTo(this.x - this.size * 0.8, y + this.size * 3);
-            ctx.closePath();
-            ctx.fill();
+            fgCtx.fillStyle = beamGradient;
+            fgCtx.beginPath();
+            fgCtx.moveTo(this.x - this.size * 0.3, y + this.size * 0.3);
+            fgCtx.lineTo(this.x + this.size * 0.3, y + this.size * 0.3);
+            fgCtx.lineTo(this.x + this.size * 0.8, y + this.size * 3);
+            fgCtx.lineTo(this.x - this.size * 0.8, y + this.size * 3);
+            fgCtx.closePath();
+            fgCtx.fill();
         }
     }
 }
@@ -538,6 +546,11 @@ function animate() {
     // Fade previous frame for trail effect
     ctx.fillStyle = 'rgba(10, 10, 30, 0.1)';
     ctx.fillRect(0, 0, width, height);
+
+    // Clear foreground canvas for UFOs
+    if (fgCtx) {
+        fgCtx.clearRect(0, 0, width, height);
+    }
 
     // Draw twinkling stars (use traditional for loop)
     const starsLen = stars.length;
@@ -619,6 +632,10 @@ window.addEventListener('resize', () => {
     height = window.innerHeight;
     canvas.width = width;
     canvas.height = height;
+    if (foregroundCanvas) {
+        foregroundCanvas.width = width;
+        foregroundCanvas.height = height;
+    }
     stars.length = 0; // Clear stars
     createStars(); // Recreate stars for new dimensions
 });
