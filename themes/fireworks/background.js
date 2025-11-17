@@ -704,7 +704,7 @@ createStars();
 if (foregroundCanvas) {
     console.log('Setting up UFO click handlers');
 
-    // Click handler - check if UFO was hit, otherwise let event pass through
+    // Click handler - only fires when hovering over UFO (pointer-events controlled by CSS)
     foregroundCanvas.addEventListener('click', (e) => {
         const clickX = e.clientX;
         const clickY = e.clientY;
@@ -720,18 +720,6 @@ if (foregroundCanvas) {
                 e.stopPropagation();
                 return; // Stop processing - we hit a UFO
             }
-        }
-
-        // If we didn't hit a UFO, temporarily hide canvas to let click through
-        foregroundCanvas.style.pointerEvents = 'none';
-        const elementBelow = document.elementFromPoint(e.clientX, e.clientY);
-        foregroundCanvas.style.pointerEvents = 'auto';
-
-        if (elementBelow && elementBelow !== foregroundCanvas) {
-            // Prevent default on canvas, let the real click happen on element below
-            e.preventDefault();
-            e.stopPropagation();
-            elementBelow.click();
         }
     });
 
