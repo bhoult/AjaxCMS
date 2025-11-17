@@ -20,6 +20,9 @@ npm-debug.log
 # SSL certificates (Let's Encrypt via Greenlock)
 greenlock.d/
 
+# Logs
+logs/
+
 # Test coverage
 coverage/
 

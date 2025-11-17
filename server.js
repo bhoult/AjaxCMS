@@ -14,6 +14,41 @@ const app = express();
 const SITES_DIR = process.env.SITES_DIR || './sites';
 const ENABLE_SSL = process.env.ENABLE_SSL === 'true';
 const MAINTAINER_EMAIL = process.env.MAINTAINER_EMAIL || '';
+const LOGS_DIR = './logs';
+
+// Ensure logs directory exists
+try {
+  if (!fsSync.existsSync(LOGS_DIR)) {
+    fsSync.mkdirSync(LOGS_DIR, { recursive: true });
+  }
+} catch (err) {
+  console.error('Failed to create logs directory:', err);
+}
+
+// Logging function for site requests
+function logRequest(siteName, req, statusCode, contentLength) {
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const logFileName = `${month}-${siteName || 'index'}.log`;
+  const logFilePath = path.join(LOGS_DIR, logFileName);
+
+  const timestamp = now.toISOString();
+  const method = req.method;
+  const url = req.originalUrl || req.url;
+  const userAgent = req.headers['user-agent'] || '-';
+  const referer = req.headers['referer'] || '-';
+  const ip = req.ip || req.connection.remoteAddress || '-';
+
+  // Combined Log Format
+  const logLine = `${ip} - - [${timestamp}] "${method} ${url} HTTP/1.1" ${statusCode} ${contentLength || '-'} "${referer}" "${userAgent}"\n`;
+
+  // Append to log file (async, non-blocking)
+  fsSync.appendFile(logFilePath, logLine, (err) => {
+    if (err) {
+      console.error('Failed to write log:', err);
+    }
+  });
+}
 
 // Port configuration
 // In SSL mode: use 80/443 (standard ports)
@@ -24,6 +59,7 @@ const HTTP_PORT = ENABLE_SSL ? 80 : (process.env.PORT || 3000);
 function sendFileWithCache(filePath, req, res, next) {
   fsSync.stat(filePath, (err, stats) => {
     if (err) {
+      logRequest(req.siteName, req, 404, 0);
       if (next) next();
       return;
     }
@@ -35,6 +71,7 @@ function sendFileWithCache(filePath, req, res, next) {
     const clientEtag = req.headers['if-none-match'];
     if (clientEtag === etag) {
       // File hasn't changed, send 304 Not Modified
+      logRequest(req.siteName, req, 304, 0);
       res.status(304).end();
       return;
     }
@@ -45,8 +82,11 @@ function sendFileWithCache(filePath, req, res, next) {
 
     // Send the file
     res.sendFile(filePath, (sendErr) => {
-      if (sendErr && next) {
-        next();
+      if (sendErr) {
+        logRequest(req.siteName, req, sendErr.status || 500, 0);
+        if (next) next();
+      } else {
+        logRequest(req.siteName, req, 200, stats.size);
       }
     });
   });
@@ -152,6 +192,53 @@ app.use((req, res, next) => {
     req.siteName = null;
     req.sitePath = null;
   }
+
+  next();
+});
+
+// Logging middleware - capture response details
+app.use((req, res, next) => {
+  const originalSend = res.send;
+  const originalJson = res.json;
+  const originalSendFile = res.sendFile;
+
+  // Store original status code
+  let statusCode = 200;
+  let contentLength = 0;
+
+  // Override res.status to capture status code
+  const originalStatus = res.status;
+  res.status = function(code) {
+    statusCode = code;
+    return originalStatus.call(this, code);
+  };
+
+  // Override send to capture content length
+  res.send = function(data) {
+    contentLength = data ? Buffer.byteLength(data) : 0;
+    logRequest(req.siteName, req, statusCode, contentLength);
+    return originalSend.call(this, data);
+  };
+
+  // Override json to capture content length
+  res.json = function(data) {
+    const jsonString = JSON.stringify(data);
+    contentLength = jsonString ? Buffer.byteLength(jsonString) : 0;
+    logRequest(req.siteName, req, statusCode, contentLength);
+    return originalJson.call(this, data);
+  };
+
+  // Override sendFile to capture file size
+  res.sendFile = function(filePath, options, callback) {
+    try {
+      const stats = fsSync.statSync(filePath);
+      contentLength = stats.size;
+      logRequest(req.siteName, req, statusCode, contentLength);
+    } catch (err) {
+      // File doesn't exist, will be handled by sendFile
+    }
+    return originalSendFile.call(this, filePath, options, callback);
+  };
 
   next();
 });
