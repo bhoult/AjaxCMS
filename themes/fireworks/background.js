@@ -13,7 +13,7 @@ const fireworks = [];
 const particles = [];
 const stars = [];
 const gravity = 0.05;
-const fireworkChance = 0.02;
+const fireworkChance = 0.04;
 
 // Firework colors - vibrant combinations
 const colorSchemes = [
@@ -52,6 +52,7 @@ class Firework {
         this.colorScheme = colorSchemes[Math.floor(Math.random() * colorSchemes.length)];
         this.trail = [];
         this.type = Math.random(); // Determines explosion type
+        this.hasParticleExplosions = Math.random() < 0.33; // 1 in 3 fireworks will have particle explosions
     }
 
     update() {
@@ -106,7 +107,7 @@ class Firework {
                 const speed = Math.random() * 4 + 2;
                 const vx = Math.cos(angle) * speed;
                 const vy = Math.sin(angle) * speed * 0.5; // Less vertical spread
-                particles.push(new Particle(this.x, this.y, vx, vy, this.colorScheme, false, true));
+                particles.push(new Particle(this.x, this.y, vx, vy, this.colorScheme, false, true, false, this.hasParticleExplosions));
             }
         } else if (this.type < 0.3) {
             // Palm - Rising particles
@@ -116,7 +117,7 @@ class Firework {
                 const speed = Math.random() * 6 + 4;
                 const vx = Math.cos(angle) * speed;
                 const vy = Math.sin(angle) * speed;
-                particles.push(new Particle(this.x, this.y, vx, vy, this.colorScheme));
+                particles.push(new Particle(this.x, this.y, vx, vy, this.colorScheme, false, false, false, this.hasParticleExplosions));
             }
         } else if (this.type < 0.45) {
             // Chrysanthemum - Dense circular burst
@@ -126,7 +127,7 @@ class Firework {
                 const speed = Math.random() * 3 + 5;
                 const vx = Math.cos(angle) * speed;
                 const vy = Math.sin(angle) * speed;
-                particles.push(new Particle(this.x, this.y, vx, vy, this.colorScheme));
+                particles.push(new Particle(this.x, this.y, vx, vy, this.colorScheme, false, false, false, this.hasParticleExplosions));
             }
         } else if (this.type < 0.6) {
             // Crossette - Breaks into clusters
@@ -142,7 +143,7 @@ class Firework {
                     const speed = Math.random() * 4 + 2;
                     const vx = Math.cos(angle) * speed;
                     const vy = Math.sin(angle) * speed;
-                    particles.push(new Particle(cx, cy, vx, vy, this.colorScheme));
+                    particles.push(new Particle(cx, cy, vx, vy, this.colorScheme, false, false, false, this.hasParticleExplosions));
                 }
             }
         } else if (this.type < 0.75) {
@@ -152,7 +153,7 @@ class Firework {
                 const speed = Math.random() * 2 + 6;
                 const vx = Math.cos(angle) * speed;
                 const vy = Math.sin(angle) * speed;
-                particles.push(new Particle(this.x, this.y, vx, vy, this.colorScheme));
+                particles.push(new Particle(this.x, this.y, vx, vy, this.colorScheme, false, false, false, this.hasParticleExplosions));
             }
         } else {
             // Random burst
@@ -161,12 +162,12 @@ class Firework {
                 const speed = Math.random() * 8 + 2;
                 const vx = Math.cos(angle) * speed;
                 const vy = Math.sin(angle) * speed;
-                particles.push(new Particle(this.x, this.y, vx, vy, this.colorScheme));
+                particles.push(new Particle(this.x, this.y, vx, vy, this.colorScheme, false, false, false, this.hasParticleExplosions));
             }
         }
 
-        // Add secondary explosions for some fireworks (50% chance)
-        if (Math.random() < 0.5) {
+        // Add secondary explosions for some fireworks (33% chance - one in three)
+        if (Math.random() < 0.33) {
             const delay = Math.random() * 400 + 300;
             setTimeout(() => {
                 const secondaryCount = Math.floor(Math.random() * 40) + 30;
@@ -228,7 +229,7 @@ class Firework {
 }
 
 class Particle {
-    constructor(x, y, vx, vy, colorScheme, isSecondary = false, isWillow = false, isTertiary = false) {
+    constructor(x, y, vx, vy, colorScheme, isSecondary = false, isWillow = false, isTertiary = false, fireworkHasExplosions = false) {
         this.x = x;
         this.y = y;
         this.vx = vx;
@@ -244,8 +245,8 @@ class Particle {
         this.hasExploded = false;
         this.colorScheme = colorScheme;
 
-        // Some primary particles will explode (15% chance, but not secondaries or tertiaries)
-        this.willExplode = !isSecondary && !isTertiary && Math.random() < 0.15;
+        // Particles will explode only if their parent firework allows it (and they're not secondary/tertiary)
+        this.willExplode = !isSecondary && !isTertiary && fireworkHasExplosions && Math.random() < 0.33;
         this.explodeThreshold = Math.random() * 0.3 + 0.3; // Explode when alpha is between 0.3-0.6
 
         // Streamer effect - some particles last longer
@@ -255,6 +256,12 @@ class Particle {
         } else {
             this.isStreamer = false;
         }
+
+        // Strobe effect - some particles flash white (10% chance)
+        this.isStrobe = Math.random() < 0.1;
+        this.strobeFrequency = Math.random() * 0.15 + 0.1; // Flash speed
+        this.strobePhase = Math.random() * Math.PI * 2; // Random starting phase
+        this.strobeTime = 0;
     }
 
     update() {
@@ -265,6 +272,11 @@ class Particle {
         this.vx *= 0.98; // Air resistance
         this.vy *= 0.98;
         this.alpha -= this.decay;
+
+        // Update strobe timing
+        if (this.isStrobe) {
+            this.strobeTime += this.strobeFrequency;
+        }
 
         // Check if particle should explode
         if (this.willExplode && !this.hasExploded && this.alpha <= this.explodeThreshold) {
@@ -304,11 +316,22 @@ class Particle {
             }
         }
 
-        // Draw particle
-        const glow = this.isStreamer ? 4 : 2;
+        // Draw particle with optional strobe effect
+        let particleColor = this.color;
+        let glow = this.isStreamer ? 4 : 2;
+
+        // Strobe effect - flash white
+        if (this.isStrobe) {
+            const strobeValue = Math.sin(this.strobeTime + this.strobePhase);
+            if (strobeValue > 0.7) { // Flash when sine wave is high
+                particleColor = [255, 255, 255]; // White flash
+                glow = 8; // Bright glow during flash
+            }
+        }
+
         ctx.shadowBlur = glow;
-        ctx.shadowColor = `rgba(${this.color[0]}, ${this.color[1]}, ${this.color[2]}, ${this.alpha})`;
-        ctx.fillStyle = `rgba(${this.color[0]}, ${this.color[1]}, ${this.color[2]}, ${this.alpha})`;
+        ctx.shadowColor = `rgba(${particleColor[0]}, ${particleColor[1]}, ${particleColor[2]}, ${this.alpha})`;
+        ctx.fillStyle = `rgba(${particleColor[0]}, ${particleColor[1]}, ${particleColor[2]}, ${this.alpha})`;
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         ctx.fill();
