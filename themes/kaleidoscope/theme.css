@@ -155,7 +155,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Content area alignment with bevel */
 #main > div {
-    padding: 0 1rem 2rem 1rem !important;
+    padding: 0 1rem 2rem 2rem !important;
 }
 
 /* Content styling */
