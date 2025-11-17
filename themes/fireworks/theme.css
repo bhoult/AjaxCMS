@@ -160,17 +160,6 @@ h1, h2, h3, h4, h5, h6 {
     position: relative;
 }
 
-.navbar::after {
-    content: '★ ★ ★ ★ ★';
-    position: absolute;
-    bottom: -3px;
-    left: 50%;
-    transform: translateX(-50%);
-    color: white;
-    font-size: 0.6rem;
-    letter-spacing: 10px;
-    opacity: 0.5;
-}
 
 .navbar-brand {
     color: var(--network-cyan) !important;

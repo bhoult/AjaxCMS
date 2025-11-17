@@ -38,6 +38,27 @@
 		<!-- fonts.google.com - Fireworks theme fonts -->
 		<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;600;700&family=Oswald:wght@700&display=swap" rel="stylesheet">
 
+		<!-- Star stream in header -->
+		<style>
+			#header-stars {
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				pointer-events: none;
+				z-index: 0;
+			}
+			nav.navbar {
+				position: relative;
+				overflow: hidden;
+			}
+			nav.navbar .container-fluid {
+				position: relative;
+				z-index: 1;
+			}
+		</style>
+
 		<!-- Load theme -->
 		<script>
 			theme = default_background;
@@ -160,11 +181,13 @@
 			}
 			
 			#a, #b {
-				position:absolute; 
+				position:absolute;
 				top: 0px;
 				width:100%;
 				z-index:0;
-				background-color:rgba(200,200,255,0.9);
+				background-color:rgba(240,240,255,0.5);
+				backdrop-filter: blur(10px);
+				-webkit-backdrop-filter: blur(10px);
 				border-radius:0px 0px 8px 8px;
 				color:black;
 				margin-bottom:50px;
@@ -341,6 +364,7 @@
 			
 			<!-- Static navbar -->
 			<nav class="navbar navbar-expand-lg navbar-light bg-light">
+				<canvas id="header-stars"></canvas>
 				<div class="container-fluid">
 				    <a class="navbar-brand" href="javascript:void(0);" style="width:200px;"><img src='images/ajaxcms.svg' style="position:relative; top: -20px; z-index:2; width:100%;"></a>
 				    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -376,6 +400,142 @@
 		
 		  ga('create', ajaxcms_google_analytics, 'auto');
 		  //ga('send', 'pageview');
+		</script>
+
+		<!-- Header star stream animation -->
+		<script>
+		$(document).ready(function() {
+			// Wait for container to fade in (1000ms) and navbar to render
+			setTimeout(function() {
+				const canvas = document.getElementById('header-stars');
+				if (!canvas) {
+					console.log('Header stars canvas not found');
+					return;
+				}
+
+				const ctx = canvas.getContext('2d');
+				const navbar = canvas.parentElement;
+
+				function resizeCanvas() {
+					canvas.width = navbar.offsetWidth;
+					canvas.height = navbar.offsetHeight;
+					console.log('Canvas resized:', canvas.width, canvas.height);
+				}
+				resizeCanvas();
+				window.addEventListener('resize', resizeCanvas);
+
+				const stars = [];
+				const starCount = 25; // Reduced from 100 to 25 (1/4)
+				const colors = [
+					'rgba(178, 34, 52, ',  // Red
+					'rgba(255, 255, 255, ', // White
+					'rgba(0, 63, 135, '     // Blue
+				];
+
+				let globalOpacity = 0; // Start at 0 for fade-in effect
+				const fadeInDuration = 2000; // 2 seconds
+				const fadeInStart = Date.now();
+
+				// Create stars
+				for (let i = 0; i < starCount; i++) {
+					stars.push({
+						x: Math.random() * canvas.width,
+						y: Math.random() * canvas.height,
+						size: Math.random() * 0.5 + 0.2, // Start much smaller (0.2-0.7px)
+						speed: (Math.random() * 2 + 1) * 0.7, // 30% slower (multiply by 0.7)
+						baseOpacity: Math.random() * 0.5 + 0.5, // Store base opacity
+						color: colors[Math.floor(Math.random() * colors.length)],
+						rotation: Math.random() * Math.PI * 2, // Random starting rotation
+						rotationSpeed: (Math.random() - 0.5) * 0.02 // Random spin direction and speed
+					});
+				}
+
+				// Function to draw a 5-pointed star with rotation
+				function drawStar(x, y, size, fillStyle, rotation, shouldStroke) {
+					const spikes = 5;
+					const outerRadius = size;
+					const innerRadius = size * 0.4;
+					let rot = Math.PI / 2 * 3 + rotation; // Add rotation offset
+					let step = Math.PI / spikes;
+
+					ctx.beginPath();
+					// Start at first outer point
+					ctx.moveTo(x + Math.cos(rot) * outerRadius, y + Math.sin(rot) * outerRadius);
+
+					for (let i = 0; i < spikes; i++) {
+						rot += step;
+						// Inner point
+						ctx.lineTo(x + Math.cos(rot) * innerRadius, y + Math.sin(rot) * innerRadius);
+						rot += step;
+						// Next outer point
+						ctx.lineTo(x + Math.cos(rot) * outerRadius, y + Math.sin(rot) * outerRadius);
+					}
+
+					ctx.closePath();
+					ctx.fillStyle = fillStyle;
+					ctx.fill();
+
+					if (shouldStroke) {
+						ctx.stroke();
+					}
+				}
+
+				function animate() {
+					ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+					// Update global opacity for fade-in
+					const elapsed = Date.now() - fadeInStart;
+					if (elapsed < fadeInDuration) {
+						globalOpacity = elapsed / fadeInDuration; // 0 to 1 over 2 seconds
+					} else {
+						globalOpacity = 1;
+					}
+
+					stars.forEach(star => {
+						// Move star to the right
+						star.x += star.speed;
+
+						// Update rotation
+						star.rotation += star.rotationSpeed;
+
+						// Calculate size based on position across the width
+						// Size grows linearly from 0.2px at left edge to 45px at right edge (75% of 60)
+						const progress = (star.x + 10) / (canvas.width + 20); // 0 to 1
+						star.size = 0.2 + (progress * 44.8); // 0.2 to 45
+
+						// If star goes completely off right edge (including its size), respawn on left
+						if (star.x > canvas.width + star.size) {
+							star.x = -50; // Start further left so size calculation makes it small
+							star.y = Math.random() * canvas.height;
+						}
+
+						// Apply global fade-in to star opacity
+						const finalOpacity = star.baseOpacity * globalOpacity;
+
+						// Check if this is a blue or red star
+						const isBlue = star.color === 'rgba(0, 63, 135, ';
+						const isRed = star.color === 'rgba(178, 34, 52, ';
+
+						// Draw star with glow and rotation
+						ctx.shadowBlur = star.size * 2;
+						ctx.shadowColor = star.color + finalOpacity + ')';
+
+						// Set stroke style for blue and red stars
+						if (isBlue || isRed) {
+							ctx.strokeStyle = 'rgba(255, 255, 255, ' + finalOpacity + ')';
+							ctx.lineWidth = star.size * 0.08; // Outline width proportional to star size
+						}
+
+						drawStar(star.x, star.y, star.size, star.color + finalOpacity + ')', star.rotation, isBlue || isRed);
+						ctx.shadowBlur = 0;
+					});
+
+					requestAnimationFrame(animate);
+				}
+
+				animate();
+			}, 1200); // Wait for container fade-in (1000ms) + small buffer for rendering (200ms)
+		});
 		</script>
 	</body>
 

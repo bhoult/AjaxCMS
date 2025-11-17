@@ -155,7 +155,7 @@ class Firework {
                 const vy = Math.sin(angle) * speed;
                 particles.push(new Particle(this.x, this.y, vx, vy, this.colorScheme, false, false, false, this.hasParticleExplosions));
             }
-        } else {
+        } else if (this.type < 0.88) {
             // Random burst
             for (let i = 0; i < particleCount; i++) {
                 const angle = Math.random() * Math.PI * 2;
@@ -163,6 +163,77 @@ class Firework {
                 const vx = Math.cos(angle) * speed;
                 const vy = Math.sin(angle) * speed;
                 particles.push(new Particle(this.x, this.y, vx, vy, this.colorScheme, false, false, false, this.hasParticleExplosions));
+            }
+        } else {
+            // American Flag pattern - massive size with correct 1.9:1 aspect ratio
+            const flagWidth = 2560; // Double again for massive flag
+            const flagHeight = 1347; // Correct 1.9:1 aspect ratio (2560 / 1.9)
+            const stripeHeight = flagHeight / 13; // 13 stripes
+            const cantonWidth = flagWidth * 0.4;
+            const cantonHeight = stripeHeight * 7; // Canton covers 7 stripes
+
+            // 13 stripes (7 red, 6 white) - 4x more particles
+            for (let stripe = 0; stripe < 13; stripe++) {
+                const isRedStripe = stripe % 2 === 0;
+                const stripeColor = isRedStripe ? [[178, 34, 52]] : [[255, 255, 255]];
+                const particlesPerStripe = 140; // 4x increase (35 * 4)
+
+                for (let i = 0; i < particlesPerStripe; i++) {
+                    const xOffset = (Math.random() - 0.5) * flagWidth;
+                    const yOffset = (stripe * stripeHeight - flagHeight / 2) + Math.random() * stripeHeight;
+
+                    // Skip canton area for upper 7 stripes
+                    if (stripe < 7 && xOffset < -flagWidth / 2 + cantonWidth) {
+                        continue;
+                    }
+
+                    // Much higher speed to reach massive flag size
+                    const speed = Math.random() * 4 + 12;
+                    // Use same scale for both x and y to maintain aspect ratio
+                    const scale = flagWidth;
+                    const vx = (xOffset / scale) * speed;
+                    const vy = (yOffset / scale) * speed;
+                    particles.push(new Particle(this.x, this.y, vx, vy, stripeColor, false, false, false, this.hasParticleExplosions));
+                }
+            }
+
+            // Blue canton (union) background - 4x more particles
+            const cantonBlueParticles = 320; // 4x increase (80 * 4)
+            for (let i = 0; i < cantonBlueParticles; i++) {
+                const xOffset = -flagWidth / 2 + Math.random() * cantonWidth;
+                const yOffset = -flagHeight / 2 + Math.random() * cantonHeight;
+
+                const speed = Math.random() * 4 + 12;
+                const scale = flagWidth;
+                const vx = (xOffset / scale) * speed;
+                const vy = (yOffset / scale) * speed;
+
+                particles.push(new Particle(this.x, this.y, vx, vy, [[0, 63, 135]], false, false, false, this.hasParticleExplosions));
+            }
+
+            // 50 white stars in canton - proper 9 row pattern (6-5-6-5-6-5-6-5-6)
+            const starPattern = [6, 5, 6, 5, 6, 5, 6, 5, 6]; // 9 rows = 50 stars
+            let starY = 0;
+            for (let row = 0; row < starPattern.length; row++) {
+                const starsInRow = starPattern[row];
+                const isOffset = starsInRow === 5;
+                const xStart = isOffset ? cantonWidth / 12 : 0;
+
+                for (let col = 0; col < starsInRow; col++) {
+                    // Multiple particles per star for visibility
+                    const particlesPerStar = 8;
+                    for (let p = 0; p < particlesPerStar; p++) {
+                        const xOffset = -flagWidth / 2 + xStart + (col * cantonWidth / 6) + (Math.random() - 0.5) * 8;
+                        const yOffset = -flagHeight / 2 + (row * cantonHeight / 9) + (Math.random() - 0.5) * 8;
+
+                        const speed = Math.random() * 4 + 12;
+                        const scale = flagWidth;
+                        const vx = (xOffset / scale) * speed;
+                        const vy = (yOffset / scale) * speed;
+
+                        particles.push(new Particle(this.x, this.y, vx, vy, [[255, 255, 255]], false, false, false, this.hasParticleExplosions));
+                    }
+                }
             }
         }
 
