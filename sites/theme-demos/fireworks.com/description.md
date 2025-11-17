@@ -1,0 +1,1 @@
+**Fireworks Theme** - Animated night sky with colorful fireworks explosions, particle effects, and streamer trails. Perfect for celebrations and festive sites.
