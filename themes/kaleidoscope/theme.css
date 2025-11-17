@@ -42,10 +42,11 @@ h1, h2, h3, h4, h5, h6 {
     -webkit-text-fill-color: transparent;
     background-clip: text;
     font-size: 3rem;
-    margin: -10px 0 2rem 0;
+    margin: -10px auto 2rem auto;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    padding: 2rem 0 1rem 0;
+    padding: 2rem 3rem 1rem 3rem;
+    max-width: 900px;
     animation: rainbow-shift 5s ease-in-out infinite;
 }
 
