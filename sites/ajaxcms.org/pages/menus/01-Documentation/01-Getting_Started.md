@@ -31,14 +31,26 @@ AjaxCMS runs on **Node.js** and works on any platform that supports Node.js (Lin
    This installs all required libraries (jQuery, Bootstrap 5, marked, etc.) managed through npm.
 
 3. **Start the server:**
+
+   **For development (HTTP only, port 3000):**
    ```bash
-   npm start
+   ./start-dev.sh
+   ```
+
+   **For production (HTTPS with SSL, ports 80 & 443):**
+   ```bash
+   # First, edit start-ssl.sh and set your email address
+   nano start-ssl.sh
+
+   # Then run (requires sudo for ports 80/443):
+   sudo ./start-ssl.sh
    ```
 
 4. **View your site:**
-   - Open `http://localhost:3000` in your browser
-   - You'll see an index of all available sites
-   - The default site runs at `http://localhost:3000/ajaxcms.org/`
+   - **Development:** Open `http://localhost:3000` to see the sites index
+   - **Production:** Open `https://yourdomain.com` (auto-redirects from HTTP)
+   - Access individual sites at `/sitename/` or via domain routing
+   - Sites index always available at `/sites` from any domain
 
 ### What Gets Installed
 
@@ -255,25 +267,50 @@ For detailed information, see the {{a | ../../AjaxCMS_Blog/2025-10-31-SEO_Enhanc
 
 ## 10. Deployment to Production
 
-### HTTP Development Mode
+### Development Mode (HTTP, port 3000)
+
+Use the included startup script:
 
 ```bash
-npm start
+./start-dev.sh
 ```
 
-Runs on `http://localhost:3000` (or custom `PORT` environment variable)
+This starts the server in development mode on `http://localhost:3000`.
 
-### HTTPS Production Mode
+### Production Mode (HTTPS with Let's Encrypt)
 
-For production with automatic SSL certificates via Let's Encrypt:
+**Automatic SSL with built-in Let's Encrypt support:**
 
-```bash
-ENABLE_SSL=true MAINTAINER_EMAIL=your@email.com node server.js
-```
+1. **Install PM2 globally:**
+   ```bash
+   npm install -g pm2
+   ```
 
-- Serves on ports 80 (HTTP, redirects to HTTPS) and 443 (HTTPS)
-- Automatically provisions SSL certificates
-- Certificates auto-renew before expiration
+2. **Edit the SSL startup script:**
+   ```bash
+   nano start-ssl.sh
+   # Change MAINTAINER_EMAIL="your@email.com" to your actual email
+   ```
+
+3. **Make sure your domain DNS points to your server's IP address**
+
+4. **Run the SSL startup script:**
+   ```bash
+   sudo ./start-ssl.sh
+   ```
+
+**What this does:**
+- ✅ Auto-discovers all site domains from `sites/` directory
+- ✅ Automatically registers domains with Let's Encrypt
+- ✅ Provisions SSL certificates for all discovered sites
+- ✅ Serves on port 80 (HTTP → HTTPS redirect) and 443 (HTTPS)
+- ✅ Auto-renews certificates before expiration
+- ✅ Sets up PM2 to restart on server boot
+
+**After setup:**
+- Access sites at `https://yourdomain.com`
+- Sites index available at `/sites` from any domain
+- Changes to content files appear immediately (no restart needed)
 
 ### Domain Routing
 
@@ -281,7 +318,7 @@ Sites can be accessed via:
 - **Path-based:** `https://yourdomain.com/sitename/`
 - **Domain-based:** `https://sitename.com/` (requires DNS configuration)
 
-For domain-based routing, create a site directory matching your domain name in `sites/`.
+For domain-based routing, create a site directory matching your domain name in `sites/`. The system automatically discovers and registers the domain for SSL.
 
 ## 11. Learning Resources
 
