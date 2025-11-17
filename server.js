@@ -28,8 +28,8 @@ try {
 // Logging function for site requests
 function logRequest(siteName, req, statusCode, contentLength) {
   const now = new Date();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const logFileName = `${month}-${siteName || 'index'}.log`;
+  const day = String(now.getDate()).padStart(2, '0');
+  const logFileName = `${day}-${siteName || 'index'}.log`;
   const logFilePath = path.join(LOGS_DIR, logFileName);
 
   const timestamp = now.toISOString();
