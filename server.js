@@ -625,26 +625,44 @@ if (require.main === module) {
 
       console.log('Discovered site domains:', siteDomains.length > 0 ? siteDomains.join(', ') : 'none');
 
+      // Create sites array for greenlock configuration
+      const sites = siteDomains.map(domain => ({
+        subject: domain,
+        altnames: [domain, 'www.' + domain]
+      }));
+
       greenlockExpress
         .init({
           packageRoot: __dirname,
           configDir: './greenlock.d',
           maintainerEmail: MAINTAINER_EMAIL,
-          cluster: false
+          cluster: false,
+          // Notify function to handle greenlock events
+          notify: function (event, details) {
+            if ('error' === event) {
+              console.error('Greenlock error:', details);
+            }
+          }
         })
         .ready(async (glx) => {
-          // Add all discovered domains to greenlock
-          if (siteDomains.length > 0) {
-            for (const domain of siteDomains) {
+          // Add sites using the sites manager
+          if (sites.length > 0) {
+            const Greenlock = require('greenlock');
+            const greenlock = Greenlock.create({
+              configDir: './greenlock.d',
+              packageRoot: __dirname,
+              maintainerEmail: MAINTAINER_EMAIL
+            });
+
+            for (const site of sites) {
               try {
-                await glx.manager.add({
-                  subject: domain,
-                  altnames: [domain, 'www.' + domain]
-                });
-                console.log(`Added domain to SSL: ${domain}, www.${domain}`);
+                await greenlock.sites.add(site);
+                console.log(`Added domain to SSL: ${site.subject}, www.${site.subject}`);
               } catch (err) {
-                // Domain might already be added, or there might be another error
-                console.log(`Note: Could not add ${domain} (may already exist):`, err.message);
+                // Domain might already be added
+                if (err.code !== 'E_DUPLICATE') {
+                  console.log(`Note: Could not add ${site.subject}:`, err.message);
+                }
               }
             }
           }
