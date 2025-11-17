@@ -684,13 +684,83 @@ createStars();
 
 // UFO click handling
 if (foregroundCanvas) {
-    let mouseX = 0;
-    let mouseY = 0;
+    console.log('Setting up UFO click handlers');
 
-    // Track mouse position
+    // Click handler - check if UFO was hit, otherwise pass through
+    foregroundCanvas.addEventListener('mousedown', (e) => {
+        const clickX = e.clientX;
+        const clickY = e.clientY;
+
+        console.log('Click at:', clickX, clickY, 'UFOs:', ufos.length);
+
+        // Check if click hit any UFO
+        let hitUfo = false;
+        for (let i = 0; i < ufos.length; i++) {
+            if (!ufos[i].exploded && ufos[i].containsPoint(clickX, clickY)) {
+                console.log('UFO hit! Exploding UFO', i);
+                ufos[i].explode();
+                hitUfo = true;
+                e.preventDefault();
+                e.stopPropagation();
+                break; // Only explode one UFO per click
+            }
+        }
+
+        // If we didn't hit a UFO, pass the click through to elements below
+        if (!hitUfo) {
+            // Temporarily disable pointer events on canvas
+            foregroundCanvas.style.pointerEvents = 'none';
+
+            // Re-dispatch the click to the element underneath
+            const elementBelow = document.elementFromPoint(e.clientX, e.clientY);
+            if (elementBelow) {
+                elementBelow.dispatchEvent(new MouseEvent('mousedown', {
+                    bubbles: true,
+                    cancelable: true,
+                    clientX: e.clientX,
+                    clientY: e.clientY,
+                    button: e.button
+                }));
+            }
+
+            // Re-enable pointer events after a brief delay
+            setTimeout(() => {
+                foregroundCanvas.style.pointerEvents = 'auto';
+            }, 0);
+        }
+    });
+
+    // Also handle click events
+    foregroundCanvas.addEventListener('click', (e) => {
+        const clickX = e.clientX;
+        const clickY = e.clientY;
+
+        // Check if click hit any UFO
+        let hitUfo = false;
+        for (let i = 0; i < ufos.length; i++) {
+            if (!ufos[i].exploded && ufos[i].containsPoint(clickX, clickY)) {
+                hitUfo = true;
+                break;
+            }
+        }
+
+        // If we didn't hit a UFO, pass the click through
+        if (!hitUfo) {
+            foregroundCanvas.style.pointerEvents = 'none';
+            const elementBelow = document.elementFromPoint(e.clientX, e.clientY);
+            if (elementBelow) {
+                elementBelow.click();
+            }
+            setTimeout(() => {
+                foregroundCanvas.style.pointerEvents = 'auto';
+            }, 0);
+        }
+    });
+
+    // Track mouse for cursor change
     foregroundCanvas.addEventListener('mousemove', (e) => {
-        mouseX = e.clientX;
-        mouseY = e.clientY;
+        const mouseX = e.clientX;
+        const mouseY = e.clientY;
 
         // Check if mouse is over any UFO
         let overUfo = false;
@@ -701,25 +771,11 @@ if (foregroundCanvas) {
             }
         }
 
-        // Toggle pointer events based on UFO hover
+        // Change cursor based on UFO hover
         if (overUfo) {
-            foregroundCanvas.classList.add('ufo-clickable');
+            foregroundCanvas.classList.add('ufo-hover');
         } else {
-            foregroundCanvas.classList.remove('ufo-clickable');
-        }
-    });
-
-    // Click handler
-    foregroundCanvas.addEventListener('click', (e) => {
-        const clickX = e.clientX;
-        const clickY = e.clientY;
-
-        // Check if click hit any UFO
-        for (let i = 0; i < ufos.length; i++) {
-            if (!ufos[i].exploded && ufos[i].containsPoint(clickX, clickY)) {
-                ufos[i].explode();
-                break; // Only explode one UFO per click
-            }
+            foregroundCanvas.classList.remove('ufo-hover');
         }
     });
 }
