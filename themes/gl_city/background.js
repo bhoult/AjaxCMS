@@ -2638,15 +2638,27 @@ var startBackground = function() {
 	}, 100);
 };
 
-// Auto-start when document is ready
+// Auto-start when document is ready, but defer to allow page content to load first
 $(document).ready(function() {
 	console.log('Document ready, checking for THREE.js...');
 
 	// Wait for THREE.js to load
 	var checkThree = function() {
 		if (typeof THREE !== 'undefined') {
-			console.log('THREE.js detected, starting background');
-			startBackground();
+			console.log('THREE.js detected, deferring background start to allow content to load');
+			// Use requestIdleCallback if available, otherwise setTimeout
+			// This ensures page content renders before we start the heavy 3D scene
+			if (window.requestIdleCallback) {
+				requestIdleCallback(function() {
+					startBackground();
+				}, { timeout: 500 });
+			} else {
+				setTimeout(function() {
+					requestAnimationFrame(function() {
+						startBackground();
+					});
+				}, 300);
+			}
 		} else {
 			console.log('THREE.js not yet loaded, waiting...');
 			setTimeout(checkThree, 100);

@@ -64,13 +64,15 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .navbar-brand {
-    background: var(--gradient-rainbow);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    font-family: 'Righteous', cursive;
+    color: var(--kaleido-magenta) !important;
     font-size: 1.5rem;
-    font-weight: 400;
+    font-weight: 800;
+    position: static !important;
+}
+
+.navbar-brand img {
+    position: static !important;
+    top: 0 !important;
 }
 
 /* Navbar links with colorful styling */
@@ -144,6 +146,11 @@ h1, h2, h3, h4, h5, h6 {
     vertical-align: 0.15em;
 }
 
+/* Container padding for proper navbar alignment */
+.container {
+    padding: 0 1rem !important;
+}
+
 /* Navbar toggler for mobile */
 .navbar-toggler {
     border-color: var(--kaleido-magenta);
@@ -153,9 +160,10 @@ h1, h2, h3, h4, h5, h6 {
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%23ff1493' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
 }
 
-/* Content area alignment with bevel */
-#main > div {
-    padding: 0 1rem 2rem 2rem !important;
+/* Shift content to align with bevel */
+#main {
+    position: relative;
+    left: 13px;
 }
 
 /* Content styling */
