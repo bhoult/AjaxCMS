@@ -1,0 +1,1 @@
+An organic theme with animated plants that grow around content. Features borderless design in black, white, and gray with procedurally generated vines and trees that crumble and regrow on page transitions.
