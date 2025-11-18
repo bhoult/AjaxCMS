@@ -3,7 +3,8 @@
 /**
  * AjaxCMS Log Analyzer
  *
- * Analyzes server logs to provide statistics on page hits, grouped by site.
+ * Analyzes server logs to provide statistics on page hits per site.
+ * Each log file represents one site (based on filename: DD-<sitename>.log)
  *
  * Usage:
  *   node analyze-logs.js [logfile]
@@ -42,87 +43,70 @@ function parseLogLine(line) {
 }
 
 /**
- * Extract site name from URL
+ * Extract site name from log filename
  * Examples:
- *   /ajaxcms.org/ -> ajaxcms.org
- *   /ajaxcms.org/pages/... -> ajaxcms.org
- *   / -> index
- *   /sites -> index
+ *   17-ajaxcms.org.log -> ajaxcms.org
+ *   17-index.log -> index
  */
-function extractSiteName(url) {
-  // Remove query string
-  const cleanUrl = url.split('?')[0];
-
-  // Match /sitename/ pattern
-  const match = cleanUrl.match(/^\/([^\/]+)\//);
+function extractSiteNameFromFilename(filename) {
+  // Remove .log extension and DD- prefix
+  const match = filename.match(/^\d{2}-(.+)\.log$/);
   if (match) {
     return match[1];
   }
-
-  // Root paths go to 'index'
-  if (cleanUrl === '/' || cleanUrl === '/sites' || cleanUrl === '/sites/') {
-    return 'index';
-  }
-
-  return 'other';
+  return 'unknown';
 }
 
 /**
- * Analyze a single log file and group by site
+ * Analyze a single log file
  */
 function analyzeLogFile(filePath) {
   const content = fs.readFileSync(filePath, 'utf-8');
   const lines = content.split('\n').filter(line => line.trim());
 
+  const fileName = path.basename(filePath);
+  const siteName = extractSiteNameFromFilename(fileName);
+
   const stats = {
-    fileName: path.basename(filePath),
-    sites: {} // site -> stats mapping
+    fileName: fileName,
+    siteName: siteName,
+    totalRequests: 0,
+    uniqueIPs: new Set(),
+    pageHits: {},
+    statusCodes: {},
+    methods: {},
+    totalBytes: 0
   };
 
   for (const line of lines) {
     const entry = parseLogLine(line);
     if (!entry) continue;
 
-    const siteName = extractSiteName(entry.url);
-
-    // Initialize site stats if needed
-    if (!stats.sites[siteName]) {
-      stats.sites[siteName] = {
-        totalRequests: 0,
-        uniqueIPs: new Set(),
-        pageHits: {},
-        statusCodes: {},
-        methods: {},
-        totalBytes: 0
-      };
-    }
-
-    const site = stats.sites[siteName];
-    site.totalRequests++;
-    site.uniqueIPs.add(entry.ip);
+    stats.totalRequests++;
+    stats.uniqueIPs.add(entry.ip);
 
     // Track page hits
-    if (!site.pageHits[entry.url]) {
-      site.pageHits[entry.url] = {
+    if (!stats.pageHits[entry.url]) {
+      stats.pageHits[entry.url] = {
         count: 0,
         uniqueIPs: new Set(),
         methods: {},
         statusCodes: {}
       };
     }
-    site.pageHits[entry.url].count++;
-    site.pageHits[entry.url].uniqueIPs.add(entry.ip);
-    site.pageHits[entry.url].methods[entry.method] = (site.pageHits[entry.url].methods[entry.method] || 0) + 1;
-    site.pageHits[entry.url].statusCodes[entry.status] = (site.pageHits[entry.url].statusCodes[entry.status] || 0) + 1;
+    stats.pageHits[entry.url].count++;
+    stats.pageHits[entry.url].uniqueIPs.add(entry.ip);
+    stats.pageHits[entry.url].methods[entry.method] = (stats.pageHits[entry.url].methods[entry.method] || 0) + 1;
+    stats.pageHits[entry.url].statusCodes[entry.status] = (stats.pageHits[entry.url].statusCodes[entry.status] || 0) + 1;
 
     // Track status codes
-    site.statusCodes[entry.status] = (site.statusCodes[entry.status] || 0) + 1;
+    stats.statusCodes[entry.status] = (stats.statusCodes[entry.status] || 0) + 1;
 
     // Track methods
-    site.methods[entry.method] = (site.methods[entry.method] || 0) + 1;
+    stats.methods[entry.method] = (stats.methods[entry.method] || 0) + 1;
 
     // Track bytes
-    site.totalBytes += entry.size;
+    stats.totalBytes += entry.size;
   }
 
   return stats;
@@ -140,27 +124,28 @@ function formatBytes(bytes) {
 }
 
 /**
- * Print statistics for a single site
+ * Print statistics for a single log file/site
  */
-function printSiteStats(siteName, siteStats) {
-  console.log(`\n${'─'.repeat(80)}`);
-  console.log(`Site: ${siteName}`);
-  console.log('─'.repeat(80));
+function printStats(stats) {
+  console.log('\n' + '='.repeat(80));
+  console.log(`Site: ${stats.siteName}`);
+  console.log(`Log File: ${stats.fileName}`);
+  console.log('='.repeat(80));
 
   console.log('\n📊 Overall Statistics:');
-  console.log(`   Total Requests: ${siteStats.totalRequests}`);
-  console.log(`   Unique IPs: ${siteStats.uniqueIPs.size}`);
-  console.log(`   Total Data Transferred: ${formatBytes(siteStats.totalBytes)}`);
+  console.log(`   Total Requests: ${stats.totalRequests}`);
+  console.log(`   Unique IPs: ${stats.uniqueIPs.size}`);
+  console.log(`   Total Data Transferred: ${formatBytes(stats.totalBytes)}`);
 
   console.log('\n📈 HTTP Methods:');
-  Object.entries(siteStats.methods)
+  Object.entries(stats.methods)
     .sort((a, b) => b[1] - a[1])
     .forEach(([method, count]) => {
       console.log(`   ${method}: ${count}`);
     });
 
   console.log('\n✅ Status Codes:');
-  Object.entries(siteStats.statusCodes)
+  Object.entries(stats.statusCodes)
     .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
     .forEach(([status, count]) => {
       const statusName = {
@@ -173,7 +158,7 @@ function printSiteStats(siteName, siteStats) {
     });
 
   console.log('\n📄 Top Pages (sorted by unique visitors):');
-  Object.entries(siteStats.pageHits)
+  Object.entries(stats.pageHits)
     .map(([url, data]) => ({
       url,
       count: data.count,
@@ -200,101 +185,133 @@ function printSiteStats(siteName, siteStats) {
 }
 
 /**
- * Print statistics for a single log file
- */
-function printStats(stats) {
-  console.log('\n' + '='.repeat(80));
-  console.log(`Log File: ${stats.fileName}`);
-  console.log('='.repeat(80));
-
-  // Print each site's stats
-  const sortedSites = Object.entries(stats.sites)
-    .sort((a, b) => b[1].totalRequests - a[1].totalRequests);
-
-  for (const [siteName, siteStats] of sortedSites) {
-    printSiteStats(siteName, siteStats);
-  }
-}
-
-/**
- * Aggregate statistics from multiple log files
+ * Aggregate statistics from multiple log files by site
  */
 function aggregateStats(allStats) {
-  const combined = {
-    files: allStats.map(s => s.fileName),
-    sites: {}
-  };
+  const siteMap = {};
 
   for (const stats of allStats) {
-    for (const [siteName, siteStats] of Object.entries(stats.sites)) {
-      if (!combined.sites[siteName]) {
-        combined.sites[siteName] = {
-          totalRequests: 0,
+    const siteName = stats.siteName;
+
+    if (!siteMap[siteName]) {
+      siteMap[siteName] = {
+        siteName: siteName,
+        files: [],
+        totalRequests: 0,
+        uniqueIPs: new Set(),
+        pageHits: {},
+        statusCodes: {},
+        methods: {},
+        totalBytes: 0
+      };
+    }
+
+    const site = siteMap[siteName];
+    site.files.push(stats.fileName);
+    site.totalRequests += stats.totalRequests;
+    stats.uniqueIPs.forEach(ip => site.uniqueIPs.add(ip));
+    site.totalBytes += stats.totalBytes;
+
+    // Aggregate page hits
+    for (const [url, data] of Object.entries(stats.pageHits)) {
+      if (!site.pageHits[url]) {
+        site.pageHits[url] = {
+          count: 0,
           uniqueIPs: new Set(),
-          pageHits: {},
-          statusCodes: {},
           methods: {},
-          totalBytes: 0
+          statusCodes: {}
         };
       }
+      site.pageHits[url].count += data.count;
+      data.uniqueIPs.forEach(ip => site.pageHits[url].uniqueIPs.add(ip));
 
-      const combinedSite = combined.sites[siteName];
-      combinedSite.totalRequests += siteStats.totalRequests;
-      siteStats.uniqueIPs.forEach(ip => combinedSite.uniqueIPs.add(ip));
-      combinedSite.totalBytes += siteStats.totalBytes;
-
-      // Aggregate page hits
-      for (const [url, data] of Object.entries(siteStats.pageHits)) {
-        if (!combinedSite.pageHits[url]) {
-          combinedSite.pageHits[url] = {
-            count: 0,
-            uniqueIPs: new Set(),
-            methods: {},
-            statusCodes: {}
-          };
-        }
-        combinedSite.pageHits[url].count += data.count;
-        data.uniqueIPs.forEach(ip => combinedSite.pageHits[url].uniqueIPs.add(ip));
-
-        for (const [method, count] of Object.entries(data.methods)) {
-          combinedSite.pageHits[url].methods[method] = (combinedSite.pageHits[url].methods[method] || 0) + count;
-        }
-
-        for (const [status, count] of Object.entries(data.statusCodes)) {
-          combinedSite.pageHits[url].statusCodes[status] = (combinedSite.pageHits[url].statusCodes[status] || 0) + count;
-        }
+      for (const [method, count] of Object.entries(data.methods)) {
+        site.pageHits[url].methods[method] = (site.pageHits[url].methods[method] || 0) + count;
       }
 
-      // Aggregate status codes
-      for (const [status, count] of Object.entries(siteStats.statusCodes)) {
-        combinedSite.statusCodes[status] = (combinedSite.statusCodes[status] || 0) + count;
+      for (const [status, count] of Object.entries(data.statusCodes)) {
+        site.pageHits[url].statusCodes[status] = (site.pageHits[url].statusCodes[status] || 0) + count;
       }
+    }
 
-      // Aggregate methods
-      for (const [method, count] of Object.entries(siteStats.methods)) {
-        combinedSite.methods[method] = (combinedSite.methods[method] || 0) + count;
-      }
+    // Aggregate status codes
+    for (const [status, count] of Object.entries(stats.statusCodes)) {
+      site.statusCodes[status] = (site.statusCodes[status] || 0) + count;
+    }
+
+    // Aggregate methods
+    for (const [method, count] of Object.entries(stats.methods)) {
+      site.methods[method] = (site.methods[method] || 0) + count;
     }
   }
 
-  return combined;
+  return Object.values(siteMap).sort((a, b) => b.totalRequests - a.totalRequests);
 }
 
 /**
  * Print aggregated statistics
  */
-function printAggregatedStats(stats) {
+function printAggregatedStats(aggregatedSites) {
   console.log('\n' + '='.repeat(80));
-  console.log(`Combined Analysis (${stats.files.length} log files)`);
+  console.log('Combined Analysis');
   console.log('='.repeat(80));
-  console.log(`Files: ${stats.files.join(', ')}`);
 
-  // Print each site's aggregated stats
-  const sortedSites = Object.entries(stats.sites)
-    .sort((a, b) => b[1].totalRequests - a[1].totalRequests);
+  for (const site of aggregatedSites) {
+    console.log(`\n${'─'.repeat(80)}`);
+    console.log(`Site: ${site.siteName}`);
+    console.log(`Log Files: ${site.files.join(', ')}`);
+    console.log('─'.repeat(80));
 
-  for (const [siteName, siteStats] of sortedSites) {
-    printSiteStats(siteName, siteStats);
+    console.log('\n📊 Overall Statistics:');
+    console.log(`   Total Requests: ${site.totalRequests}`);
+    console.log(`   Unique IPs: ${site.uniqueIPs.size}`);
+    console.log(`   Total Data Transferred: ${formatBytes(site.totalBytes)}`);
+
+    console.log('\n📈 HTTP Methods:');
+    Object.entries(site.methods)
+      .sort((a, b) => b[1] - a[1])
+      .forEach(([method, count]) => {
+        console.log(`   ${method}: ${count}`);
+      });
+
+    console.log('\n✅ Status Codes:');
+    Object.entries(site.statusCodes)
+      .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
+      .forEach(([status, count]) => {
+        const statusName = {
+          '200': 'OK',
+          '304': 'Not Modified',
+          '404': 'Not Found',
+          '500': 'Server Error'
+        }[status] || '';
+        console.log(`   ${status} ${statusName}: ${count}`);
+      });
+
+    console.log('\n📄 Top Pages (sorted by unique visitors):');
+    Object.entries(site.pageHits)
+      .map(([url, data]) => ({
+        url,
+        count: data.count,
+        uniqueIPs: data.uniqueIPs.size,
+        methods: data.methods,
+        statusCodes: data.statusCodes
+      }))
+      .sort((a, b) => b.uniqueIPs - a.uniqueIPs)
+      .slice(0, 10) // Top 10 pages
+      .forEach(page => {
+        console.log(`\n   ${page.url}`);
+        console.log(`      Hits: ${page.count}, Unique IPs: ${page.uniqueIPs}`);
+
+        const methodStr = Object.entries(page.methods)
+          .map(([method, count]) => `${method}:${count}`)
+          .join(', ');
+        console.log(`      Methods: ${methodStr}`);
+
+        const statusStr = Object.entries(page.statusCodes)
+          .map(([status, count]) => `${status}:${count}`)
+          .join(', ');
+        console.log(`      Status: ${statusStr}`);
+      });
   }
 
   console.log('\n');
@@ -331,8 +348,8 @@ function main() {
 
     // Print aggregated stats if multiple files
     if (allStats.length > 1) {
-      const combined = aggregateStats(allStats);
-      printAggregatedStats(combined);
+      const aggregated = aggregateStats(allStats);
+      printAggregatedStats(aggregated);
     }
 
   } else {
