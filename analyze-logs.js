@@ -7,9 +7,14 @@
  * Each log file represents one site (based on filename: DD-<sitename>.log)
  *
  * Usage:
- *   node analyze-logs.js [logfile]
- *   node analyze-logs.js                    # Analyze all logs in logs/
+ *   node analyze-logs.js [options] [logfile]
+ *   node analyze-logs.js                    # Analyze all logs (detailed)
+ *   node analyze-logs.js -s                 # Summary table only
  *   node analyze-logs.js logs/17-index.log  # Analyze specific log file
+ *   node analyze-logs.js -s logs/17-index.log  # Summary for specific file
+ *
+ * Options:
+ *   -s, --summary   Show only summary table with unique IPs, hits, and bandwidth
  */
 
 const fs = require('fs');
@@ -318,14 +323,66 @@ function printAggregatedStats(aggregatedSites) {
 }
 
 /**
+ * Print summary table
+ */
+function printSummaryTable(aggregatedSites) {
+  // Calculate column widths
+  const maxSiteLength = Math.max(...aggregatedSites.map(s => s.siteName.length), 'Site'.length);
+  const siteWidth = Math.max(maxSiteLength + 2, 20);
+
+  // Header
+  console.log('\n' + '='.repeat(80));
+  console.log('Traffic Summary');
+  console.log('='.repeat(80));
+  console.log();
+
+  // Table header
+  const header = `${'Site'.padEnd(siteWidth)} ${'Unique IPs'.padStart(12)} ${'Total Hits'.padStart(12)} ${'Bandwidth'.padStart(15)}`;
+  console.log(header);
+  console.log('─'.repeat(header.length));
+
+  // Table rows
+  for (const site of aggregatedSites) {
+    const siteName = site.siteName.padEnd(siteWidth);
+    const uniqueIPs = site.uniqueIPs.size.toString().padStart(12);
+    const totalHits = site.totalRequests.toString().padStart(12);
+    const bandwidth = formatBytes(site.totalBytes).padStart(15);
+
+    console.log(`${siteName} ${uniqueIPs} ${totalHits} ${bandwidth}`);
+  }
+
+  // Totals
+  const totalIPs = new Set();
+  let totalHits = 0;
+  let totalBandwidth = 0;
+
+  for (const site of aggregatedSites) {
+    site.uniqueIPs.forEach(ip => totalIPs.add(ip));
+    totalHits += site.totalRequests;
+    totalBandwidth += site.totalBytes;
+  }
+
+  console.log('─'.repeat(header.length));
+  const totalsRow = `${'TOTAL'.padEnd(siteWidth)} ${totalIPs.size.toString().padStart(12)} ${totalHits.toString().padStart(12)} ${formatBytes(totalBandwidth).padStart(15)}`;
+  console.log(totalsRow);
+  console.log();
+}
+
+/**
  * Main function
  */
 function main() {
   const args = process.argv.slice(2);
 
-  if (args.length === 0) {
+  // Check for -s flag
+  const summaryMode = args.includes('-s') || args.includes('--summary');
+  const otherArgs = args.filter(a => a !== '-s' && a !== '--summary');
+
+  if (otherArgs.length === 0) {
     // Analyze all log files in logs directory
-    console.log('Analyzing all log files in logs/...\n');
+    if (!summaryMode) {
+      console.log('Analyzing all log files in logs/...\n');
+    }
 
     if (!fs.existsSync(LOGS_DIR)) {
       console.error('Error: logs/ directory does not exist');
@@ -343,18 +400,25 @@ function main() {
 
     const allStats = files.map(file => analyzeLogFile(file));
 
-    // Print individual stats
-    allStats.forEach(stats => printStats(stats));
-
-    // Print aggregated stats if multiple files
-    if (allStats.length > 1) {
+    if (summaryMode) {
+      // Summary mode: just show the table
       const aggregated = aggregateStats(allStats);
-      printAggregatedStats(aggregated);
+      printSummaryTable(aggregated);
+    } else {
+      // Full mode: show everything
+      // Print individual stats
+      allStats.forEach(stats => printStats(stats));
+
+      // Print aggregated stats if multiple files
+      if (allStats.length > 1) {
+        const aggregated = aggregateStats(allStats);
+        printAggregatedStats(aggregated);
+      }
     }
 
   } else {
     // Analyze specific log file
-    const logFile = args[0];
+    const logFile = otherArgs[0];
 
     if (!fs.existsSync(logFile)) {
       console.error(`Error: Log file '${logFile}' does not exist`);
@@ -362,8 +426,20 @@ function main() {
     }
 
     const stats = analyzeLogFile(logFile);
-    printStats(stats);
-    console.log('\n');
+
+    if (summaryMode) {
+      // Summary mode for single file
+      const aggregated = [{
+        siteName: stats.siteName,
+        uniqueIPs: stats.uniqueIPs,
+        totalRequests: stats.totalRequests,
+        totalBytes: stats.totalBytes
+      }];
+      printSummaryTable(aggregated);
+    } else {
+      printStats(stats);
+      console.log('\n');
+    }
   }
 }
 
