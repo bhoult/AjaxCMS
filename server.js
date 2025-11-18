@@ -601,14 +601,18 @@ app.get('/ajaxcms.org/', (req, res, next) => {
   next();
 });
 
-// Serve sites index at /sites regardless of domain
-app.get('/sites', (req, res) => {
+// Serve sites index at /sites regardless of domain or path
+app.get('*/sites', (req, res) => {
+  // Override siteName for logging purposes
+  req.siteName = 'sites-index';
   sendFileWithCache(path.join(__dirname, 'sites-index.html'), req, res, () => {
     res.status(404).send('Sites index not found');
   });
 });
 
-app.get('/sites/', (req, res) => {
+app.get('*/sites/', (req, res) => {
+  // Override siteName for logging purposes
+  req.siteName = 'sites-index';
   sendFileWithCache(path.join(__dirname, 'sites-index.html'), req, res, () => {
     res.status(404).send('Sites index not found');
   });
@@ -617,6 +621,8 @@ app.get('/sites/', (req, res) => {
 // Serve index page for root or site root
 app.get('/', (req, res, next) => {
   if (!req.siteName) {
+    // Override siteName for logging purposes
+    req.siteName = 'sites-index';
     // Serve the sites index page with caching
     sendFileWithCache(path.join(__dirname, 'sites-index.html'), req, res, next);
   } else {

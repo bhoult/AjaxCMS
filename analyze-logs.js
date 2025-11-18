@@ -336,34 +336,61 @@ function printSummaryTable(aggregatedSites) {
   console.log('='.repeat(80));
   console.log();
 
-  // Table header
-  const header = `${'Site'.padEnd(siteWidth)} ${'Unique IPs'.padStart(12)} ${'Total Hits'.padStart(12)} ${'Bandwidth'.padStart(15)}`;
+  // Table header with status codes
+  const header = `${'Site'.padEnd(siteWidth)} ${'Unique IPs'.padStart(10)} ${'Total Hits'.padStart(11)} ${'Bandwidth'.padStart(12)} ${'200'.padStart(6)} ${'304'.padStart(6)} ${'404'.padStart(6)} ${'Other'.padStart(6)}`;
   console.log(header);
   console.log('─'.repeat(header.length));
 
   // Table rows
   for (const site of aggregatedSites) {
     const siteName = site.siteName.padEnd(siteWidth);
-    const uniqueIPs = site.uniqueIPs.size.toString().padStart(12);
-    const totalHits = site.totalRequests.toString().padStart(12);
-    const bandwidth = formatBytes(site.totalBytes).padStart(15);
+    const uniqueIPs = site.uniqueIPs.size.toString().padStart(10);
+    const totalHits = site.totalRequests.toString().padStart(11);
+    const bandwidth = formatBytes(site.totalBytes).padStart(12);
 
-    console.log(`${siteName} ${uniqueIPs} ${totalHits} ${bandwidth}`);
+    // Status codes
+    const status200 = (site.statusCodes[200] || 0).toString().padStart(6);
+    const status304 = (site.statusCodes[304] || 0).toString().padStart(6);
+    const status404 = (site.statusCodes[404] || 0).toString().padStart(6);
+
+    // Calculate "other" status codes
+    let otherCount = 0;
+    for (const [code, count] of Object.entries(site.statusCodes)) {
+      if (code !== '200' && code !== '304' && code !== '404') {
+        otherCount += count;
+      }
+    }
+    const statusOther = otherCount.toString().padStart(6);
+
+    console.log(`${siteName} ${uniqueIPs} ${totalHits} ${bandwidth} ${status200} ${status304} ${status404} ${statusOther}`);
   }
 
   // Totals
   const totalIPs = new Set();
   let totalHits = 0;
   let totalBandwidth = 0;
+  const totalStatusCodes = {};
 
   for (const site of aggregatedSites) {
     site.uniqueIPs.forEach(ip => totalIPs.add(ip));
     totalHits += site.totalRequests;
     totalBandwidth += site.totalBytes;
+
+    for (const [code, count] of Object.entries(site.statusCodes)) {
+      totalStatusCodes[code] = (totalStatusCodes[code] || 0) + count;
+    }
+  }
+
+  // Calculate total "other" status codes
+  let totalOther = 0;
+  for (const [code, count] of Object.entries(totalStatusCodes)) {
+    if (code !== '200' && code !== '304' && code !== '404') {
+      totalOther += count;
+    }
   }
 
   console.log('─'.repeat(header.length));
-  const totalsRow = `${'TOTAL'.padEnd(siteWidth)} ${totalIPs.size.toString().padStart(12)} ${totalHits.toString().padStart(12)} ${formatBytes(totalBandwidth).padStart(15)}`;
+  const totalsRow = `${'TOTAL'.padEnd(siteWidth)} ${totalIPs.size.toString().padStart(10)} ${totalHits.toString().padStart(11)} ${formatBytes(totalBandwidth).padStart(12)} ${(totalStatusCodes[200] || 0).toString().padStart(6)} ${(totalStatusCodes[304] || 0).toString().padStart(6)} ${(totalStatusCodes[404] || 0).toString().padStart(6)} ${totalOther.toString().padStart(6)}`;
   console.log(totalsRow);
   console.log();
 }
