@@ -1,7 +1,8 @@
 /* Growth Theme - Minimal design with sky blue background */
 
 body {
-    /* Background gradient applied by background.js based on config */
+    /* Gradient provided by #gradient-background div in HTML */
+    background-color: white;
     color: #1a1a1a;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
