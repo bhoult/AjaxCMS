@@ -17,6 +17,9 @@
     // Active growth tips - only track points that are currently growing
     let growthTips = [];
 
+    // Leaves - grow at the end of branches
+    let leaves = [];
+
     // Tree generation tracking
     let totalTreesCreated = 0;       // Total number of trees created so far
     let targetTreeCount = 0;         // Random target between minTrees and maxTrees
@@ -71,7 +74,15 @@
 
         // === VISUAL EFFECTS ===
         branchFade: 7,               // Number of frames to fade in new branches (0 to 100% opacity)
-        color: 'rgba(230, 194, 161, 0.85)' // Brown tree color (darker and more opaque)
+        color: 'rgba(230, 194, 161, 0.85)', // Brown tree color (darker and more opaque)
+
+        // === LEAF PROPERTIES ===
+        minLeavesPerBranch: 2,       // Minimum number of leaves to spawn at branch end
+        maxLeavesPerBranch: 5,       // Maximum number of leaves to spawn at branch end
+        leafGrowthRate: 0.3,         // Pixels per frame that leaves grow
+        minLeafSize: 4,              // Minimum leaf size (width)
+        maxLeafSize: 12,             // Maximum leaf size (width)
+        leafColor: 'rgba(100, 180, 100, 0.9)' // Darker, more opaque green leaf color
     };
 
     let frameCount = 0;
@@ -341,10 +352,80 @@
     }
 
     /**
+     * Create leaves at the end of a dying branch
+     */
+    function spawnLeaves(x, y, vx, vy, branchWidth) {
+        const numLeaves = config.minLeavesPerBranch +
+            Math.floor(Math.random() * (config.maxLeavesPerBranch - config.minLeavesPerBranch + 1));
+
+        for (let i = 0; i < numLeaves; i++) {
+            // Random target size for this leaf
+            const targetSize = config.minLeafSize + Math.random() * (config.maxLeafSize - config.minLeafSize);
+
+            // Calculate angle based on branch direction with some randomness
+            const branchAngle = Math.atan2(vy, vx);
+            const leafAngle = branchAngle + (Math.random() - 0.5) * Math.PI / 2; // ±45° variation
+
+            // Position with slight offset from branch tip
+            const offset = Math.random() * branchWidth * 2;
+            const offsetAngle = Math.random() * Math.PI * 2;
+
+            leaves.push({
+                x: x + Math.cos(offsetAngle) * offset,
+                y: y + Math.sin(offsetAngle) * offset,
+                size: 0, // Start at 0 and grow
+                targetSize: targetSize,
+                angle: leafAngle,
+                age: 0
+            });
+        }
+    }
+
+    /**
+     * Update and draw all leaves
+     */
+    function updateLeaves() {
+        const newLeaves = [];
+
+        for (let leaf of leaves) {
+            // Grow leaf until it reaches target size
+            if (leaf.size < leaf.targetSize) {
+                leaf.size += config.leafGrowthRate;
+                if (leaf.size > leaf.targetSize) {
+                    leaf.size = leaf.targetSize;
+                }
+            }
+
+            leaf.age++;
+
+            // Draw leaf as an ellipse
+            if (leaf.size > 0.1) {
+                ctx.save();
+                ctx.translate(leaf.x, leaf.y);
+                ctx.rotate(leaf.angle);
+
+                // Draw leaf shape (ellipse)
+                ctx.fillStyle = config.leafColor;
+                ctx.beginPath();
+                ctx.ellipse(0, 0, leaf.size, leaf.size * 0.5, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+
+                // Keep leaf alive
+                newLeaves.push(leaf);
+            }
+        }
+
+        leaves = newLeaves;
+    }
+
+    /**
      * Initialize with starting trees and set random target
      */
     function initializeTrees() {
         growthTips = [];
+        leaves = []; // Clear leaves when reinitializing
 
         // Set random target number of trees to create
         targetTreeCount = config.minTrees + Math.floor(Math.random() * (config.maxTrees - config.minTrees + 1));
@@ -638,8 +719,14 @@
                        tip.x < width + 50) {
                 // Keep growing if still viable and width is above invisible threshold
                 newTips.push(tip);
+            } else {
+                // Branch is dying - spawn leaves at this position
+                // Only spawn leaves for branches that are on-screen and died naturally (not off-screen)
+                if (tip.y > -50 && tip.y < height + 50 &&
+                    tip.x > -50 && tip.x < width + 50) {
+                    spawnLeaves(tip.x, tip.y, tip.vx, tip.vy, tip.width);
+                }
             }
-            // If width <= minWidth, branch has tapered to invisible - just stop, no cap visible
         }
 
         // Count generation-0 tips (trees) before and after
@@ -692,6 +779,7 @@
      */
     function animate() {
         updateGrowth();
+        updateLeaves();
         setTimeout(animate, config.frameDelay);
     }
 
