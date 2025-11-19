@@ -79,10 +79,11 @@
         // === LEAF PROPERTIES ===
         minLeavesPerBranch: 2,       // Minimum number of leaves to spawn at branch end
         maxLeavesPerBranch: 5,       // Maximum number of leaves to spawn at branch end
-        leafGrowthRate: 0.3,         // Pixels per frame that leaves grow
+        leafGrowthRate: 0.03,         // Pixels per frame that leaves grow
         minLeafSize: 4,              // Minimum leaf size (width)
         maxLeafSize: 12,             // Maximum leaf size (width)
-        leafColor: 'rgba(100, 180, 100, 0.9)' // Darker, more opaque green leaf color
+        leafColor: 'rgba(100, 180, 100, 0.9)', // Darker, more opaque green leaf color
+        leafBrightnessVariation: 0.3 // How much leaves vary in brightness (0 = all same, 0.3 = ±30% variation)
     };
 
     let frameCount = 0;
@@ -362,20 +363,23 @@
             // Random target size for this leaf
             const targetSize = config.minLeafSize + Math.random() * (config.maxLeafSize - config.minLeafSize);
 
-            // Calculate angle based on branch direction with some randomness
-            const branchAngle = Math.atan2(vy, vx);
-            const leafAngle = branchAngle + (Math.random() - 0.5) * Math.PI / 2; // ±45° variation
+            // Each leaf angle varies randomly around the branch tip
+            const leafAngle = Math.random() * Math.PI * 2; // Full 360° variation
 
-            // Position with slight offset from branch tip
-            const offset = Math.random() * branchWidth * 2;
-            const offsetAngle = Math.random() * Math.PI * 2;
+            // Position at branch tip
+            const leafX = x;
+            const leafY = y;
+
+            // Random brightness variation (1.0 ± variation)
+            const brightnessMultiplier = 1.0 + (Math.random() - 0.5) * 2 * config.leafBrightnessVariation;
 
             leaves.push({
-                x: x + Math.cos(offsetAngle) * offset,
-                y: y + Math.sin(offsetAngle) * offset,
+                x: leafX,
+                y: leafY,
                 size: 0, // Start at 0 and grow
                 targetSize: targetSize,
                 angle: leafAngle,
+                brightness: brightnessMultiplier,
                 age: 0
             });
         }
@@ -398,23 +402,32 @@
 
             leaf.age++;
 
-            // Draw leaf as an ellipse
+            // Draw leaf as an ellipse (only if visible)
             if (leaf.size > 0.1) {
                 ctx.save();
                 ctx.translate(leaf.x, leaf.y);
                 ctx.rotate(leaf.angle);
 
-                // Draw leaf shape (ellipse)
-                ctx.fillStyle = config.leafColor;
+                // Parse base color and apply brightness variation
+                const colorMatch = config.leafColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/);
+                const r = Math.min(255, Math.floor(parseInt(colorMatch[1]) * leaf.brightness));
+                const g = Math.min(255, Math.floor(parseInt(colorMatch[2]) * leaf.brightness));
+                const b = Math.min(255, Math.floor(parseInt(colorMatch[3]) * leaf.brightness));
+                const a = parseFloat(colorMatch[4]);
+
+                // Draw leaf shape (ellipse) offset so it extends from connection point
+                // Position leaf so its narrow end (stem) is at the origin (branch tip)
+                // Ellipse center is offset by radius so left edge is at origin
+                ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${a})`;
                 ctx.beginPath();
-                ctx.ellipse(0, 0, leaf.size, leaf.size * 0.5, 0, 0, Math.PI * 2);
+                ctx.ellipse(leaf.size / 2, 0, leaf.size / 2, leaf.size * 0.25, 0, 0, Math.PI * 2);
                 ctx.fill();
 
                 ctx.restore();
-
-                // Keep leaf alive
-                newLeaves.push(leaf);
             }
+
+            // Always keep leaf alive (even if not visible yet)
+            newLeaves.push(leaf);
         }
 
         leaves = newLeaves;
