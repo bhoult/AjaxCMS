@@ -61,6 +61,9 @@
         // === DEBUG ===
         enableDebugLogging: false,   // Enable console logging for debugging (set to false for production)
 
+        // === VISUAL ===
+        backgroundColor: '#87CEEB',  // Sky blue background color
+
         // === TRUNK PROPERTIES (Generation 0) ===
         minTrunkHeight: 50,          // Minimum trunk age before first fork (generation 0)
         maxTrunkHeight: 450,         // Maximum trunk age before first fork (generation 0) - fork age randomly chosen between min and max
@@ -1172,6 +1175,9 @@
         }
 
         if (config.enableDebugLogging) console.log('Growth theme initializing...');
+
+        // Set background color
+        document.body.style.backgroundColor = config.backgroundColor;
 
         if (!canvas) {
             console.error('Canvas element not found!');
