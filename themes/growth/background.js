@@ -20,6 +20,11 @@
     canvas.parentNode.insertBefore(leafCanvas, canvas.nextSibling);
     const leafCtx = leafCanvas.getContext('2d');
 
+    // Create a collision detection canvas (invisible, persistent, not cleared each frame)
+    // Used for O(1) pixel-based leaf collision instead of O(n²) leaf-to-leaf comparison
+    const collisionCanvas = document.createElement('canvas');
+    const collisionCtx = collisionCanvas.getContext('2d', { willReadFrequently: true });
+
     // Canvas dimensions
     let width, height;
 
@@ -538,46 +543,45 @@
                         collided = true;
                     }
 
-                    // Check collision with other settled leaves
+                    // Check collision using pixel-based detection (O(1) instead of O(n²))
                     if (!collided) {
-                        for (let otherLeaf of newLeaves) {
-                            if (otherLeaf.isSettled && otherLeaf !== leaf) {
-                                // Use squared distance check for performance (avoid Math.sqrt)
-                                const dx = newX - otherLeaf.x;
-                                const dy = newY - otherLeaf.y;
-                                const distanceSquared = dx * dx + dy * dy;
-                                const minDistance = (leaf.size + otherLeaf.size) / 2;
-                                const minDistanceSquared = minDistance * minDistance;
+                        // Sample pixels below the leaf to detect collision with settled leaves
+                        const checkX = Math.floor(Math.max(0, Math.min(width - 1, newX)));
+                        const checkY = Math.floor(Math.max(0, Math.min(height - 1, newY)));
+                        const leafRadius = Math.ceil(leaf.size / 2);
 
-                                if (distanceSquared < minDistanceSquared) {
-                                    const settleY = otherLeaf.y - minDistance;
+                        // Scan downward from current position to find first occupied pixel
+                        let settleY = null;
+                        for (let dy = 0; dy <= leafRadius && checkY + dy < height; dy++) {
+                            const pixel = collisionCtx.getImageData(checkX, checkY + dy, 1, 1).data;
+                            // If alpha > 0, something is there
+                            if (pixel[3] > 0) {
+                                settleY = checkY + dy - leafRadius;
+                                break;
+                            }
+                        }
 
-                                    // Only settle if within allowed pile height
-                                    if (settleY >= minAllowedY) {
-                                        leaf.y = settleY;
-                                        leaf.x = newX;
-                                        leaf.isSettled = true;
-                                        leaf.fallVelocityY = 0;
-                                        leaf.fallVelocityX = 0;
-                                        collided = true;
-                                        break;
-                                    } else {
-                                        // Pile is too high - drift through to random position
-                                        // Pick a random Y between max pile height and bottom
-                                        if (!leaf.driftTargetY) {
-                                            leaf.driftTargetY = minAllowedY + Math.random() * config.maxLeafPileHeight;
-                                        }
-                                        // Continue falling until reaching target
-                                        if (newY >= leaf.driftTargetY) {
-                                            leaf.y = leaf.driftTargetY;
-                                            leaf.x = newX;
-                                            leaf.isSettled = true;
-                                            leaf.fallVelocityY = 0;
-                                            leaf.fallVelocityX = 0;
-                                            collided = true;
-                                        }
-                                        break;
-                                    }
+                        if (settleY !== null) {
+                            // Found collision - settle on top of existing leaves
+                            if (settleY >= minAllowedY) {
+                                leaf.y = settleY;
+                                leaf.x = newX;
+                                leaf.isSettled = true;
+                                leaf.fallVelocityY = 0;
+                                leaf.fallVelocityX = 0;
+                                collided = true;
+                            } else {
+                                // Pile is too high - drift through to random position
+                                if (!leaf.driftTargetY) {
+                                    leaf.driftTargetY = minAllowedY + Math.random() * config.maxLeafPileHeight;
+                                }
+                                if (newY >= leaf.driftTargetY) {
+                                    leaf.y = leaf.driftTargetY;
+                                    leaf.x = newX;
+                                    leaf.isSettled = true;
+                                    leaf.fallVelocityY = 0;
+                                    leaf.fallVelocityX = 0;
+                                    collided = true;
                                 }
                             }
                         }
@@ -625,6 +629,19 @@
                 leafCtx.fill();
 
                 leafCtx.restore();
+
+                // Draw settled leaves to collision canvas for pixel-based collision detection
+                if (leaf.isSettled && !leaf.drawnToCollision) {
+                    collisionCtx.save();
+                    collisionCtx.translate(leaf.x, leaf.y);
+                    collisionCtx.rotate(leaf.angle);
+                    collisionCtx.fillStyle = 'rgba(255, 255, 255, 1)'; // Solid white for detection
+                    collisionCtx.beginPath();
+                    collisionCtx.ellipse(leaf.size / 2, 0, leaf.size / 2, leaf.size * 0.25, 0, 0, Math.PI * 2);
+                    collisionCtx.fill();
+                    collisionCtx.restore();
+                    leaf.drawnToCollision = true;
+                }
             }
 
             // Always keep leaf alive (even if not visible yet) unless it fell off screen
@@ -641,6 +658,9 @@
         growthTips = [];
         leaves = []; // Clear leaves when reinitializing
         animationComplete = false; // Reset animation state
+
+        // Clear collision canvas for pixel-based leaf collision detection
+        collisionCtx.clearRect(0, 0, width, height);
 
         // Set random target number of trees to create
         targetTreeCount = config.minTrees + Math.floor(Math.random() * (config.maxTrees - config.minTrees + 1));
@@ -1122,13 +1142,14 @@
      * Resize canvas
      */
     function resize() {
-        width = canvas.width = leafCanvas.width = window.innerWidth;
-        height = canvas.height = leafCanvas.height = window.innerHeight;
+        width = canvas.width = leafCanvas.width = collisionCanvas.width = window.innerWidth;
+        height = canvas.height = leafCanvas.height = collisionCanvas.height = window.innerHeight;
 
         // Only reinitialize trees if already initialized (not during first setup)
         if (initialized) {
             ctx.clearRect(0, 0, width, height);
             leafCtx.clearRect(0, 0, width, height);
+            collisionCtx.clearRect(0, 0, width, height);
             initializeTrees();
         }
     }
@@ -1162,9 +1183,9 @@
         parsedFallColors = config.fallColors.map(parseColor);
         console.log('Colors pre-parsed for performance');
 
-        // Set canvas size for both canvases
-        width = canvas.width = leafCanvas.width = window.innerWidth;
-        height = canvas.height = leafCanvas.height = window.innerHeight;
+        // Set canvas size for all canvases (including collision canvas)
+        width = canvas.width = leafCanvas.width = collisionCanvas.width = window.innerWidth;
+        height = canvas.height = leafCanvas.height = collisionCanvas.height = window.innerHeight;
         console.log('Canvas size:', width, 'x', height);
 
         // Detect content boundaries BEFORE creating trees
