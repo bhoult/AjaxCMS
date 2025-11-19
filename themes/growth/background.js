@@ -34,12 +34,13 @@
         minTrunkHeight: 50,          // Minimum trunk age before first fork (generation 0)
         maxTrunkHeight: 200,         // Maximum trunk age before first fork (generation 0) - fork age randomly chosen between min and max
         initialMinWidth: 3,          // Minimum initial trunk width
-        initialMaxWidth: 30,         // Maximum initial trunk width (based on distance to content)
+        initialMaxWidth: 20,         // Maximum initial trunk width (based on distance to content)
+        trunkWidthLookAhead: 99,     // Horizontal distance (pixels) to check for content above when calculating initial trunk width
         upwardBias: -0.8,            // Negative Y velocity (upward)
         horizontalVariance: 0.3,     // Random horizontal movement
 
         // === BRANCH FORKING ===
-        forkChance: 0.008,           // Chance to fork per frame (for branches, not trunks)
+        forkChance: 0.01,           // Chance to fork per frame (for branches, not trunks)
         minForkAge: 15,              // Minimum age before forking (branches after trunk)
         maxForkAge: 100,             // Maximum age before forced forking (branches after trunk)
         minBranchAngle: 15,          // Minimum fork angle in degrees
@@ -50,12 +51,13 @@
 
         // === WIDTH/THICKNESS ===
         minWidth: 0.01,              // Stop growing when width is nearly invisible
-        widthAttenuation: 0.03,      // Natural width reduction per frame
+        widthAttenuation: 0.015,     // Natural width reduction per frame (reduced from 0.03 for taller trees)
         generationAttenuationRatio: 0.7, // Attenuation multiplier per generation (<1 = slower for smaller branches, >1 = faster)
 
         // === CONTENT AVOIDANCE ===
-        contentBuffer: 60,           // Distance to start avoiding content
+        bendingRange: 400,           // Distance from content where bending/avoidance begins
         bendStrength: 0.05,          // How much to bend away from content
+        attenuationRange: 300,       // Distance from content where width reduction begins
         widthReduction: 0.9,         // Width reduction when near content
         widthReductionConeAngle: 90, // Cone angle in degrees for detecting content ahead (0-180)
 
@@ -177,16 +179,19 @@
 
     /**
      * Get distance to nearest content from a point
+     * Calculates distance to the nearest edge of content rectangles
      */
     function getDistanceToNearestContent(x, y) {
         let minDistance = Infinity;
 
         for (let rect of contentRects) {
-            // Calculate distance to rect center
-            const centerX = (rect.left + rect.right) / 2;
-            const centerY = (rect.top + rect.bottom) / 2;
-            const dx = centerX - x;
-            const dy = centerY - y;
+            // Calculate distance to nearest edge of rectangle
+            // Clamp point to rectangle bounds to find closest point on edge
+            const closestX = Math.max(rect.left, Math.min(x, rect.right));
+            const closestY = Math.max(rect.top, Math.min(y, rect.bottom));
+
+            const dx = closestX - x;
+            const dy = closestY - y;
             const distance = Math.sqrt(dx * dx + dy * dy);
 
             if (distance < minDistance) {
@@ -199,6 +204,7 @@
 
     /**
      * Get distance to nearest content directly above a point
+     * Checks within trunkWidthLookAhead pixels to the left and right
      */
     function getDistanceToContentAbove(x, y) {
         let minDistance = Infinity;
@@ -206,8 +212,8 @@
         for (let rect of contentRects) {
             // Only consider content that is above this point
             if (rect.bottom < y) {
-                // Check if horizontally aligned (within the x range of the rect)
-                if (x >= rect.left - 50 && x <= rect.right + 50) {
+                // Check if horizontally aligned (within the x range of the rect + lookahead)
+                if (x >= rect.left - config.trunkWidthLookAhead && x <= rect.right + config.trunkWidthLookAhead) {
                     // Calculate vertical distance to bottom of rect
                     const distance = y - rect.bottom;
                     if (distance < minDistance) {
@@ -334,21 +340,20 @@
             const oldX = tip.x;
             const oldY = tip.y;
 
-            // Check proximity to content - use for both avoidance and attenuation
-            const proximityThreshold = config.contentBuffer * 6; // Start at 6x the buffer distance
+            // Check proximity to content for bending
             const distanceToContent = getDistanceToNearestContent(tip.x, tip.y);
-            const proximityFactor = distanceToContent < proximityThreshold
-                ? 1 - (distanceToContent / proximityThreshold)
+            const bendingFactor = distanceToContent < config.bendingRange
+                ? 1 - (distanceToContent / config.bendingRange)
                 : 0;
 
-            // Also check distance in direction of travel for width reduction
+            // Check distance in direction of travel for width reduction
             const distanceAhead = getDistanceInDirection(tip.x, tip.y, tip.vx, tip.vy);
-            const aheadProximityFactor = distanceAhead < proximityThreshold
-                ? 1 - (distanceAhead / proximityThreshold)
+            const attenuationFactor = distanceAhead < config.attenuationRange
+                ? 1 - (distanceAhead / config.attenuationRange)
                 : 0;
 
-            // If we're within the proximity threshold, start avoiding
-            if (distanceToContent < proximityThreshold) {
+            // If we're within the bending range, start avoiding
+            if (distanceToContent < config.bendingRange) {
                 // Find which direction to avoid
                 let nearestRect = null;
                 let minDist = Infinity;
@@ -379,21 +384,21 @@
                     const approachingFromBottom = tip.y > nearestRect.bottom;
                     const approachingFromTop = tip.y < nearestRect.top;
 
-                    // Apply avoidance forces away from content
+                    // Apply avoidance forces away from content (scaled by bendingFactor)
                     if (approachingFromLeft || approachingFromRight) {
                         // Approaching horizontally - push away horizontally
                         const directionX = approachingFromLeft ? -1 : 1;
-                        tip.vx += directionX * config.bendStrength * proximityFactor;
+                        tip.vx += directionX * config.bendStrength * bendingFactor;
                     } else {
                         // Inside horizontal bounds - use distance to determine direction
                         const directionX = dx < 0 ? -1 : 1;
-                        tip.vx += directionX * config.bendStrength * proximityFactor;
+                        tip.vx += directionX * config.bendStrength * bendingFactor;
                     }
 
                     if (approachingFromBottom || approachingFromTop) {
                         // Approaching vertically - push away vertically
                         const directionY = approachingFromBottom ? 1 : -1;
-                        tip.vy += directionY * config.bendStrength * proximityFactor;
+                        tip.vy += directionY * config.bendStrength * bendingFactor;
                     }
                 }
             }
@@ -416,10 +421,10 @@
             let attenuationRate = config.widthAttenuation * (1 + tip.generation * config.generationAttenuationRatio);
 
             // Additional attenuation based on proximity to content ahead in direction of travel
-            if (aheadProximityFactor > 0) {
+            if (attenuationFactor > 0) {
                 // Add extra attenuation when approaching content ahead
                 // Uses configurable widthReduction parameter
-                const proximityAttenuation = config.widthReduction * aheadProximityFactor;
+                const proximityAttenuation = config.widthReduction * attenuationFactor;
                 attenuationRate += proximityAttenuation;
             }
 
