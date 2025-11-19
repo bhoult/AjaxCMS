@@ -1288,9 +1288,10 @@
                     totalNodesChanged += mutation.addedNodes.length + mutation.removedNodes.length;
                 }
 
-                // Consider it a page change if many nodes changed (threshold: 5 nodes)
-                // This filters out minor scrolling-related mutations on mobile
-                significantChange = totalNodesChanged >= 5;
+                // Higher threshold on mobile to avoid false positives from scrolling
+                // Desktop: 5 nodes, Mobile: 20 nodes (major page content change)
+                const threshold = isMobile() ? 20 : 5;
+                significantChange = totalNodesChanged >= threshold;
 
                 // Trigger page fade out (debounced to 500ms, only on significant changes)
                 if (significantChange && now - lastPageChange > 500) {
