@@ -19,30 +19,49 @@
 
     // Configuration
     const config = {
+        // === TREE POPULATION ===
         initialTips: 8,              // Number of trees to start with
+        minTrees: 0,                 // Minimum number of trees (0 = allow all to die out)
+        maxTrees: 100,               // Maximum number of trees (0 = unlimited)
+        newTipInterval: 180,         // Frames between new trees
+
+        // === ANIMATION SPEED ===
         growthSpeed: 1.5,            // Pixels per frame
-        minBranchAngle: 15,          // Minimum fork angle in degrees
-        maxBranchAngle: 55,          // Maximum fork angle in degrees
-        forkChance: 0.008,           // Chance to fork per frame
-        minForkAge: 15,              // Minimum age before forking (reduced for shorter trunk)
-        maxForkAge: 100,             // Maximum age before forced forking
+        frameDelay: 1,               // Milliseconds between updates (0 = as fast as possible, 16 ≈ 60fps, 33 ≈ 30fps)
+        preRenderFrames: 100,        // Number of frames to pre-render before animation starts
+
+        // === TRUNK PROPERTIES (Generation 0) ===
+        minTrunkHeight: 50,          // Minimum trunk age before first fork (generation 0)
+        maxTrunkHeight: 200,         // Maximum trunk age before first fork (generation 0) - fork age randomly chosen between min and max
         initialMinWidth: 3,          // Minimum initial trunk width
         initialMaxWidth: 30,         // Maximum initial trunk width (based on distance to content)
+        upwardBias: -0.8,            // Negative Y velocity (upward)
+        horizontalVariance: 0.3,     // Random horizontal movement
+
+        // === BRANCH FORKING ===
+        forkChance: 0.008,           // Chance to fork per frame (for branches, not trunks)
+        minForkAge: 15,              // Minimum age before forking (branches after trunk)
+        maxForkAge: 100,             // Maximum age before forced forking (branches after trunk)
+        minBranchAngle: 15,          // Minimum fork angle in degrees
+        maxBranchAngle: 55,          // Maximum fork angle in degrees
+        minBranchWidthRatio: 0.7,    // Minimum branch width as ratio of parent
+        maxBranchWidthRatio: 0.9,    // Maximum branch width as ratio of parent
+        branchOffsetRatio: 0.3,      // How far from parent center to position branches (0.5 = edge, 0 = center, 1 = beyond edge)
+
+        // === WIDTH/THICKNESS ===
         minWidth: 0.01,              // Stop growing when width is nearly invisible
-        widthAttenuation: 0.03,      // Natural width reduction per frame (increased)
+        widthAttenuation: 0.03,      // Natural width reduction per frame
         generationAttenuationRatio: 0.7, // Attenuation multiplier per generation (<1 = slower for smaller branches, >1 = faster)
-        minBranchWidthRatio: 0.7,    // Minimum branch width as ratio of parent (40%)
-        maxBranchWidthRatio: 0.9,    // Maximum branch width as ratio of parent (60%)
+
+        // === CONTENT AVOIDANCE ===
         contentBuffer: 60,           // Distance to start avoiding content
         bendStrength: 0.05,          // How much to bend away from content
         widthReduction: 0.9,         // Width reduction when near content
         widthReductionConeAngle: 90, // Cone angle in degrees for detecting content ahead (0-180)
-        newTipInterval: 180,         // Frames between new trees
-        preRenderFrames: 100,        // Number of frames to pre-render before animation starts
-        frameDelay: 0,              // Milliseconds between frames (16ms ≈ 60fps, 33ms ≈ 30fps, 0 = no delay)
-        color: 'rgba(60, 40, 20, 0.85)', // Brown tree color (darker and more opaque)
-        upwardBias: -0.8,            // Negative Y velocity (upward)
-        horizontalVariance: 0.3      // Random horizontal movement
+
+        // === VISUAL EFFECTS ===
+        branchFade: 7,               // Number of frames to fade in new branches (0 to 100% opacity)
+        color: 'rgba(60, 40, 20, 0.85)' // Brown tree color (darker and more opaque)
     };
 
     let frameCount = 0;
@@ -255,17 +274,27 @@
      * Create a new growth tip
      */
     function createTip(x, y, vx, vy, width, parentX, parentY, generation) {
-        return {
+        const gen = generation || 0;
+        const tip = {
             x: x,
             y: y,
             vx: vx,
             vy: vy,
             width: width,
+            initialWidth: width,  // Track starting width for fade scaling
             age: 0,
             parentX: parentX || x,
             parentY: parentY || y,
-            generation: generation || 0  // Track branch depth for attenuation
+            generation: gen  // Track branch depth for attenuation
         };
+
+        // For trunks (generation 0), assign a random fork age between min and max trunk height
+        if (gen === 0) {
+            tip.trunkForkAge = config.minTrunkHeight +
+                Math.random() * (config.maxTrunkHeight - config.minTrunkHeight);
+        }
+
+        return tip;
     }
 
     /**
@@ -399,13 +428,27 @@
             // Only draw if width is above sub-pixel threshold
             // This prevents rendering caps on invisible branches
             if (tip.width > 0.15 && isFinite(tip.x) && isFinite(tip.y) && isFinite(tip.width)) {
+                // Calculate fade-in opacity based on age and initial width
+                // Smaller branches fade faster than larger branches
+                let opacity = 0.85; // Default full opacity
+                if (config.branchFade > 0) {
+                    // Scale fade duration based on branch width (larger = longer fade)
+                    const widthRatio = tip.initialWidth / config.initialMaxWidth;
+                    const fadeDuration = config.branchFade * widthRatio;
+
+                    if (tip.age < fadeDuration) {
+                        // Fade from 0 to 0.85 over scaled fade duration
+                        opacity = 0.85 * (tip.age / fadeDuration);
+                    }
+                }
+
                 // Create gradient for shading - lighter on left, darker on right
                 const gradient = ctx.createLinearGradient(
                     tip.x - tip.width / 2, tip.y,
                     tip.x + tip.width / 2, tip.y
                 );
-                gradient.addColorStop(0, 'rgba(80, 60, 40, 0.85)');  // Lighter left
-                gradient.addColorStop(1, 'rgba(40, 20, 10, 0.85)');  // Darker right
+                gradient.addColorStop(0, `rgba(80, 60, 40, ${opacity})`);  // Lighter left
+                gradient.addColorStop(1, `rgba(40, 20, 10, ${opacity})`);  // Darker right
 
                 ctx.strokeStyle = gradient;
                 ctx.lineWidth = tip.width;
@@ -423,11 +466,18 @@
             // Fork chance increases dramatically as width decreases (inverse relationship)
             const dynamicForkChance = config.forkChance * (5 - widthRatio * 4); // Much higher chance when thin
 
-            // Force fork if age exceeds maximum, otherwise use probability
-            const shouldFork = (tip.age > config.minForkAge &&
-                               Math.random() < dynamicForkChance &&
-                               tip.width > config.minWidth * 2) ||
-                              (tip.age >= config.maxForkAge && tip.width > config.minWidth * 2);
+            // Check if should fork
+            let shouldFork = false;
+            if (tip.generation === 0) {
+                // Trunk: fork at predetermined random age (between min and max trunk height)
+                shouldFork = tip.age >= tip.trunkForkAge && tip.width > config.minWidth * 2;
+            } else {
+                // Branch: probability-based with forced forking at max age
+                shouldFork = (tip.age > config.minForkAge &&
+                             Math.random() < dynamicForkChance &&
+                             tip.width > config.minWidth * 2) ||
+                            (tip.age >= config.maxForkAge && tip.width > config.minWidth * 2);
+            }
 
             if (shouldFork) {
                 // Create two new branches using configured width ratios
@@ -442,9 +492,10 @@
                 const rightRatio = config.minBranchWidthRatio + Math.random() * widthRange;
                 const rightWidth = tip.width * rightRatio;
 
-                // Position branches at edges of parent branch, offset by branch radius
-                const leftX = tip.x - tip.width / 2 + leftWidth / 2;
-                const rightX = tip.x + tip.width / 2 - rightWidth / 2;
+                // Position branches based on configurable offset from parent center
+                const parentOffset = tip.width * config.branchOffsetRatio;
+                const leftX = tip.x - parentOffset + leftWidth / 2;
+                const rightX = tip.x + parentOffset - rightWidth / 2;
 
                 // Calculate random fork angles within configured range
                 const angleRange = config.maxBranchAngle - config.minBranchAngle;
@@ -499,7 +550,8 @@
         }
 
         // Occasionally add new trees from the bottom
-        if (frameCount % config.newTipInterval === 0 && growthTips.length < 100) {
+        const canAddTree = config.maxTrees === 0 || growthTips.length < config.maxTrees;
+        if (frameCount % config.newTipInterval === 0 && canAddTree) {
             const x = Math.random() * width;
 
             // Calculate initial width based on distance to content directly above
@@ -516,9 +568,9 @@
             growthTips.push(createTip(x, height, vx, vy, tipWidth, x, height, 0));
         }
 
-        // Safety: restart if all trees died out
-        if (growthTips.length === 0 && frameCount % 60 === 0) {
-            console.log('All trees died, restarting...');
+        // Safety: restart if trees fall below minimum
+        if (growthTips.length < config.minTrees && frameCount % 60 === 0) {
+            console.log('Trees below minimum, restarting...');
             initializeTrees();
         }
 
@@ -526,17 +578,11 @@
     }
 
     /**
-     * Animation loop with frame delay control
+     * Animation loop - basic loop with frame delay control
      */
-    let lastFrameTime = 0;
-    function animate(timestamp) {
-        // Check if enough time has passed since last frame
-        if (timestamp - lastFrameTime >= config.frameDelay) {
-            updateGrowth();
-            lastFrameTime = timestamp;
-        }
-
-        requestAnimationFrame(animate);
+    function animate() {
+        updateGrowth();
+        setTimeout(animate, config.frameDelay);
     }
 
     /**
