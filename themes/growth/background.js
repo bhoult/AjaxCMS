@@ -42,15 +42,17 @@
     let targetTreeCount = 0;         // Random target between minTrees and maxTrees
     let pendingTreeTimers = [];      // Array of pause timers for each pending tree
 
-    // Detect mobile devices
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
-                     || window.innerWidth <= 768;
+    // Detect mobile devices (function to allow dynamic checking on resize)
+    function isMobile() {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+               || window.innerWidth <= 768;
+    }
 
     // Configuration
     const config = {
         // === TREE POPULATION ===
-        minTrees: isMobile ? 2 : 3,              // Minimum number of trees to create (reduced on mobile)
-        maxTrees: isMobile ? 9 : 18,             // Maximum number of trees to create (half on mobile)
+        minTrees: isMobile() ? 2 : 3,              // Minimum number of trees to create (reduced on mobile)
+        maxTrees: isMobile() ? 9 : 18,             // Maximum number of trees to create (half on mobile)
         minTreePause: 100,           // Minimum frames to pause between tree finish and new tree start
         maxTreePause: 700,           // Maximum frames to pause between tree finish and new tree start
 
@@ -66,7 +68,7 @@
         enableDebugLogging: false,   // Enable console logging for debugging (set to false for production)
 
         // === MOBILE ===
-        enableContentCollision: !isMobile,  // Disable content collision detection on mobile for performance
+        enableContentCollision: !isMobile(),  // Disable content collision detection on mobile for performance
 
         // === VISUAL ===
         backgroundColor: '#97e2ffff',      // Sky blue background color (top of gradient)
@@ -1236,9 +1238,11 @@
         height = canvas.height = leafCanvas.height = collisionCanvas.height = window.innerHeight;
         if (config.enableDebugLogging) console.log('Canvas size:', width, 'x', height);
 
-        // Detect content boundaries BEFORE creating trees
-        detectContentBoundaries();
-        if (config.enableDebugLogging) console.log('Initial content rectangles:', contentRects.length);
+        // Detect content boundaries BEFORE creating trees (only if collision detection is enabled)
+        if (config.enableContentCollision) {
+            detectContentBoundaries();
+            if (config.enableDebugLogging) console.log('Initial content rectangles:', contentRects.length);
+        }
 
         // Initialize trees (now with content boundaries available)
         initializeTrees();
@@ -1248,7 +1252,7 @@
         if (config.enableDebugLogging) console.log('Pre-rendering', config.preRenderFrames, 'frames...');
         for (let i = 0; i < config.preRenderFrames; i++) {
             updateGrowth();
-            if (i % 100 === 0) {
+            if (config.enableContentCollision && i % 100 === 0) {
                 detectContentBoundaries(); // Update content detection during pre-render
             }
         }
@@ -1283,11 +1287,13 @@
                 }
 
                 // Trigger content detection (debounced to 200ms to avoid excessive calls)
-                if (contentDetectionTimeout) clearTimeout(contentDetectionTimeout);
-                contentDetectionTimeout = setTimeout(() => {
-                    detectContentBoundaries();
-                    contentDetectionTimeout = null;
-                }, 200);
+                if (config.enableContentCollision) {
+                    if (contentDetectionTimeout) clearTimeout(contentDetectionTimeout);
+                    contentDetectionTimeout = setTimeout(() => {
+                        detectContentBoundaries();
+                        contentDetectionTimeout = null;
+                    }, 200);
+                }
             });
 
             pageChangeObserver.observe(contentA, observerConfig);
@@ -1295,7 +1301,9 @@
             if (config.enableDebugLogging) console.log('Page change and content detection observer initialized');
 
             // Detect once more after 2 seconds (initial content may still be loading)
-            setTimeout(detectContentBoundaries, 2000);
+            if (config.enableContentCollision) {
+                setTimeout(detectContentBoundaries, 2000);
+            }
         }
 
         // Start animation
