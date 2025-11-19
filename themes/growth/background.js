@@ -26,9 +26,9 @@
     // Configuration
     const config = {
         // === TREE POPULATION ===
-        minTrees: 100,                 // Minimum number of trees to create
-        maxTrees: 115,                // Maximum number of trees to create
-        newTreePause: 5,            // Frames to pause between tree finish and new tree start
+        minTrees: 3,                 // Minimum number of trees to create
+        maxTrees: 45,                // Maximum number of trees to create
+        newTreePause: 500,           // Frames to pause between tree finish and new tree start
 
         // === ANIMATION SPEED ===
         growthSpeed: 1.5,            // Pixels per frame
@@ -46,9 +46,9 @@
         horizontalVariance: 0.3,     // Random horizontal movement
 
         // === BRANCH FORKING ===
-        forkChance: 0.01,           // Chance to fork per frame (for branches, not trunks)
-        minForkAge: 25,              // Minimum age before forking (branches after trunk)
-        maxForkAge: 100,             // Maximum age before forced forking (branches after trunk)
+        forkChance: 0.02,           // Chance to fork per frame (for branches, not trunks)
+        minForkAge: 45,              // Minimum age before forking (branches after trunk)
+        maxForkAge: 120,             // Maximum age before forced forking (branches after trunk)
         minBranchAngle: 15,          // Minimum fork angle in degrees
         maxBranchAngle: 35,          // Maximum fork angle in degrees
         minBranchWidthRatio: 0.7,    // Minimum branch width as ratio of parent
@@ -58,7 +58,7 @@
         // === WIDTH/THICKNESS ===
         minWidth: 0.01,              // Stop growing when width is nearly invisible
         widthAttenuation: 0.015,     // Natural width reduction per frame (reduced from 0.03 for taller trees)
-        generationAttenuationRatio: 0.7, // Attenuation multiplier per generation (<1 = slower for smaller branches, >1 = faster)
+        generationAttenuationRatio: 0.2, // Attenuation multiplier per generation (<1 = slower for smaller branches, >1 = faster)
 
         // === CONTENT AVOIDANCE ===
         bendingRange: 100,           // Distance from content where bending/avoidance begins
