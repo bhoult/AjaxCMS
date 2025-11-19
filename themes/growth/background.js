@@ -37,9 +37,9 @@
 
         // === TRUNK PROPERTIES (Generation 0) ===
         minTrunkHeight: 50,          // Minimum trunk age before first fork (generation 0)
-        maxTrunkHeight: 200,         // Maximum trunk age before first fork (generation 0) - fork age randomly chosen between min and max
+        maxTrunkHeight: 450,         // Maximum trunk age before first fork (generation 0) - fork age randomly chosen between min and max
         initialMinWidth: 1,          // Minimum initial trunk width
-        initialMaxWidth: 45,         // Maximum initial trunk width (based on distance to content)
+        initialMaxWidth: 55,         // Maximum initial trunk width (based on distance to content)
         trunkWidthLookAhead: 10,     // Horizontal distance (pixels) to check for content above when calculating initial trunk width
         trunkWidthDistanceScale: 0.8,// Multiplier for distance-based width scaling (1.0 = no scaling at full page height, 0.5x at half height, etc. Higher values = less aggressive scaling)
         upwardBias: -0.8,            // Negative Y velocity (upward)
