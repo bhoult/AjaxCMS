@@ -54,6 +54,8 @@
         minBranchWidthRatio: 0.7,    // Minimum branch width as ratio of parent
         maxBranchWidthRatio: 0.9,    // Maximum branch width as ratio of parent
         branchOffsetRatio: 0.3,      // How far from parent center to position branches (0.5 = edge, 0 = center, 1 = beyond edge)
+        branchCurvature: 0.02,       // Amount of natural curve/waviness in branches (0 = straight, higher = more curved)
+        curvatureFrequency: 0.1,     // How quickly branch direction changes (higher = more frequent direction changes)
 
         // === WIDTH/THICKNESS ===
         minWidth: 0.01,              // Stop growing when width is nearly invisible
@@ -392,6 +394,23 @@
                         tip.vy += directionY * config.bendStrength * bendingFactor;
                     }
                 }
+            }
+
+            // Apply natural curvature using noise-based perturbation
+            if (config.branchCurvature > 0) {
+                // Use position and age to generate pseudo-random but smooth curves
+                // Different branches get different curves based on initial position
+                const noiseInput = (tip.parentX + tip.parentY + tip.age * config.curvatureFrequency) * 0.01;
+                const curvatureAngle = Math.sin(noiseInput) * config.branchCurvature;
+
+                // Apply perpendicular rotation to create curve
+                const currentAngle = Math.atan2(tip.vy, tip.vx);
+                const newAngle = currentAngle + curvatureAngle;
+
+                // Convert back to velocity components (unnormalized)
+                const currentSpeed = Math.sqrt(tip.vx * tip.vx + tip.vy * tip.vy);
+                tip.vx = Math.cos(newAngle) * currentSpeed;
+                tip.vy = Math.sin(newAngle) * currentSpeed;
             }
 
             // Normalize velocity to maintain consistent speed
