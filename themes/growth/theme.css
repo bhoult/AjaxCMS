@@ -7,20 +7,30 @@ body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-/* White glow around all text for better readability */
+/* White outline and glow around all text for better readability */
 body, h1, h2, h3, h4, h5, h6, p, a, li, td, th, blockquote, code, pre {
+    -webkit-text-stroke: 1px rgba(255, 255, 255, 0.8);
     text-shadow: 0 0 8px rgba(255, 255, 255, 0.9),
                  0 0 12px rgba(255, 255, 255, 0.7),
-                 0 0 16px rgba(255, 255, 255, 0.5);
+                 0 0 16px rgba(255, 255, 255, 0.5),
+                 1px 1px 2px rgba(255, 255, 255, 0.9),
+                 -1px -1px 2px rgba(255, 255, 255, 0.9),
+                 1px -1px 2px rgba(255, 255, 255, 0.9),
+                 -1px 1px 2px rgba(255, 255, 255, 0.9);
 }
 
-/* Stronger glow on mobile for better readability */
+/* Stronger glow and outline on mobile for better readability */
 @media (max-width: 768px) {
     body, h1, h2, h3, h4, h5, h6, p, a, li, td, th, blockquote, code, pre {
+        -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.9);
         text-shadow: 0 0 12px rgba(255, 255, 255, 1),
                      0 0 18px rgba(255, 255, 255, 0.9),
                      0 0 24px rgba(255, 255, 255, 0.7),
-                     0 0 32px rgba(255, 255, 255, 0.5);
+                     0 0 32px rgba(255, 255, 255, 0.5),
+                     1px 1px 3px rgba(255, 255, 255, 1),
+                     -1px -1px 3px rgba(255, 255, 255, 1),
+                     1px -1px 3px rgba(255, 255, 255, 1),
+                     -1px 1px 3px rgba(255, 255, 255, 1);
     }
 }
 
