@@ -50,6 +50,9 @@
         frameDelay: 8,               // Milliseconds between updates (0 = as fast as possible, 16 ≈ 60fps, 33 ≈ 30fps)
         preRenderFrames: 10,        // Number of frames to pre-render before animation starts
 
+        // === PAGE TRANSITION ===
+        fadeOutSpeed: 0.02,          // Opacity decrease per frame when fading out (0.01 = slow, 0.05 = fast)
+
         // === TRUNK PROPERTIES (Generation 0) ===
         minTrunkHeight: 50,          // Minimum trunk age before first fork (generation 0)
         maxTrunkHeight: 450,         // Maximum trunk age before first fork (generation 0) - fork age randomly chosen between min and max
@@ -129,6 +132,10 @@
 
     let frameCount = 0;
     let animationComplete = false;  // Track when growth animation finishes
+    let isFadingOut = false;         // Track when fading out for page transition
+    let canvasOpacity = 1.0;         // Current opacity of canvases
+    let lastPageChange = 0;          // Timestamp of last page change to debounce
+    let animationTimeoutId = null;   // Store timeout ID to prevent multiple loops
 
     /**
      * Simple Perlin-like noise implementation for smooth randomness
@@ -1026,19 +1033,71 @@
     }
 
     /**
+     * Start fading out the canvases for page transition
+     */
+    function startFadeOut() {
+        if (!isFadingOut) {
+            console.log('Starting canvas fade out for page transition');
+            isFadingOut = true;
+            // Restart animation loop if it was stopped (animationTimeoutId will be null)
+            if (animationTimeoutId === null) {
+                animate();
+            }
+        }
+    }
+
+    /**
      * Animation loop - basic loop with frame delay control
      */
     function animate() {
+        // Clear any existing timeout to prevent multiple loops
+        if (animationTimeoutId !== null) {
+            clearTimeout(animationTimeoutId);
+            animationTimeoutId = null;
+        }
+
+        // Handle fade out for page transitions
+        if (isFadingOut) {
+            canvasOpacity -= config.fadeOutSpeed;
+
+            if (canvasOpacity <= 0) {
+                canvasOpacity = 0;
+                canvas.style.opacity = '0';
+                leafCanvas.style.opacity = '0';
+
+                // Clear both canvases and reinitialize
+                console.log('Fade out complete. Reinitializing...');
+                ctx.clearRect(0, 0, width, height);
+                leafCtx.clearRect(0, 0, width, height);
+                initializeTrees();
+
+                // Reset opacity and fade state
+                canvasOpacity = 1.0;
+                canvas.style.opacity = '1';
+                leafCanvas.style.opacity = '1';
+                isFadingOut = false;
+
+                animationTimeoutId = setTimeout(animate, config.frameDelay);
+                return;
+            } else {
+                canvas.style.opacity = canvasOpacity.toString();
+                leafCanvas.style.opacity = canvasOpacity.toString();
+                animationTimeoutId = setTimeout(animate, config.frameDelay);
+                return;
+            }
+        }
+
         updateGrowth();
         updateLeaves();
 
         // Check if animation should stop (growth complete and all leaves settled)
         if (animationComplete && leaves.length > 0 && leaves.every(leaf => leaf.isSettled)) {
             console.log('All leaves have settled. Animation complete!');
+            animationTimeoutId = null; // Mark as stopped
             return; // Stop animation
         }
 
-        setTimeout(animate, config.frameDelay);
+        animationTimeoutId = setTimeout(animate, config.frameDelay);
     }
 
     /**
@@ -1121,6 +1180,30 @@
 
         // Handle window resize
         window.addEventListener('resize', resize);
+
+        // Observe page content changes to trigger fade out
+        const contentA = document.getElementById('a');
+        const contentB = document.getElementById('b');
+
+        if (contentA && contentB) {
+            const observerConfig = {
+                childList: true,
+                subtree: true
+            };
+
+            const pageChangeObserver = new MutationObserver(() => {
+                // Debounce: Only trigger if at least 500ms since last trigger
+                const now = Date.now();
+                if (now - lastPageChange > 500) {
+                    lastPageChange = now;
+                    startFadeOut();
+                }
+            });
+
+            pageChangeObserver.observe(contentA, observerConfig);
+            pageChangeObserver.observe(contentB, observerConfig);
+            console.log('Page change observer initialized');
+        }
 
         // Start animation
         console.log('Starting animation loop...');
