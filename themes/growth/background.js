@@ -137,6 +137,10 @@
     let lastPageChange = 0;          // Timestamp of last page change to debounce
     let animationTimeoutId = null;   // Store timeout ID to prevent multiple loops
 
+    // Pre-parsed colors for performance (avoid regex in animation loop)
+    let parsedLeafColor = null;
+    let parsedFallColors = [];
+
     /**
      * Simple Perlin-like noise implementation for smooth randomness
      */
@@ -208,6 +212,19 @@
 
     // Create noise generator instance
     const noise = new NoiseGenerator();
+
+    /**
+     * Parse RGBA color string into components (optimization: avoid regex in animation loop)
+     */
+    function parseColor(colorString) {
+        const match = colorString.match(/rgba?\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/);
+        return {
+            r: parseInt(match[1]),
+            g: parseInt(match[2]),
+            b: parseInt(match[3]),
+            a: parseFloat(match[4])
+        };
+    }
 
     /**
      * Get actual text boundaries for collision detection
@@ -423,8 +440,8 @@
             // Random brightness variation (1.0 ± variation)
             const brightnessMultiplier = 1.0 + (Math.random() - 0.5) * 2 * config.leafBrightnessVariation;
 
-            // Choose random fall color for this leaf
-            const fallColor = config.fallColors[Math.floor(Math.random() * config.fallColors.length)];
+            // Choose random fall color for this leaf (store parsed color reference for performance)
+            const fallColorIndex = Math.floor(Math.random() * parsedFallColors.length);
 
             // Random delays and rates for natural variation
             const colorChangeDelay = config.colorChangeDelayMin + Math.random() * (config.colorChangeDelayMax - config.colorChangeDelayMin);
@@ -443,7 +460,7 @@
                 colorChangeDelay: colorChangeDelay,    // Frames to wait before color starts changing
                 colorChangeRate: colorChangeRate,      // Speed of color change for this leaf
                 fallDelay: fallDelay,                  // Frames to wait after color change before falling
-                fallColor: fallColor,
+                fallColorIndex: fallColorIndex,        // Index into parsedFallColors array
                 colorTransition: 0, // 0 = green, 1 = fall color
                 isColorChanging: false,
                 isFalling: false,
@@ -525,13 +542,14 @@
                     if (!collided) {
                         for (let otherLeaf of newLeaves) {
                             if (otherLeaf.isSettled && otherLeaf !== leaf) {
-                                // Simple distance check for collision
+                                // Use squared distance check for performance (avoid Math.sqrt)
                                 const dx = newX - otherLeaf.x;
                                 const dy = newY - otherLeaf.y;
-                                const distance = Math.sqrt(dx * dx + dy * dy);
+                                const distanceSquared = dx * dx + dy * dy;
                                 const minDistance = (leaf.size + otherLeaf.size) / 2;
+                                const minDistanceSquared = minDistance * minDistance;
 
-                                if (distance < minDistance) {
+                                if (distanceSquared < minDistanceSquared) {
                                     const settleY = otherLeaf.y - minDistance;
 
                                     // Only settle if within allowed pile height
@@ -581,22 +599,22 @@
                 leafCtx.rotate(leaf.angle);
 
                 // Interpolate between green and fall color based on colorTransition
-                const greenMatch = config.leafColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/);
-                const fallMatch = leaf.fallColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/);
+                // Use pre-parsed colors for performance (avoid regex in hot loop)
+                const fallColorParsed = parsedFallColors[leaf.fallColorIndex];
 
-                const greenR = parseInt(greenMatch[1]) * leaf.brightness;
-                const greenG = parseInt(greenMatch[2]) * leaf.brightness;
-                const greenB = parseInt(greenMatch[3]) * leaf.brightness;
+                const greenR = parsedLeafColor.r * leaf.brightness;
+                const greenG = parsedLeafColor.g * leaf.brightness;
+                const greenB = parsedLeafColor.b * leaf.brightness;
 
-                const fallR = parseInt(fallMatch[1]) * leaf.brightness;
-                const fallG = parseInt(fallMatch[2]) * leaf.brightness;
-                const fallB = parseInt(fallMatch[3]) * leaf.brightness;
+                const fallR = fallColorParsed.r * leaf.brightness;
+                const fallG = fallColorParsed.g * leaf.brightness;
+                const fallB = fallColorParsed.b * leaf.brightness;
 
                 // Lerp between green and fall color
                 const r = Math.min(255, Math.floor(greenR + (fallR - greenR) * leaf.colorTransition));
                 const g = Math.min(255, Math.floor(greenG + (fallG - greenG) * leaf.colorTransition));
                 const b = Math.min(255, Math.floor(greenB + (fallB - greenB) * leaf.colorTransition));
-                const a = parseFloat(greenMatch[4]);
+                const a = parsedLeafColor.a;
 
                 // Draw leaf shape (ellipse) offset so it extends from connection point
                 // Position leaf so its narrow end (stem) is at the origin (branch tip)
@@ -1139,6 +1157,11 @@
             return;
         }
 
+        // Parse colors once for performance (avoid regex in animation loop)
+        parsedLeafColor = parseColor(config.leafColor);
+        parsedFallColors = config.fallColors.map(parseColor);
+        console.log('Colors pre-parsed for performance');
+
         // Set canvas size for both canvases
         width = canvas.width = leafCanvas.width = window.innerWidth;
         height = canvas.height = leafCanvas.height = window.innerHeight;
@@ -1165,44 +1188,45 @@
         // Mark as initialized after setup is complete
         initialized = true;
 
-        // Re-detect content frequently for the first 10 seconds (content loads dynamically)
-        let detectionCount = 0;
-        const frequentDetection = setInterval(() => {
-            detectContentBoundaries();
-            detectionCount++;
-            if (detectionCount >= 20) {
-                clearInterval(frequentDetection);
-                // Then continue at slower rate
-                setInterval(detectContentBoundaries, 2000);
-                console.log('Switched to slow content detection');
-            }
-        }, 500); // Every 500ms for first 10 seconds
-
         // Handle window resize
         window.addEventListener('resize', resize);
 
-        // Observe page content changes to trigger fade out
+        // Observe page content changes for both fade out and content detection
         const contentA = document.getElementById('a');
         const contentB = document.getElementById('b');
 
         if (contentA && contentB) {
             const observerConfig = {
                 childList: true,
-                subtree: true
+                subtree: true,
+                characterData: true
             };
 
+            let contentDetectionTimeout = null;
+
             const pageChangeObserver = new MutationObserver(() => {
-                // Debounce: Only trigger if at least 500ms since last trigger
                 const now = Date.now();
+
+                // Trigger page fade out (debounced to 500ms)
                 if (now - lastPageChange > 500) {
                     lastPageChange = now;
                     startFadeOut();
                 }
+
+                // Trigger content detection (debounced to 200ms to avoid excessive calls)
+                if (contentDetectionTimeout) clearTimeout(contentDetectionTimeout);
+                contentDetectionTimeout = setTimeout(() => {
+                    detectContentBoundaries();
+                    contentDetectionTimeout = null;
+                }, 200);
             });
 
             pageChangeObserver.observe(contentA, observerConfig);
             pageChangeObserver.observe(contentB, observerConfig);
-            console.log('Page change observer initialized');
+            console.log('Page change and content detection observer initialized');
+
+            // Detect once more after 2 seconds (initial content may still be loading)
+            setTimeout(detectContentBoundaries, 2000);
         }
 
         // Start animation
