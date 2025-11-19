@@ -17,13 +17,15 @@
     // Active growth tips - only track points that are currently growing
     let growthTips = [];
 
+    // Tree generation tracking
+    let totalTreesCreated = 0;       // Total number of trees created so far
+    let targetTreeCount = 0;         // Random target between minTrees and maxTrees
+
     // Configuration
     const config = {
         // === TREE POPULATION ===
-        initialTips: 8,              // Number of trees to start with
-        minTrees: 0,                 // Minimum number of trees (0 = allow all to die out)
-        maxTrees: 100,               // Maximum number of trees (0 = unlimited)
-        newTipInterval: 180,         // Frames between new trees
+        minTrees: 8,                 // Minimum number of trees to create
+        maxTrees: 115,                // Maximum number of trees to create
 
         // === ANIMATION SPEED ===
         growthSpeed: 1.5,            // Pixels per frame
@@ -55,10 +57,10 @@
         generationAttenuationRatio: 0.7, // Attenuation multiplier per generation (<1 = slower for smaller branches, >1 = faster)
 
         // === CONTENT AVOIDANCE ===
-        bendingRange: 400,           // Distance from content where bending/avoidance begins
+        bendingRange: 300,           // Distance from content where bending/avoidance begins
         bendStrength: 0.05,          // How much to bend away from content
-        attenuationRange: 300,       // Distance from content where width reduction begins
-        widthReduction: 0.9,         // Width reduction when near content
+        attenuationRange: 400,       // Distance from content where width reduction begins
+        widthReduction: 1,         // Width reduction when near content
         widthReductionConeAngle: 90, // Cone angle in degrees for detecting content ahead (0-180)
 
         // === VISUAL EFFECTS ===
@@ -304,28 +306,43 @@
     }
 
     /**
-     * Initialize with starting trees
+     * Initialize with starting trees and set random target
      */
     function initializeTrees() {
         growthTips = [];
 
-        for (let i = 0; i < config.initialTips; i++) {
-            const x = Math.random() * width;
-            const y = height; // Start at bottom
+        // Set random target number of trees to create
+        targetTreeCount = config.minTrees + Math.floor(Math.random() * (config.maxTrees - config.minTrees + 1));
+        totalTreesCreated = 0;
 
-            // Calculate initial width based on distance to content directly above
-            const distanceToContent = getDistanceToContentAbove(x, y);
-            // Scale width directly proportional to distance - linear with no cap
-            // If no content above (Infinity), use full initialMaxWidth
-            const widthMultiplier = isFinite(distanceToContent) ? distanceToContent / 300 : 1.0;
-            const scaledWidth = config.initialMaxWidth * widthMultiplier * (0.9 + Math.random() * 0.2);
-            const tipWidth = Math.max(config.initialMinWidth, scaledWidth);
+        console.log('Target tree count:', targetTreeCount);
 
-            const vx = (Math.random() - 0.5) * config.horizontalVariance;
-            const vy = config.upwardBias;
-
-            growthTips.push(createTip(x, y, vx, vy, tipWidth, x, y, 0));
+        // Start with minTrees
+        for (let i = 0; i < config.minTrees; i++) {
+            createNewTree();
         }
+    }
+
+    /**
+     * Create a new tree at the bottom
+     */
+    function createNewTree() {
+        const x = Math.random() * width;
+        const y = height; // Start at bottom
+
+        // Calculate initial width based on distance to content directly above
+        const distanceToContent = getDistanceToContentAbove(x, y);
+        // Scale width directly proportional to distance - linear with no cap
+        // If no content above (Infinity), use full initialMaxWidth
+        const widthMultiplier = isFinite(distanceToContent) ? distanceToContent / 300 : 1.0;
+        const scaledWidth = config.initialMaxWidth * widthMultiplier * (0.9 + Math.random() * 0.2);
+        const tipWidth = Math.max(config.initialMinWidth, scaledWidth);
+
+        const vx = (Math.random() - 0.5) * config.horizontalVariance;
+        const vy = config.upwardBias;
+
+        growthTips.push(createTip(x, y, vx, vy, tipWidth, x, y, 0));
+        totalTreesCreated++;
     }
 
     /**
@@ -547,6 +564,11 @@
             // If width <= minWidth, branch has tapered to invisible - just stop, no cap visible
         }
 
+        // Count generation-0 tips (trees) before and after
+        const oldTreeCount = growthTips.filter(tip => tip.generation === 0).length;
+        const newTreeCount = newTips.filter(tip => tip.generation === 0).length;
+        const treesFinished = oldTreeCount - newTreeCount;
+
         growthTips = newTips;
 
         // Log avoidance activity every 60 frames
@@ -554,29 +576,17 @@
             console.log('Frame', frameCount, '- Avoiding content:', avoidanceCount, 'tips,', contentRects.length, 'content rects');
         }
 
-        // Occasionally add new trees from the bottom
-        const canAddTree = config.maxTrees === 0 || growthTips.length < config.maxTrees;
-        if (frameCount % config.newTipInterval === 0 && canAddTree) {
-            const x = Math.random() * width;
-
-            // Calculate initial width based on distance to content directly above
-            const distanceToContent = getDistanceToContentAbove(x, height);
-            // Scale width directly proportional to distance - linear with no cap
-            // If no content above (Infinity), use full initialMaxWidth
-            const widthMultiplier = isFinite(distanceToContent) ? distanceToContent / 300 : 1.0;
-            const scaledWidth = config.initialMaxWidth * widthMultiplier * (0.9 + Math.random() * 0.2);
-            const tipWidth = Math.max(config.initialMinWidth, scaledWidth);
-
-            const vx = (Math.random() - 0.5) * config.horizontalVariance;
-            const vy = config.upwardBias;
-
-            growthTips.push(createTip(x, height, vx, vy, tipWidth, x, height, 0));
+        // When trees finish, start new ones if we haven't reached target
+        if (treesFinished > 0 && totalTreesCreated < targetTreeCount) {
+            for (let i = 0; i < treesFinished && totalTreesCreated < targetTreeCount; i++) {
+                createNewTree();
+            }
         }
 
-        // Safety: restart if trees fall below minimum
-        if (growthTips.length < config.minTrees && frameCount % 60 === 0) {
-            console.log('Trees below minimum, restarting...');
-            initializeTrees();
+        // Check if animation should end
+        if (totalTreesCreated >= targetTreeCount && growthTips.length === 0) {
+            console.log('Animation complete! Created', totalTreesCreated, 'trees (target:', targetTreeCount + ')');
+            return; // Stop the animation
         }
 
         frameCount++;
