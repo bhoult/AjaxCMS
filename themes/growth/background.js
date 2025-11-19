@@ -42,11 +42,15 @@
     let targetTreeCount = 0;         // Random target between minTrees and maxTrees
     let pendingTreeTimers = [];      // Array of pause timers for each pending tree
 
+    // Detect mobile devices
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+                     || window.innerWidth <= 768;
+
     // Configuration
     const config = {
         // === TREE POPULATION ===
-        minTrees: 3,                 // Minimum number of trees to create
-        maxTrees: 18,                // Maximum number of trees to create
+        minTrees: isMobile ? 2 : 3,              // Minimum number of trees to create (reduced on mobile)
+        maxTrees: isMobile ? 9 : 18,             // Maximum number of trees to create (half on mobile)
         minTreePause: 100,           // Minimum frames to pause between tree finish and new tree start
         maxTreePause: 700,           // Maximum frames to pause between tree finish and new tree start
 
@@ -60,6 +64,9 @@
 
         // === DEBUG ===
         enableDebugLogging: false,   // Enable console logging for debugging (set to false for production)
+
+        // === MOBILE ===
+        enableContentCollision: !isMobile,  // Disable content collision detection on mobile for performance
 
         // === VISUAL ===
         backgroundColor: '#97e2ffff',      // Sky blue background color (top of gradient)
@@ -740,8 +747,8 @@
                 ? 1 - (distanceAhead / config.attenuationRange)
                 : 0;
 
-            // If we're within the bending range, start avoiding
-            if (distanceAhead < config.bendingRange) {
+            // If we're within the bending range, start avoiding (only if content collision is enabled)
+            if (config.enableContentCollision && distanceAhead < config.bendingRange) {
                 // Find which direction to avoid
                 let nearestRect = null;
                 let minDist = Infinity;

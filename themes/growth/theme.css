@@ -7,6 +7,13 @@ body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
+/* White glow around all text for better readability */
+body, h1, h2, h3, h4, h5, h6, p, a, li, td, th, blockquote, code, pre {
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.9),
+                 0 0 12px rgba(255, 255, 255, 0.7),
+                 0 0 16px rgba(255, 255, 255, 0.5);
+}
+
 /* Remove all borders from content areas */
 #a, #b {
     border: none !important;
