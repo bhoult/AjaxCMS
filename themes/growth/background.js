@@ -26,30 +26,31 @@
     // Configuration
     const config = {
         // === TREE POPULATION ===
-        minTrees: 1,                 // Minimum number of trees to create
-        maxTrees: 15,                // Maximum number of trees to create
-        newTreePause: 500,            // Frames to pause between tree finish and new tree start
+        minTrees: 100,                 // Minimum number of trees to create
+        maxTrees: 115,                // Maximum number of trees to create
+        newTreePause: 5,            // Frames to pause between tree finish and new tree start
 
         // === ANIMATION SPEED ===
         growthSpeed: 1.5,            // Pixels per frame
         frameDelay: 1,               // Milliseconds between updates (0 = as fast as possible, 16 ≈ 60fps, 33 ≈ 30fps)
-        preRenderFrames: 100,        // Number of frames to pre-render before animation starts
+        preRenderFrames: 10,        // Number of frames to pre-render before animation starts
 
         // === TRUNK PROPERTIES (Generation 0) ===
         minTrunkHeight: 50,          // Minimum trunk age before first fork (generation 0)
         maxTrunkHeight: 200,         // Maximum trunk age before first fork (generation 0) - fork age randomly chosen between min and max
-        initialMinWidth: 3,          // Minimum initial trunk width
-        initialMaxWidth: 20,         // Maximum initial trunk width (based on distance to content)
+        initialMinWidth: 1,          // Minimum initial trunk width
+        initialMaxWidth: 45,         // Maximum initial trunk width (based on distance to content)
         trunkWidthLookAhead: 99,     // Horizontal distance (pixels) to check for content above when calculating initial trunk width
+        trunkWidthDistanceScale: 1.0,// Multiplier for distance-based width scaling (1.0 = no scaling at full page height, 0.5x at half height, etc. Higher values = less aggressive scaling)
         upwardBias: -0.8,            // Negative Y velocity (upward)
         horizontalVariance: 0.3,     // Random horizontal movement
 
         // === BRANCH FORKING ===
         forkChance: 0.01,           // Chance to fork per frame (for branches, not trunks)
-        minForkAge: 15,              // Minimum age before forking (branches after trunk)
+        minForkAge: 25,              // Minimum age before forking (branches after trunk)
         maxForkAge: 100,             // Maximum age before forced forking (branches after trunk)
         minBranchAngle: 15,          // Minimum fork angle in degrees
-        maxBranchAngle: 55,          // Maximum fork angle in degrees
+        maxBranchAngle: 35,          // Maximum fork angle in degrees
         minBranchWidthRatio: 0.7,    // Minimum branch width as ratio of parent
         maxBranchWidthRatio: 0.9,    // Maximum branch width as ratio of parent
         branchOffsetRatio: 0.3,      // How far from parent center to position branches (0.5 = edge, 0 = center, 1 = beyond edge)
@@ -60,9 +61,9 @@
         generationAttenuationRatio: 0.7, // Attenuation multiplier per generation (<1 = slower for smaller branches, >1 = faster)
 
         // === CONTENT AVOIDANCE ===
-        bendingRange: 300,           // Distance from content where bending/avoidance begins
+        bendingRange: 100,           // Distance from content where bending/avoidance begins
         bendStrength: 0.02,          // How much to bend away from content
-        attenuationRange: 400,       // Distance from content where width reduction begins
+        attenuationRange: 200,       // Distance from content where width reduction begins
         widthReduction: 1,         // Width reduction when near content
         widthReductionConeAngle: 90, // Cone angle in degrees for detecting content ahead (0-180)
 
@@ -158,40 +159,14 @@
     }
 
     /**
-     * Check if a point would collide with content
-     * Returns { collision: boolean, directionX: -1|0|1 }
+     * Get distance to nearest content anywhere on the page
+     * Used for determining initial trunk width based on available vertical space
      */
-    function checkCollision(x, y) {
-        for (let rect of contentRects) {
-            // Check if point is inside or very close to content
-            const expandedBuffer = config.contentBuffer;
-            if (x >= rect.left - expandedBuffer &&
-                x <= rect.right + expandedBuffer &&
-                y >= rect.top - expandedBuffer &&
-                y <= rect.bottom + expandedBuffer) {
-
-                // Determine which direction to go to avoid
-                const centerX = (rect.left + rect.right) / 2;
-                return {
-                    collision: true,
-                    directionX: x < centerX ? -1 : 1,
-                    rect: rect
-                };
-            }
-        }
-        return { collision: false, directionX: 0 };
-    }
-
-    /**
-     * Get distance to nearest content from a point
-     * Calculates distance to the nearest edge of content rectangles
-     */
-    function getDistanceToNearestContent(x, y) {
+    function getDistanceToContentAbove(x, y) {
         let minDistance = Infinity;
 
         for (let rect of contentRects) {
-            // Calculate distance to nearest edge of rectangle
-            // Clamp point to rectangle bounds to find closest point on edge
+            // Calculate distance to nearest edge of content (any content on page)
             const closestX = Math.max(rect.left, Math.min(x, rect.right));
             const closestY = Math.max(rect.top, Math.min(y, rect.bottom));
 
@@ -208,31 +183,8 @@
     }
 
     /**
-     * Get distance to nearest content directly above a point
-     * Checks within trunkWidthLookAhead pixels to the left and right
-     */
-    function getDistanceToContentAbove(x, y) {
-        let minDistance = Infinity;
-
-        for (let rect of contentRects) {
-            // Only consider content that is above this point
-            if (rect.bottom < y) {
-                // Check if horizontally aligned (within the x range of the rect + lookahead)
-                if (x >= rect.left - config.trunkWidthLookAhead && x <= rect.right + config.trunkWidthLookAhead) {
-                    // Calculate vertical distance to bottom of rect
-                    const distance = y - rect.bottom;
-                    if (distance < minDistance) {
-                        minDistance = distance;
-                    }
-                }
-            }
-        }
-
-        return minDistance;
-    }
-
-    /**
      * Get distance to nearest content in the direction of travel
+     * Uses nearest edge distance like bending, with directional filtering
      */
     function getDistanceInDirection(x, y, vx, vy) {
         let minDistance = Infinity;
@@ -250,18 +202,18 @@
         const alignmentThreshold = Math.cos(halfConeAngle * Math.PI / 180);
 
         for (let rect of contentRects) {
-            // Calculate vector to rect center
-            const centerX = (rect.left + rect.right) / 2;
-            const centerY = (rect.top + rect.bottom) / 2;
-            const toContentX = centerX - x;
-            const toContentY = centerY - y;
+            // Calculate distance to nearest edge of rectangle (same as bending)
+            const closestX = Math.max(rect.left, Math.min(x, rect.right));
+            const closestY = Math.max(rect.top, Math.min(y, rect.bottom));
+            const toContentX = closestX - x;
+            const toContentY = closestY - y;
 
             // Calculate dot product to see if content is ahead in direction of travel
             const dotProduct = toContentX * dirX + toContentY * dirY;
 
             // Only consider content that is ahead (dot product > 0)
             if (dotProduct > 0) {
-                // Calculate actual distance
+                // Calculate actual distance to nearest edge
                 const distance = Math.sqrt(toContentX * toContentX + toContentY * toContentY);
 
                 // Weight distance by alignment - content directly ahead matters more
@@ -335,11 +287,19 @@
 
         // Calculate initial width based on distance to content directly above
         const distanceToContent = getDistanceToContentAbove(x, y);
-        // Scale width directly proportional to distance - linear with no cap
-        // If no content above (Infinity), use full initialMaxWidth
-        const widthMultiplier = isFinite(distanceToContent) ? distanceToContent / 300 : 1.0;
-        const scaledWidth = config.initialMaxWidth * widthMultiplier * (0.9 + Math.random() * 0.2);
-        const tipWidth = Math.max(config.initialMinWidth, scaledWidth);
+
+        // Start with random width between min and max
+        const baseWidth = config.initialMinWidth + Math.random() * (config.initialMaxWidth - config.initialMinWidth);
+
+        // Scale based on distance - closer to content = scaled down more
+        // Use page height as reference distance with configurable multiplier
+        // If no content above (Infinity), use full width (scale = 1.0)
+        const distanceScaleFactor = isFinite(distanceToContent)
+            ? Math.min(1.0, (distanceToContent / height) * config.trunkWidthDistanceScale)
+            : 1.0;
+
+        // Apply distance scaling to the random base width
+        const tipWidth = baseWidth * distanceScaleFactor;
 
         const vx = (Math.random() - 0.5) * config.horizontalVariance;
         const vy = config.upwardBias;
@@ -360,20 +320,19 @@
             const oldX = tip.x;
             const oldY = tip.y;
 
-            // Check proximity to content for bending
-            const distanceToContent = getDistanceToNearestContent(tip.x, tip.y);
-            const bendingFactor = distanceToContent < config.bendingRange
-                ? 1 - (distanceToContent / config.bendingRange)
+            // Check distance in direction of travel for both bending and width reduction
+            const distanceAhead = getDistanceInDirection(tip.x, tip.y, tip.vx, tip.vy);
+
+            const bendingFactor = distanceAhead < config.bendingRange
+                ? 1 - (distanceAhead / config.bendingRange)
                 : 0;
 
-            // Check distance in direction of travel for width reduction
-            const distanceAhead = getDistanceInDirection(tip.x, tip.y, tip.vx, tip.vy);
             const attenuationFactor = distanceAhead < config.attenuationRange
                 ? 1 - (distanceAhead / config.attenuationRange)
                 : 0;
 
             // If we're within the bending range, start avoiding
-            if (distanceToContent < config.bendingRange) {
+            if (distanceAhead < config.bendingRange) {
                 // Find which direction to avoid
                 let nearestRect = null;
                 let minDist = Infinity;
