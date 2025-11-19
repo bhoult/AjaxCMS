@@ -1177,6 +1177,12 @@
 
         if (config.enableDebugLogging) console.log('Growth theme initializing...');
 
+        // Ensure document.body exists
+        if (!document.body) {
+            console.error('document.body not available yet');
+            return;
+        }
+
         // Set background gradient (or solid color if gradientHeight is 0)
         if (config.backgroundGradientHeight > 0) {
             // Create HTML element to hold gradient background
@@ -1192,10 +1198,12 @@
                 gradientDiv.style.zIndex = '-2';
                 gradientDiv.style.pointerEvents = 'none';
                 document.body.insertBefore(gradientDiv, document.body.firstChild);
+                if (config.enableDebugLogging) console.log('Created gradient background div');
             }
             gradientDiv.style.background = `linear-gradient(to bottom, ${config.backgroundColor} 0%, white 100%)`;
             gradientDiv.style.height = `${config.backgroundGradientHeight}px`;
             document.body.style.backgroundColor = 'white'; // Solid white for rest of page
+            if (config.enableDebugLogging) console.log('Applied gradient background');
         } else {
             document.body.style.background = '';
             document.body.style.backgroundColor = config.backgroundColor;
@@ -1288,8 +1296,65 @@
         animate();
     }
 
-    // Start when page loads
+    // Retry initialization if it fails
+    let initRetryCount = 0;
+    const maxInitRetries = 5;
+
+    function tryInit() {
+        if (initialized) {
+            return; // Already initialized successfully
+        }
+
+        initRetryCount++;
+        if (config.enableDebugLogging) console.log(`Attempting initialization (attempt ${initRetryCount}/${maxInitRetries})...`);
+
+        // Check if document.body and canvas exist before calling init
+        if (!document.body) {
+            if (initRetryCount < maxInitRetries) {
+                if (config.enableDebugLogging) console.log('document.body not ready, retrying in 500ms...');
+                setTimeout(tryInit, 500);
+            } else {
+                console.error('Failed to initialize Growth theme: document.body not available after', maxInitRetries, 'attempts');
+            }
+            return;
+        }
+
+        if (!document.getElementById('background')) {
+            if (initRetryCount < maxInitRetries) {
+                if (config.enableDebugLogging) console.log('Canvas not found, retrying in 500ms...');
+                setTimeout(tryInit, 500);
+            } else {
+                console.error('Failed to initialize Growth theme: canvas element not found after', maxInitRetries, 'attempts');
+            }
+            return;
+        }
+
+        init();
+
+        // Verify initialization succeeded
+        if (!initialized && initRetryCount < maxInitRetries) {
+            if (config.enableDebugLogging) console.log('Initialization incomplete, retrying in 500ms...');
+            setTimeout(tryInit, 500);
+        }
+    }
+
+    // Start when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(tryInit, 100);
+        });
+    } else {
+        // DOM already loaded
+        setTimeout(tryInit, 100);
+    }
+
+    // Also try on window load as backup
     window.addEventListener('load', function() {
-        setTimeout(init, 1000); // Delay to ensure content is rendered
+        if (!initialized) {
+            setTimeout(tryInit, 500);
+        }
     });
+
+    // Expose init function globally for manual initialization if needed
+    window.growthThemeInit = tryInit;
 })();
