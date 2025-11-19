@@ -8,6 +8,18 @@
     const canvas = document.getElementById('background');
     const ctx = canvas.getContext('2d');
 
+    // Create a separate canvas for leaves (so we can clear them without affecting branches)
+    const leafCanvas = document.createElement('canvas');
+    leafCanvas.style.position = 'fixed';
+    leafCanvas.style.top = '0';
+    leafCanvas.style.left = '0';
+    leafCanvas.style.width = '100%';
+    leafCanvas.style.height = '100%';
+    leafCanvas.style.pointerEvents = 'none';
+    leafCanvas.style.zIndex = '-1';
+    canvas.parentNode.insertBefore(leafCanvas, canvas.nextSibling);
+    const leafCtx = leafCanvas.getContext('2d');
+
     // Canvas dimensions
     let width, height;
 
@@ -23,19 +35,19 @@
     // Tree generation tracking
     let totalTreesCreated = 0;       // Total number of trees created so far
     let targetTreeCount = 0;         // Random target between minTrees and maxTrees
-    let pendingTrees = 0;            // Trees waiting to be created after pause
-    let pauseFramesRemaining = 0;    // Frames remaining in current pause
+    let pendingTreeTimers = [];      // Array of pause timers for each pending tree
 
     // Configuration
     const config = {
         // === TREE POPULATION ===
         minTrees: 3,                 // Minimum number of trees to create
-        maxTrees: 45,                // Maximum number of trees to create
-        newTreePause: 500,           // Frames to pause between tree finish and new tree start
+        maxTrees: 25,                // Maximum number of trees to create
+        minTreePause: 100,           // Minimum frames to pause between tree finish and new tree start
+        maxTreePause: 700,           // Maximum frames to pause between tree finish and new tree start
 
         // === ANIMATION SPEED ===
         growthSpeed: 1.5,            // Pixels per frame
-        frameDelay: 1,               // Milliseconds between updates (0 = as fast as possible, 16 ≈ 60fps, 33 ≈ 30fps)
+        frameDelay: 8,               // Milliseconds between updates (0 = as fast as possible, 16 ≈ 60fps, 33 ≈ 30fps)
         preRenderFrames: 10,        // Number of frames to pre-render before animation starts
 
         // === TRUNK PROPERTIES (Generation 0) ===
@@ -61,13 +73,13 @@
         curvatureFrequency: 0.5,     // Noise sampling scale along age axis (lower = more frequent direction changes, higher = smoother curves)
 
         // === TWIG SPROUTING ===
-        twigChance: 0.05,            // Chance to sprout a twig per frame
+        twigChance: 0.03,            // Chance to sprout a twig per frame
         minTwigAge: 20,              // Minimum age before branch can sprout twigs
         minTwigWidthRatio: 0.1,      // Minimum twig width as ratio of parent branch
-        maxTwigWidthRatio: 0.3,      // Maximum twig width as ratio of parent branch
+        maxTwigWidthRatio: 0.2,      // Maximum twig width as ratio of parent branch
         minTwigAngle: 30,            // Minimum twig angle from parent direction (degrees)
         maxTwigAngle: 80,            // Maximum twig angle from parent direction (degrees)
-        twigAttenuationMultiplier: 2.0, // Multiplier for twig width attenuation (higher = twigs thin faster)
+        twigAttenuationMultiplier: 3.0, // Multiplier for twig width attenuation (higher = twigs thin faster)
 
         // === WIDTH/THICKNESS ===
         minWidth: 0.01,              // Stop growing when width is nearly invisible
@@ -89,13 +101,34 @@
         minLeavesPerBranch: 2,       // Minimum number of leaves to spawn at branch end
         maxLeavesPerBranch: 5,       // Maximum number of leaves to spawn at branch end
         leafGrowthRate: 0.03,         // Pixels per frame that leaves grow
-        minLeafSize: 4,              // Minimum leaf size (width)
-        maxLeafSize: 12,             // Maximum leaf size (width)
+        minLeafSize: 8,              // Minimum leaf size (width)
+        maxLeafSize: 20,             // Maximum leaf size (width)
         leafColor: 'rgba(100, 180, 100, 0.9)', // Darker, more opaque green leaf color
-        leafBrightnessVariation: 0.3 // How much leaves vary in brightness (0 = all same, 0.3 = ±30% variation)
+        leafBrightnessVariation: 0.3, // How much leaves vary in brightness (0 = all same, 0.3 = ±30% variation)
+
+        // === FALL/AUTUMN EFFECT ===
+        enableFall: true,            // Enable autumn fall effect after animation completes
+        colorChangeDelayMin: 160,     // Minimum frames to wait before leaf starts changing color
+        colorChangeDelayMax: 1600,    // Maximum frames to wait before leaf starts changing color
+        colorChangeRateMin: 0.0005,   // Minimum speed of color transition (slower change)
+        colorChangeRateMax: 0.001,    // Maximum speed of color transition (faster change)
+        fallDelayMin: 0,             // Minimum additional frames to wait after color change before falling
+        fallDelayMax: 1500,            // Maximum additional frames to wait after color change before falling
+        fallColors: [                // Possible fall colors (randomly chosen)
+            'rgba(180, 50, 50, 0.9)',   // Red
+            'rgba(200, 100, 50, 0.9)',  // Orange-red
+            'rgba(150, 100, 50, 0.9)',  // Brown
+            'rgba(224, 201, 84, 0.9)'   // Golden brown
+        ],
+        fallGravity: 0.005,           // Downward acceleration when falling
+        maxFallSpeed: 1.5,           // Maximum downward velocity (terminal velocity)
+        fallDriftSpeed: 1.0,         // Maximum horizontal drift speed
+        fallRotationSpeed: 0.05,     // Rotation speed while falling
+        maxLeafPileHeight: 50       // Maximum height from bottom where leaves can pile (prevents infinite piling)
     };
 
     let frameCount = 0;
+    let animationComplete = false;  // Track when growth animation finishes
 
     /**
      * Simple Perlin-like noise implementation for smooth randomness
@@ -383,6 +416,14 @@
             // Random brightness variation (1.0 ± variation)
             const brightnessMultiplier = 1.0 + (Math.random() - 0.5) * 2 * config.leafBrightnessVariation;
 
+            // Choose random fall color for this leaf
+            const fallColor = config.fallColors[Math.floor(Math.random() * config.fallColors.length)];
+
+            // Random delays and rates for natural variation
+            const colorChangeDelay = config.colorChangeDelayMin + Math.random() * (config.colorChangeDelayMax - config.colorChangeDelayMin);
+            const colorChangeRate = config.colorChangeRateMin + Math.random() * (config.colorChangeRateMax - config.colorChangeRateMin);
+            const fallDelay = config.fallDelayMin + Math.random() * (config.fallDelayMax - config.fallDelayMin);
+
             leaves.push({
                 x: leafX,
                 y: leafY,
@@ -390,7 +431,18 @@
                 targetSize: targetSize,
                 angle: leafAngle,
                 brightness: brightnessMultiplier,
-                age: 0
+                age: 0,
+                // Fall properties
+                colorChangeDelay: colorChangeDelay,    // Frames to wait before color starts changing
+                colorChangeRate: colorChangeRate,      // Speed of color change for this leaf
+                fallDelay: fallDelay,                  // Frames to wait after color change before falling
+                fallColor: fallColor,
+                colorTransition: 0, // 0 = green, 1 = fall color
+                isColorChanging: false,
+                isFalling: false,
+                isSettled: false,  // Track if leaf has settled on ground or another leaf
+                fallVelocityY: 0,
+                fallVelocityX: (Math.random() - 0.5) * config.fallDriftSpeed
             });
         }
     }
@@ -399,6 +451,9 @@
      * Update and draw all leaves
      */
     function updateLeaves() {
+        // Clear the leaf canvas each frame
+        leafCtx.clearRect(0, 0, width, height);
+
         const newLeaves = [];
 
         for (let leaf of leaves) {
@@ -412,31 +467,142 @@
 
             leaf.age++;
 
+            // Fall effect logic (only if animation is complete and fall is enabled)
+            if (config.enableFall && animationComplete) {
+                // Start changing color after colorChangeDelay
+                if (!leaf.isColorChanging && leaf.age >= leaf.colorChangeDelay) {
+                    leaf.isColorChanging = true;
+                }
+
+                // Gradually change color
+                if (leaf.isColorChanging && leaf.colorTransition < 1) {
+                    leaf.colorTransition += leaf.colorChangeRate;
+                    if (leaf.colorTransition >= 1) {
+                        leaf.colorTransition = 1;
+                        leaf.colorChangeCompleteAge = leaf.age; // Track when color change finished
+                    }
+                }
+
+                // Start falling after color change completes and fallDelay passes
+                if (leaf.colorTransition >= 1 && !leaf.isFalling) {
+                    if (leaf.age >= leaf.colorChangeCompleteAge + leaf.fallDelay) {
+                        leaf.isFalling = true;
+                    }
+                }
+
+                // Apply falling physics
+                if (leaf.isFalling && !leaf.isSettled) {
+                    leaf.fallVelocityY += config.fallGravity;
+                    // Cap at maximum fall speed (terminal velocity)
+                    if (leaf.fallVelocityY > config.maxFallSpeed) {
+                        leaf.fallVelocityY = config.maxFallSpeed;
+                    }
+
+                    const newY = leaf.y + leaf.fallVelocityY;
+                    const newX = leaf.x + leaf.fallVelocityX;
+
+                    // Check if leaf would hit the bottom or another leaf
+                    let collided = false;
+                    const minAllowedY = height - config.maxLeafPileHeight; // Minimum Y where leaves can settle
+
+                    // Check ground collision
+                    if (newY >= height - leaf.size) {
+                        leaf.y = height - leaf.size;
+                        leaf.isSettled = true;
+                        leaf.fallVelocityY = 0;
+                        leaf.fallVelocityX = 0;
+                        collided = true;
+                    }
+
+                    // Check collision with other settled leaves
+                    if (!collided) {
+                        for (let otherLeaf of newLeaves) {
+                            if (otherLeaf.isSettled && otherLeaf !== leaf) {
+                                // Simple distance check for collision
+                                const dx = newX - otherLeaf.x;
+                                const dy = newY - otherLeaf.y;
+                                const distance = Math.sqrt(dx * dx + dy * dy);
+                                const minDistance = (leaf.size + otherLeaf.size) / 2;
+
+                                if (distance < minDistance) {
+                                    const settleY = otherLeaf.y - minDistance;
+
+                                    // Only settle if within allowed pile height
+                                    if (settleY >= minAllowedY) {
+                                        leaf.y = settleY;
+                                        leaf.x = newX;
+                                        leaf.isSettled = true;
+                                        leaf.fallVelocityY = 0;
+                                        leaf.fallVelocityX = 0;
+                                        collided = true;
+                                        break;
+                                    } else {
+                                        // Pile is too high - drift through to random position
+                                        // Pick a random Y between max pile height and bottom
+                                        if (!leaf.driftTargetY) {
+                                            leaf.driftTargetY = minAllowedY + Math.random() * config.maxLeafPileHeight;
+                                        }
+                                        // Continue falling until reaching target
+                                        if (newY >= leaf.driftTargetY) {
+                                            leaf.y = leaf.driftTargetY;
+                                            leaf.x = newX;
+                                            leaf.isSettled = true;
+                                            leaf.fallVelocityY = 0;
+                                            leaf.fallVelocityX = 0;
+                                            collided = true;
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // If no collision, continue falling
+                    if (!collided) {
+                        leaf.y = newY;
+                        leaf.x = newX;
+                        leaf.angle += config.fallRotationSpeed; // Rotate while falling
+                    }
+                }
+            }
+
             // Draw leaf as an ellipse (only if visible)
             if (leaf.size > 0.1) {
-                ctx.save();
-                ctx.translate(leaf.x, leaf.y);
-                ctx.rotate(leaf.angle);
+                leafCtx.save();
+                leafCtx.translate(leaf.x, leaf.y);
+                leafCtx.rotate(leaf.angle);
 
-                // Parse base color and apply brightness variation
-                const colorMatch = config.leafColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/);
-                const r = Math.min(255, Math.floor(parseInt(colorMatch[1]) * leaf.brightness));
-                const g = Math.min(255, Math.floor(parseInt(colorMatch[2]) * leaf.brightness));
-                const b = Math.min(255, Math.floor(parseInt(colorMatch[3]) * leaf.brightness));
-                const a = parseFloat(colorMatch[4]);
+                // Interpolate between green and fall color based on colorTransition
+                const greenMatch = config.leafColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/);
+                const fallMatch = leaf.fallColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/);
+
+                const greenR = parseInt(greenMatch[1]) * leaf.brightness;
+                const greenG = parseInt(greenMatch[2]) * leaf.brightness;
+                const greenB = parseInt(greenMatch[3]) * leaf.brightness;
+
+                const fallR = parseInt(fallMatch[1]) * leaf.brightness;
+                const fallG = parseInt(fallMatch[2]) * leaf.brightness;
+                const fallB = parseInt(fallMatch[3]) * leaf.brightness;
+
+                // Lerp between green and fall color
+                const r = Math.min(255, Math.floor(greenR + (fallR - greenR) * leaf.colorTransition));
+                const g = Math.min(255, Math.floor(greenG + (fallG - greenG) * leaf.colorTransition));
+                const b = Math.min(255, Math.floor(greenB + (fallB - greenB) * leaf.colorTransition));
+                const a = parseFloat(greenMatch[4]);
 
                 // Draw leaf shape (ellipse) offset so it extends from connection point
                 // Position leaf so its narrow end (stem) is at the origin (branch tip)
                 // Ellipse center is offset by radius so left edge is at origin
-                ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${a})`;
-                ctx.beginPath();
-                ctx.ellipse(leaf.size / 2, 0, leaf.size / 2, leaf.size * 0.25, 0, 0, Math.PI * 2);
-                ctx.fill();
+                leafCtx.fillStyle = `rgba(${r}, ${g}, ${b}, ${a})`;
+                leafCtx.beginPath();
+                leafCtx.ellipse(leaf.size / 2, 0, leaf.size / 2, leaf.size * 0.25, 0, 0, Math.PI * 2);
+                leafCtx.fill();
 
-                ctx.restore();
+                leafCtx.restore();
             }
 
-            // Always keep leaf alive (even if not visible yet)
+            // Always keep leaf alive (even if not visible yet) unless it fell off screen
             newLeaves.push(leaf);
         }
 
@@ -449,6 +615,7 @@
     function initializeTrees() {
         growthTips = [];
         leaves = []; // Clear leaves when reinitializing
+        animationComplete = false; // Reset animation state
 
         // Set random target number of trees to create
         targetTreeCount = config.minTrees + Math.floor(Math.random() * (config.maxTrees - config.minTrees + 1));
@@ -788,6 +955,7 @@
 
             } else if (tip.width > config.minWidth &&
                        tip.y > -50 &&
+                       tip.y < height &&
                        tip.x > -50 &&
                        tip.x < width + 50) {
                 // Keep growing if still viable and width is above invisible threshold
@@ -814,34 +982,43 @@
             console.log('Frame', frameCount, '- Avoiding content:', avoidanceCount, 'tips,', contentRects.length, 'content rects');
         }
 
-        // When trees finish, queue them up for creation after pause
+        // Debug: log status every 100 frames
+        if (frameCount % 100 === 0) {
+            console.log('Frame', frameCount, '- growthTips:', growthTips.length, 'pendingTimers:', pendingTreeTimers.length, 'created:', totalTreesCreated, '/', targetTreeCount);
+        }
+
+        // When trees finish, create individual pause timers for each one
         if (treesFinished > 0 && totalTreesCreated < targetTreeCount) {
             const treesToQueue = Math.min(treesFinished, targetTreeCount - totalTreesCreated);
-            pendingTrees += treesToQueue;
 
-            // Start pause if not already pausing
-            if (pauseFramesRemaining === 0) {
-                pauseFramesRemaining = config.newTreePause;
+            for (let i = 0; i < treesToQueue; i++) {
+                const randomPause = Math.floor(config.minTreePause + Math.random() * (config.maxTreePause - config.minTreePause));
+                pendingTreeTimers.push(randomPause);
+                console.log('Tree finished! Starting pause for', randomPause, 'frames. Total pending:', pendingTreeTimers.length);
             }
         }
 
-        // Decrement pause timer
-        if (pauseFramesRemaining > 0) {
-            pauseFramesRemaining--;
-
-            // When pause ends, create pending trees
-            if (pauseFramesRemaining === 0 && pendingTrees > 0) {
-                for (let i = 0; i < pendingTrees; i++) {
-                    createNewTree();
-                }
-                pendingTrees = 0;
+        // Decrement all pause timers and create trees when they expire
+        const newTimers = [];
+        for (let timer of pendingTreeTimers) {
+            timer--;
+            if (timer <= 0) {
+                console.log('Pause ended! Creating new tree. Total created:', totalTreesCreated + 1, '/', targetTreeCount);
+                createNewTree();
+            } else {
+                newTimers.push(timer);
             }
         }
+        pendingTreeTimers = newTimers;
 
-        // Check if animation should end
-        if (totalTreesCreated >= targetTreeCount && growthTips.length === 0 && pendingTrees === 0) {
-            console.log('Animation complete! Created', totalTreesCreated, 'trees (target:', targetTreeCount + ')');
-            return false; // Signal to stop the animation
+        // Check if growth animation should end
+        if (totalTreesCreated >= targetTreeCount && growthTips.length === 0 && pendingTreeTimers.length === 0) {
+            if (!animationComplete) {
+                console.log('Growth animation complete! Created', totalTreesCreated, 'trees (target:', targetTreeCount + ')');
+                console.log('Leaves will now begin falling...');
+                animationComplete = true;
+            }
+            // Don't stop - continue for fall effect
         }
 
         frameCount++;
@@ -852,27 +1029,29 @@
      * Animation loop - basic loop with frame delay control
      */
     function animate() {
-        const shouldContinue = updateGrowth();
+        updateGrowth();
         updateLeaves();
 
-        // Only schedule next frame if animation should continue
-        if (shouldContinue) {
-            setTimeout(animate, config.frameDelay);
-        } else {
-            console.log('Animation stopped. Total leaves:', leaves.length);
+        // Check if animation should stop (growth complete and all leaves settled)
+        if (animationComplete && leaves.length > 0 && leaves.every(leaf => leaf.isSettled)) {
+            console.log('All leaves have settled. Animation complete!');
+            return; // Stop animation
         }
+
+        setTimeout(animate, config.frameDelay);
     }
 
     /**
      * Resize canvas
      */
     function resize() {
-        width = canvas.width = window.innerWidth;
-        height = canvas.height = window.innerHeight;
+        width = canvas.width = leafCanvas.width = window.innerWidth;
+        height = canvas.height = leafCanvas.height = window.innerHeight;
 
         // Only reinitialize trees if already initialized (not during first setup)
         if (initialized) {
             ctx.clearRect(0, 0, width, height);
+            leafCtx.clearRect(0, 0, width, height);
             initializeTrees();
         }
     }
@@ -901,9 +1080,9 @@
             return;
         }
 
-        // Set canvas size
-        width = canvas.width = window.innerWidth;
-        height = canvas.height = window.innerHeight;
+        // Set canvas size for both canvases
+        width = canvas.width = leafCanvas.width = window.innerWidth;
+        height = canvas.height = leafCanvas.height = window.innerHeight;
         console.log('Canvas size:', width, 'x', height);
 
         // Detect content boundaries BEFORE creating trees
