@@ -62,7 +62,8 @@
         enableDebugLogging: false,   // Enable console logging for debugging (set to false for production)
 
         // === VISUAL ===
-        backgroundColor: '#87CEEB',  // Sky blue background color
+        backgroundColor: '#87CEEB',      // Sky blue background color (top of gradient)
+        backgroundGradientHeight: 800,   // Height in pixels where gradient fades to white (0 = no gradient, solid color)
 
         // === TRUNK PROPERTIES (Generation 0) ===
         minTrunkHeight: 50,          // Minimum trunk age before first fork (generation 0)
@@ -1176,8 +1177,29 @@
 
         if (config.enableDebugLogging) console.log('Growth theme initializing...');
 
-        // Set background color
-        document.body.style.backgroundColor = config.backgroundColor;
+        // Set background gradient (or solid color if gradientHeight is 0)
+        if (config.backgroundGradientHeight > 0) {
+            // Create HTML element to hold gradient background
+            let gradientDiv = document.getElementById('gradient-background');
+            if (!gradientDiv) {
+                gradientDiv = document.createElement('div');
+                gradientDiv.id = 'gradient-background';
+                gradientDiv.style.position = 'fixed';
+                gradientDiv.style.top = '0';
+                gradientDiv.style.left = '0';
+                gradientDiv.style.width = '100%';
+                gradientDiv.style.height = '100vh';
+                gradientDiv.style.zIndex = '-2';
+                gradientDiv.style.pointerEvents = 'none';
+                document.body.insertBefore(gradientDiv, document.body.firstChild);
+            }
+            gradientDiv.style.background = `linear-gradient(to bottom, ${config.backgroundColor} 0%, white 100%)`;
+            gradientDiv.style.height = `${config.backgroundGradientHeight}px`;
+            document.body.style.backgroundColor = 'white'; // Solid white for rest of page
+        } else {
+            document.body.style.background = '';
+            document.body.style.backgroundColor = config.backgroundColor;
+        }
 
         if (!canvas) {
             console.error('Canvas element not found!');
