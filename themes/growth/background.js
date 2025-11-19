@@ -46,7 +46,7 @@
     const config = {
         // === TREE POPULATION ===
         minTrees: 3,                 // Minimum number of trees to create
-        maxTrees: 25,                // Maximum number of trees to create
+        maxTrees: 18,                // Maximum number of trees to create
         minTreePause: 100,           // Minimum frames to pause between tree finish and new tree start
         maxTreePause: 700,           // Maximum frames to pause between tree finish and new tree start
 
@@ -57,6 +57,9 @@
 
         // === PAGE TRANSITION ===
         fadeOutSpeed: 0.02,          // Opacity decrease per frame when fading out (0.01 = slow, 0.05 = fast)
+
+        // === DEBUG ===
+        enableDebugLogging: false,   // Enable console logging for debugging (set to false for production)
 
         // === TRUNK PROPERTIES (Generation 0) ===
         minTrunkHeight: 50,          // Minimum trunk age before first fork (generation 0)
@@ -311,7 +314,7 @@
         });
 
         if (contentRects.length !== oldCount) {
-            console.log('Content boundaries updated:', oldCount, '->', contentRects.length, 'rectangles');
+            if (config.enableDebugLogging) console.log('Content boundaries updated:', oldCount, '->', contentRects.length, 'rectangles');
         }
     }
 
@@ -666,7 +669,7 @@
         targetTreeCount = config.minTrees + Math.floor(Math.random() * (config.maxTrees - config.minTrees + 1));
         totalTreesCreated = 0;
 
-        console.log('Target tree count:', targetTreeCount);
+        if (config.enableDebugLogging) console.log('Target tree count:', targetTreeCount);
 
         // Start with minTrees
         for (let i = 0; i < config.minTrees; i++) {
@@ -1023,12 +1026,12 @@
         growthTips = newTips;
 
         // Log avoidance activity every 60 frames
-        if (frameCount % 60 === 0 && avoidanceCount > 0) {
+        if (config.enableDebugLogging && frameCount % 60 === 0 && avoidanceCount > 0) {
             console.log('Frame', frameCount, '- Avoiding content:', avoidanceCount, 'tips,', contentRects.length, 'content rects');
         }
 
         // Debug: log status every 100 frames
-        if (frameCount % 100 === 0) {
+        if (config.enableDebugLogging && frameCount % 100 === 0) {
             console.log('Frame', frameCount, '- growthTips:', growthTips.length, 'pendingTimers:', pendingTreeTimers.length, 'created:', totalTreesCreated, '/', targetTreeCount);
         }
 
@@ -1039,7 +1042,7 @@
             for (let i = 0; i < treesToQueue; i++) {
                 const randomPause = Math.floor(config.minTreePause + Math.random() * (config.maxTreePause - config.minTreePause));
                 pendingTreeTimers.push(randomPause);
-                console.log('Tree finished! Starting pause for', randomPause, 'frames. Total pending:', pendingTreeTimers.length);
+                if (config.enableDebugLogging) console.log('Tree finished! Starting pause for', randomPause, 'frames. Total pending:', pendingTreeTimers.length);
             }
         }
 
@@ -1048,7 +1051,7 @@
         for (let timer of pendingTreeTimers) {
             timer--;
             if (timer <= 0) {
-                console.log('Pause ended! Creating new tree. Total created:', totalTreesCreated + 1, '/', targetTreeCount);
+                if (config.enableDebugLogging) console.log('Pause ended! Creating new tree. Total created:', totalTreesCreated + 1, '/', targetTreeCount);
                 createNewTree();
             } else {
                 newTimers.push(timer);
@@ -1059,8 +1062,10 @@
         // Check if growth animation should end
         if (totalTreesCreated >= targetTreeCount && growthTips.length === 0 && pendingTreeTimers.length === 0) {
             if (!animationComplete) {
-                console.log('Growth animation complete! Created', totalTreesCreated, 'trees (target:', targetTreeCount + ')');
-                console.log('Leaves will now begin falling...');
+                if (config.enableDebugLogging) {
+                    console.log('Growth animation complete! Created', totalTreesCreated, 'trees (target:', targetTreeCount + ')');
+                    console.log('Leaves will now begin falling...');
+                }
                 animationComplete = true;
             }
             // Don't stop - continue for fall effect
@@ -1075,7 +1080,7 @@
      */
     function startFadeOut() {
         if (!isFadingOut) {
-            console.log('Starting canvas fade out for page transition');
+            if (config.enableDebugLogging) console.log('Starting canvas fade out for page transition');
             isFadingOut = true;
             // Restart animation loop if it was stopped (animationTimeoutId will be null)
             if (animationTimeoutId === null) {
@@ -1104,7 +1109,7 @@
                 leafCanvas.style.opacity = '0';
 
                 // Clear both canvases and reinitialize
-                console.log('Fade out complete. Reinitializing...');
+                if (config.enableDebugLogging) console.log('Fade out complete. Reinitializing...');
                 ctx.clearRect(0, 0, width, height);
                 leafCtx.clearRect(0, 0, width, height);
                 initializeTrees();
@@ -1130,7 +1135,7 @@
 
         // Check if animation should stop (growth complete and all leaves settled)
         if (animationComplete && leaves.length > 0 && leaves.every(leaf => leaf.isSettled)) {
-            console.log('All leaves have settled. Animation complete!');
+            if (config.enableDebugLogging) console.log('All leaves have settled. Animation complete!');
             animationTimeoutId = null; // Mark as stopped
             return; // Stop animation
         }
@@ -1162,11 +1167,11 @@
      */
     function init() {
         if (initialized) {
-            console.log('Already initialized, skipping...');
+            if (config.enableDebugLogging) console.log('Already initialized, skipping...');
             return;
         }
 
-        console.log('Growth theme initializing...');
+        if (config.enableDebugLogging) console.log('Growth theme initializing...');
 
         if (!canvas) {
             console.error('Canvas element not found!');
@@ -1181,30 +1186,30 @@
         // Parse colors once for performance (avoid regex in animation loop)
         parsedLeafColor = parseColor(config.leafColor);
         parsedFallColors = config.fallColors.map(parseColor);
-        console.log('Colors pre-parsed for performance');
+        if (config.enableDebugLogging) console.log('Colors pre-parsed for performance');
 
         // Set canvas size for all canvases (including collision canvas)
         width = canvas.width = leafCanvas.width = collisionCanvas.width = window.innerWidth;
         height = canvas.height = leafCanvas.height = collisionCanvas.height = window.innerHeight;
-        console.log('Canvas size:', width, 'x', height);
+        if (config.enableDebugLogging) console.log('Canvas size:', width, 'x', height);
 
         // Detect content boundaries BEFORE creating trees
         detectContentBoundaries();
-        console.log('Initial content rectangles:', contentRects.length);
+        if (config.enableDebugLogging) console.log('Initial content rectangles:', contentRects.length);
 
         // Initialize trees (now with content boundaries available)
         initializeTrees();
-        console.log('Initial growth tips:', growthTips.length);
+        if (config.enableDebugLogging) console.log('Initial growth tips:', growthTips.length);
 
         // PRE-RENDER: Run frames instantly to show mature trees
-        console.log('Pre-rendering', config.preRenderFrames, 'frames...');
+        if (config.enableDebugLogging) console.log('Pre-rendering', config.preRenderFrames, 'frames...');
         for (let i = 0; i < config.preRenderFrames; i++) {
             updateGrowth();
             if (i % 100 === 0) {
                 detectContentBoundaries(); // Update content detection during pre-render
             }
         }
-        console.log('Pre-render complete, active tips:', growthTips.length);
+        if (config.enableDebugLogging) console.log('Pre-render complete, active tips:', growthTips.length);
 
         // Mark as initialized after setup is complete
         initialized = true;
@@ -1244,14 +1249,14 @@
 
             pageChangeObserver.observe(contentA, observerConfig);
             pageChangeObserver.observe(contentB, observerConfig);
-            console.log('Page change and content detection observer initialized');
+            if (config.enableDebugLogging) console.log('Page change and content detection observer initialized');
 
             // Detect once more after 2 seconds (initial content may still be loading)
             setTimeout(detectContentBoundaries, 2000);
         }
 
         // Start animation
-        console.log('Starting animation loop...');
+        if (config.enableDebugLogging) console.log('Starting animation loop...');
         animate();
     }
 
