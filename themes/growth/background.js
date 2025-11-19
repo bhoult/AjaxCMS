@@ -40,8 +40,8 @@
         maxTrunkHeight: 200,         // Maximum trunk age before first fork (generation 0) - fork age randomly chosen between min and max
         initialMinWidth: 1,          // Minimum initial trunk width
         initialMaxWidth: 45,         // Maximum initial trunk width (based on distance to content)
-        trunkWidthLookAhead: 99,     // Horizontal distance (pixels) to check for content above when calculating initial trunk width
-        trunkWidthDistanceScale: 1.0,// Multiplier for distance-based width scaling (1.0 = no scaling at full page height, 0.5x at half height, etc. Higher values = less aggressive scaling)
+        trunkWidthLookAhead: 10,     // Horizontal distance (pixels) to check for content above when calculating initial trunk width
+        trunkWidthDistanceScale: 0.8,// Multiplier for distance-based width scaling (1.0 = no scaling at full page height, 0.5x at half height, etc. Higher values = less aggressive scaling)
         upwardBias: -0.8,            // Negative Y velocity (upward)
         horizontalVariance: 0.3,     // Random horizontal movement
 
@@ -159,23 +159,28 @@
     }
 
     /**
-     * Get distance to nearest content anywhere on the page
-     * Used for determining initial trunk width based on available vertical space
+     * Get vertical distance to nearest content directly above a point
+     * Checks content within trunkWidthLookAhead pixels left/right of position
+     * Used for determining initial trunk width based on vertical clearance
      */
     function getDistanceToContentAbove(x, y) {
         let minDistance = Infinity;
 
         for (let rect of contentRects) {
-            // Calculate distance to nearest edge of content (any content on page)
-            const closestX = Math.max(rect.left, Math.min(x, rect.right));
-            const closestY = Math.max(rect.top, Math.min(y, rect.bottom));
+            // Only consider content that is above this point
+            if (rect.bottom < y) {
+                // Check if content overlaps with horizontal search range (x ± trunkWidthLookAhead)
+                const searchLeft = x - config.trunkWidthLookAhead;
+                const searchRight = x + config.trunkWidthLookAhead;
 
-            const dx = closestX - x;
-            const dy = closestY - y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-
-            if (distance < minDistance) {
-                minDistance = distance;
+                // Content overlaps if: content.left <= searchRight AND content.right >= searchLeft
+                if (rect.left <= searchRight && rect.right >= searchLeft) {
+                    // Calculate vertical distance to bottom of rect
+                    const distance = y - rect.bottom;
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                    }
+                }
             }
         }
 
@@ -236,7 +241,7 @@
     /**
      * Create a new growth tip
      */
-    function createTip(x, y, vx, vy, width, parentX, parentY, generation) {
+    function createTip(x, y, vx, vy, width, parentX, parentY, generation, trunkForkAge) {
         const gen = generation || 0;
         const tip = {
             x: x,
@@ -251,10 +256,11 @@
             generation: gen  // Track branch depth for attenuation
         };
 
-        // For trunks (generation 0), assign a random fork age between min and max trunk height
+        // For trunks (generation 0), use provided fork age (distance-scaled) or random default
         if (gen === 0) {
-            tip.trunkForkAge = config.minTrunkHeight +
-                Math.random() * (config.maxTrunkHeight - config.minTrunkHeight);
+            tip.trunkForkAge = trunkForkAge !== undefined
+                ? trunkForkAge
+                : config.minTrunkHeight + Math.random() * (config.maxTrunkHeight - config.minTrunkHeight);
         }
 
         return tip;
@@ -301,10 +307,16 @@
         // Apply distance scaling to the random base width
         const tipWidth = baseWidth * distanceScaleFactor;
 
+        // Start with random trunk height between min and max
+        const baseHeight = config.minTrunkHeight + Math.random() * (config.maxTrunkHeight - config.minTrunkHeight);
+
+        // Apply same distance scaling to trunk height (closer to content = shorter trunk)
+        const trunkHeight = baseHeight * distanceScaleFactor;
+
         const vx = (Math.random() - 0.5) * config.horizontalVariance;
         const vy = config.upwardBias;
 
-        growthTips.push(createTip(x, y, vx, vy, tipWidth, x, y, 0));
+        growthTips.push(createTip(x, y, vx, vy, tipWidth, x, y, 0, trunkHeight));
         totalTreesCreated++;
     }
 
@@ -631,13 +643,13 @@
         height = canvas.height = window.innerHeight;
         console.log('Canvas size:', width, 'x', height);
 
-        // Initialize trees
-        initializeTrees();
-        console.log('Initial growth tips:', growthTips.length);
-
-        // Detect content boundaries immediately
+        // Detect content boundaries BEFORE creating trees
         detectContentBoundaries();
         console.log('Initial content rectangles:', contentRects.length);
+
+        // Initialize trees (now with content boundaries available)
+        initializeTrees();
+        console.log('Initial growth tips:', growthTips.length);
 
         // PRE-RENDER: Run frames instantly to show mature trees
         console.log('Pre-rendering', config.preRenderFrames, 'frames...');
