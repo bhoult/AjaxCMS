@@ -1160,8 +1160,26 @@
      * Resize canvas
      */
     function resize() {
-        width = canvas.width = leafCanvas.width = collisionCanvas.width = window.innerWidth;
-        height = canvas.height = leafCanvas.height = collisionCanvas.height = window.innerHeight;
+        const newWidth = window.innerWidth;
+        const newHeight = window.innerHeight;
+
+        // On mobile, ignore small height changes (likely URL bar showing/hiding)
+        // Only reinitialize if width changed or height changed significantly
+        if (isMobile() && initialized) {
+            const widthChanged = Math.abs(newWidth - width) > 10;
+            const heightChanged = Math.abs(newHeight - height) > 150; // URL bar is typically 50-100px
+
+            // If only height changed by a small amount, just update canvas size without reinitializing
+            if (!widthChanged && !heightChanged) {
+                canvas.height = leafCanvas.height = collisionCanvas.height = newHeight;
+                height = newHeight;
+                if (config.enableDebugLogging) console.log('Mobile resize ignored (likely URL bar)');
+                return; // Don't reinitialize trees
+            }
+        }
+
+        width = canvas.width = leafCanvas.width = collisionCanvas.width = newWidth;
+        height = canvas.height = leafCanvas.height = collisionCanvas.height = newHeight;
 
         // Only reinitialize trees if already initialized (not during first setup)
         if (initialized) {
@@ -1169,6 +1187,7 @@
             leafCtx.clearRect(0, 0, width, height);
             collisionCtx.clearRect(0, 0, width, height);
             initializeTrees();
+            if (config.enableDebugLogging) console.log('Resize triggered tree reinit');
         }
     }
 
