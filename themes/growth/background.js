@@ -20,12 +20,15 @@
     // Tree generation tracking
     let totalTreesCreated = 0;       // Total number of trees created so far
     let targetTreeCount = 0;         // Random target between minTrees and maxTrees
+    let pendingTrees = 0;            // Trees waiting to be created after pause
+    let pauseFramesRemaining = 0;    // Frames remaining in current pause
 
     // Configuration
     const config = {
         // === TREE POPULATION ===
-        minTrees: 8,                 // Minimum number of trees to create
-        maxTrees: 115,                // Maximum number of trees to create
+        minTrees: 1,                 // Minimum number of trees to create
+        maxTrees: 15,                // Maximum number of trees to create
+        newTreePause: 500,            // Frames to pause between tree finish and new tree start
 
         // === ANIMATION SPEED ===
         growthSpeed: 1.5,            // Pixels per frame
@@ -58,14 +61,14 @@
 
         // === CONTENT AVOIDANCE ===
         bendingRange: 300,           // Distance from content where bending/avoidance begins
-        bendStrength: 0.05,          // How much to bend away from content
+        bendStrength: 0.02,          // How much to bend away from content
         attenuationRange: 400,       // Distance from content where width reduction begins
         widthReduction: 1,         // Width reduction when near content
         widthReductionConeAngle: 90, // Cone angle in degrees for detecting content ahead (0-180)
 
         // === VISUAL EFFECTS ===
         branchFade: 7,               // Number of frames to fade in new branches (0 to 100% opacity)
-        color: 'rgba(60, 40, 20, 0.85)' // Brown tree color (darker and more opaque)
+        color: 'rgba(230, 194, 161, 0.85)' // Brown tree color (darker and more opaque)
     };
 
     let frameCount = 0;
@@ -464,13 +467,22 @@
                     }
                 }
 
-                // Create gradient for shading - lighter on left, darker on right
+                // Extract RGB from config color and create gradient for shading
+                // Parse config.color to extract RGB values
+                const colorMatch = config.color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+                const r = parseInt(colorMatch[1]);
+                const g = parseInt(colorMatch[2]);
+                const b = parseInt(colorMatch[3]);
+
+                // Create gradient - lighter on left, darker on right
                 const gradient = ctx.createLinearGradient(
                     tip.x - tip.width / 2, tip.y,
                     tip.x + tip.width / 2, tip.y
                 );
-                gradient.addColorStop(0, `rgba(80, 60, 40, ${opacity})`);  // Lighter left
-                gradient.addColorStop(1, `rgba(40, 20, 10, ${opacity})`);  // Darker right
+                // Lighter left (1.2x brightness)
+                gradient.addColorStop(0, `rgba(${Math.min(255, r * 1.2)}, ${Math.min(255, g * 1.2)}, ${Math.min(255, b * 1.2)}, ${opacity})`);
+                // Darker right (0.6x brightness)
+                gradient.addColorStop(1, `rgba(${r * 0.6}, ${g * 0.6}, ${b * 0.6}, ${opacity})`);
 
                 ctx.strokeStyle = gradient;
                 ctx.lineWidth = tip.width;
@@ -576,15 +588,32 @@
             console.log('Frame', frameCount, '- Avoiding content:', avoidanceCount, 'tips,', contentRects.length, 'content rects');
         }
 
-        // When trees finish, start new ones if we haven't reached target
+        // When trees finish, queue them up for creation after pause
         if (treesFinished > 0 && totalTreesCreated < targetTreeCount) {
-            for (let i = 0; i < treesFinished && totalTreesCreated < targetTreeCount; i++) {
-                createNewTree();
+            const treesToQueue = Math.min(treesFinished, targetTreeCount - totalTreesCreated);
+            pendingTrees += treesToQueue;
+
+            // Start pause if not already pausing
+            if (pauseFramesRemaining === 0) {
+                pauseFramesRemaining = config.newTreePause;
+            }
+        }
+
+        // Decrement pause timer
+        if (pauseFramesRemaining > 0) {
+            pauseFramesRemaining--;
+
+            // When pause ends, create pending trees
+            if (pauseFramesRemaining === 0 && pendingTrees > 0) {
+                for (let i = 0; i < pendingTrees; i++) {
+                    createNewTree();
+                }
+                pendingTrees = 0;
             }
         }
 
         // Check if animation should end
-        if (totalTreesCreated >= targetTreeCount && growthTips.length === 0) {
+        if (totalTreesCreated >= targetTreeCount && growthTips.length === 0 && pendingTrees === 0) {
             console.log('Animation complete! Created', totalTreesCreated, 'trees (target:', targetTreeCount + ')');
             return; // Stop the animation
         }
