@@ -176,6 +176,10 @@ tr:hover {
     z-index: 1;
 }
 
+.container {
+    padding-bottom: 8px !important;
+}
+
 /* Splash page styling */
 #splash {
     background-color: rgba(255, 255, 255, 0.95);

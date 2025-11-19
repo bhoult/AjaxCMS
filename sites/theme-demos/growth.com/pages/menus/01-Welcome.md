@@ -1,4 +1,4 @@
-<h1 style="text-align: center; font-size: 5em; margin-top: 1em;">Welcome to Growth</h1>
+<h1 style="text-align: center; font-size: 5em; margin-top: 0.3em;">Welcome to Growth</h1>
 
 <div style="text-align: center; font-size: 1.8em; margin: 2em 0; font-weight: 300;">
 A living, breathing theme that grows with you.
