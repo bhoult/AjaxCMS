@@ -1277,11 +1277,23 @@
 
             let contentDetectionTimeout = null;
 
-            const pageChangeObserver = new MutationObserver(() => {
+            const pageChangeObserver = new MutationObserver((mutations) => {
                 const now = Date.now();
 
-                // Trigger page fade out (debounced to 500ms, disabled on mobile)
-                if (!isMobile() && now - lastPageChange > 500) {
+                // Count significant changes (added/removed nodes)
+                let significantChange = false;
+                let totalNodesChanged = 0;
+
+                for (let mutation of mutations) {
+                    totalNodesChanged += mutation.addedNodes.length + mutation.removedNodes.length;
+                }
+
+                // Consider it a page change if many nodes changed (threshold: 5 nodes)
+                // This filters out minor scrolling-related mutations on mobile
+                significantChange = totalNodesChanged >= 5;
+
+                // Trigger page fade out (debounced to 500ms, only on significant changes)
+                if (significantChange && now - lastPageChange > 500) {
                     lastPageChange = now;
                     startFadeOut();
                 }
