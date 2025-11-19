@@ -1169,12 +1169,11 @@
             const widthChanged = Math.abs(newWidth - width) > 10;
             const heightChanged = Math.abs(newHeight - height) > 150; // URL bar is typically 50-100px
 
-            // If only height changed by a small amount, just update canvas size without reinitializing
+            // If only height changed by a small amount, ignore it completely
+            // Don't update canvas dimensions as that would clear the canvas
             if (!widthChanged && !heightChanged) {
-                canvas.height = leafCanvas.height = collisionCanvas.height = newHeight;
-                height = newHeight;
-                if (config.enableDebugLogging) console.log('Mobile resize ignored (likely URL bar)');
-                return; // Don't reinitialize trees
+                if (config.enableDebugLogging) console.log('Mobile resize ignored (likely URL bar), keeping current dimensions');
+                return; // Don't change anything
             }
         }
 
