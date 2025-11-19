@@ -60,6 +60,15 @@
         branchCurvature: 0.05,       // Amount of natural curve/waviness in branches (0 = straight, higher = more curved)
         curvatureFrequency: 0.5,     // Noise sampling scale along age axis (lower = more frequent direction changes, higher = smoother curves)
 
+        // === TWIG SPROUTING ===
+        twigChance: 0.05,            // Chance to sprout a twig per frame
+        minTwigAge: 20,              // Minimum age before branch can sprout twigs
+        minTwigWidthRatio: 0.1,      // Minimum twig width as ratio of parent branch
+        maxTwigWidthRatio: 0.3,      // Maximum twig width as ratio of parent branch
+        minTwigAngle: 30,            // Minimum twig angle from parent direction (degrees)
+        maxTwigAngle: 80,            // Maximum twig angle from parent direction (degrees)
+        twigAttenuationMultiplier: 2.0, // Multiplier for twig width attenuation (higher = twigs thin faster)
+
         // === WIDTH/THICKNESS ===
         minWidth: 0.01,              // Stop growing when width is nearly invisible
         widthAttenuation: 0.015,     // Natural width reduction per frame (reduced from 0.03 for taller trees)
@@ -327,7 +336,7 @@
     /**
      * Create a new growth tip
      */
-    function createTip(x, y, vx, vy, width, parentX, parentY, generation, trunkForkAge) {
+    function createTip(x, y, vx, vy, width, parentX, parentY, generation, trunkForkAge, isTwig) {
         const gen = generation || 0;
         const tip = {
             x: x,
@@ -339,7 +348,8 @@
             age: 0,
             parentX: parentX || x,
             parentY: parentY || y,
-            generation: gen  // Track branch depth for attenuation
+            generation: gen,  // Track branch depth for attenuation
+            isTwig: isTwig || false  // Track if this is a twig (for special forking rules)
         };
 
         // For trunks (generation 0), use provided fork age (distance-scaled) or random default
@@ -355,7 +365,7 @@
     /**
      * Create leaves at the end of a dying branch
      */
-    function spawnLeaves(x, y, vx, vy, branchWidth) {
+    function spawnLeaves(x, y) {
         const numLeaves = config.minLeavesPerBranch +
             Math.floor(Math.random() * (config.maxLeavesPerBranch - config.minLeavesPerBranch + 1));
 
@@ -600,6 +610,11 @@
             // Lower/negative ratio = smaller branches thin slower (longer)
             let attenuationRate = config.widthAttenuation * (1 + tip.generation * config.generationAttenuationRatio);
 
+            // Apply twig attenuation multiplier if this is a twig
+            if (tip.isTwig) {
+                attenuationRate *= config.twigAttenuationMultiplier;
+            }
+
             // Additional attenuation based on proximity to content ahead in direction of travel
             if (attenuationFactor > 0) {
                 // Add extra attenuation when approaching content ahead
@@ -653,6 +668,49 @@
                 ctx.stroke();
             }
 
+            // Check if should sprout a twig (small side branch)
+            if (tip.age > config.minTwigAge &&
+                Math.random() < config.twigChance &&
+                tip.width > config.minWidth * 3) {
+
+                const currentAngle = Math.atan2(tip.vy, tip.vx);
+
+                // Random twig width within configured ratio range
+                const widthRange = config.maxTwigWidthRatio - config.minTwigWidthRatio;
+                const twigWidthRatio = config.minTwigWidthRatio + Math.random() * widthRange;
+                const twigWidth = tip.width * twigWidthRatio;
+
+                // Random angle within configured range, randomly left or right
+                const angleRange = config.maxTwigAngle - config.minTwigAngle;
+                const twigAngleDeg = config.minTwigAngle + Math.random() * angleRange;
+                const direction = Math.random() < 0.5 ? -1 : 1; // Random side
+                const twigAngle = currentAngle + (direction * twigAngleDeg * Math.PI / 180);
+
+                // Twig velocity
+                const twigVx = Math.cos(twigAngle) * config.growthSpeed;
+                const twigVy = Math.sin(twigAngle) * config.growthSpeed;
+
+                // Position twig offset from parent center
+                const parentOffset = tip.width * config.branchOffsetRatio;
+                const twigX = tip.x + (direction * parentOffset);
+
+                // Offset by twig radius in direction of travel
+                const twigOffsetX = Math.cos(twigAngle) * (twigWidth / 2);
+                const twigOffsetY = Math.sin(twigAngle) * (twigWidth / 2);
+
+                // Spawn twig (same generation as parent - it's a side shoot, not a child)
+                // Mark as twig for special forking rules
+                newTips.push(createTip(
+                    twigX + twigOffsetX, tip.y + twigOffsetY,
+                    twigVx, twigVy,
+                    twigWidth,
+                    twigX, tip.y,
+                    tip.generation,
+                    undefined,  // trunkForkAge (not applicable for twigs)
+                    true  // isTwig flag
+                ));
+            }
+
             // Calculate width ratio for forking
             const widthRatio = tip.width / config.initialMaxWidth; // 1.0 at base, decreases as it thins
 
@@ -660,17 +718,19 @@
             // Fork chance increases dramatically as width decreases (inverse relationship)
             const dynamicForkChance = config.forkChance * (5 - widthRatio * 4); // Much higher chance when thin
 
-            // Check if should fork
+            // Check if should fork (twigs never fork)
             let shouldFork = false;
-            if (tip.generation === 0) {
-                // Trunk: fork at predetermined random age (between min and max trunk height)
-                shouldFork = tip.age >= tip.trunkForkAge && tip.width > config.minWidth * 2;
-            } else {
-                // Branch: probability-based with forced forking at max age
-                shouldFork = (tip.age > config.minForkAge &&
-                             Math.random() < dynamicForkChance &&
-                             tip.width > config.minWidth * 2) ||
-                            (tip.age >= config.maxForkAge && tip.width > config.minWidth * 2);
+            if (!tip.isTwig) {
+                if (tip.generation === 0) {
+                    // Trunk: fork at predetermined random age (between min and max trunk height)
+                    shouldFork = tip.age >= tip.trunkForkAge && tip.width > config.minWidth * 2;
+                } else {
+                    // Branch: probability-based with forced forking at max age
+                    shouldFork = (tip.age > config.minForkAge &&
+                                 Math.random() < dynamicForkChance &&
+                                 tip.width > config.minWidth * 2) ||
+                                (tip.age >= config.maxForkAge && tip.width > config.minWidth * 2);
+                }
             }
 
             if (shouldFork) {
@@ -737,14 +797,14 @@
                 // Only spawn leaves for branches that are on-screen and died naturally (not off-screen)
                 if (tip.y > -50 && tip.y < height + 50 &&
                     tip.x > -50 && tip.x < width + 50) {
-                    spawnLeaves(tip.x, tip.y, tip.vx, tip.vy, tip.width);
+                    spawnLeaves(tip.x, tip.y);
                 }
             }
         }
 
-        // Count generation-0 tips (trees) before and after
-        const oldTreeCount = growthTips.filter(tip => tip.generation === 0).length;
-        const newTreeCount = newTips.filter(tip => tip.generation === 0).length;
+        // Count generation-0 tips (trees) before and after, excluding twigs
+        const oldTreeCount = growthTips.filter(tip => tip.generation === 0 && !tip.isTwig).length;
+        const newTreeCount = newTips.filter(tip => tip.generation === 0 && !tip.isTwig).length;
         const treesFinished = oldTreeCount - newTreeCount;
 
         growthTips = newTips;
@@ -781,19 +841,26 @@
         // Check if animation should end
         if (totalTreesCreated >= targetTreeCount && growthTips.length === 0 && pendingTrees === 0) {
             console.log('Animation complete! Created', totalTreesCreated, 'trees (target:', targetTreeCount + ')');
-            return; // Stop the animation
+            return false; // Signal to stop the animation
         }
 
         frameCount++;
+        return true; // Continue animation
     }
 
     /**
      * Animation loop - basic loop with frame delay control
      */
     function animate() {
-        updateGrowth();
+        const shouldContinue = updateGrowth();
         updateLeaves();
-        setTimeout(animate, config.frameDelay);
+
+        // Only schedule next frame if animation should continue
+        if (shouldContinue) {
+            setTimeout(animate, config.frameDelay);
+        } else {
+            console.log('Animation stopped. Total leaves:', leaves.length);
+        }
     }
 
     /**
