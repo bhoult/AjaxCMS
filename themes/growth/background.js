@@ -62,7 +62,7 @@
         enableDebugLogging: false,   // Enable console logging for debugging (set to false for production)
 
         // === VISUAL ===
-        backgroundColor: '#87CEEB',      // Sky blue background color (top of gradient)
+        backgroundColor: '#97e2ffff',      // Sky blue background color (top of gradient)
         backgroundGradientHeight: 800,   // Height in pixels where gradient fades to white (0 = no gradient, solid color)
 
         // === TRUNK PROPERTIES (Generation 0) ===
