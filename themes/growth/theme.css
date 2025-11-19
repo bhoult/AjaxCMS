@@ -39,6 +39,11 @@ body, h1, h2, h3, h4, h5, h6, p, a, li, td, th, blockquote, code, pre {
                      0 0 24px rgba(255, 255, 255, 0.7),
                      0 0 32px rgba(255, 255, 255, 0.5);
     }
+
+    /* Reduce h1 font size on mobile to prevent overflow */
+    h1 {
+        font-size: 4em !important;
+    }
 }
 
 /* Remove all borders from content areas */
