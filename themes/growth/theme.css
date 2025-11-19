@@ -14,6 +14,16 @@ body, h1, h2, h3, h4, h5, h6, p, a, li, td, th, blockquote, code, pre {
                  0 0 16px rgba(255, 255, 255, 0.5);
 }
 
+/* Stronger glow on mobile for better readability */
+@media (max-width: 768px) {
+    body, h1, h2, h3, h4, h5, h6, p, a, li, td, th, blockquote, code, pre {
+        text-shadow: 0 0 12px rgba(255, 255, 255, 1),
+                     0 0 18px rgba(255, 255, 255, 0.9),
+                     0 0 24px rgba(255, 255, 255, 0.7),
+                     0 0 32px rgba(255, 255, 255, 0.5);
+    }
+}
+
 /* Remove all borders from content areas */
 #a, #b {
     border: none !important;

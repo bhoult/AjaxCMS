@@ -72,7 +72,7 @@
 
         // === VISUAL ===
         backgroundColor: '#97e2ffff',      // Sky blue background color (top of gradient)
-        backgroundGradientHeight: 800,   // Height in pixels where gradient fades to white (0 = no gradient, solid color)
+        backgroundGradientHeight: isMobile() ? 400 : 800,   // Height in pixels where gradient fades to white (half on mobile)
 
         // === TRUNK PROPERTIES (Generation 0) ===
         minTrunkHeight: 50,          // Minimum trunk age before first fork (generation 0)
