@@ -77,6 +77,78 @@
     let frameCount = 0;
 
     /**
+     * Simple Perlin-like noise implementation for smooth randomness
+     */
+    class NoiseGenerator {
+        constructor() {
+            // Create permutation table for noise
+            this.permutation = [];
+            for (let i = 0; i < 256; i++) {
+                this.permutation[i] = i;
+            }
+            // Shuffle using simple random (seeded by time for consistency per session)
+            for (let i = 255; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [this.permutation[i], this.permutation[j]] = [this.permutation[j], this.permutation[i]];
+            }
+            // Duplicate for wrapping
+            this.permutation = this.permutation.concat(this.permutation);
+        }
+
+        // Fade function for smooth interpolation
+        fade(t) {
+            return t * t * t * (t * (t * 6 - 15) + 10);
+        }
+
+        // Linear interpolation
+        lerp(t, a, b) {
+            return a + t * (b - a);
+        }
+
+        // Gradient function
+        grad(hash, x, y) {
+            const h = hash & 3;
+            const u = h < 2 ? x : y;
+            const v = h < 2 ? y : x;
+            return ((h & 1) ? -u : u) + ((h & 2) ? -v : v);
+        }
+
+        // 2D Perlin noise
+        noise2D(x, y) {
+            // Find unit grid cell containing point
+            const X = Math.floor(x) & 255;
+            const Y = Math.floor(y) & 255;
+
+            // Get relative coordinates within cell
+            x -= Math.floor(x);
+            y -= Math.floor(y);
+
+            // Compute fade curves
+            const u = this.fade(x);
+            const v = this.fade(y);
+
+            // Hash coordinates of 4 cube corners
+            const a = this.permutation[X] + Y;
+            const b = this.permutation[X + 1] + Y;
+
+            // Blend results from 4 corners
+            return this.lerp(v,
+                this.lerp(u,
+                    this.grad(this.permutation[a], x, y),
+                    this.grad(this.permutation[b], x - 1, y)
+                ),
+                this.lerp(u,
+                    this.grad(this.permutation[a + 1], x, y - 1),
+                    this.grad(this.permutation[b + 1], x - 1, y - 1)
+                )
+            );
+        }
+    }
+
+    // Create noise generator instance
+    const noise = new NoiseGenerator();
+
+    /**
      * Get actual text boundaries for collision detection
      */
     function getTextBoundaries(element) {
@@ -396,14 +468,18 @@
                 }
             }
 
-            // Apply natural curvature using noise-based perturbation
+            // Apply natural curvature using Perlin noise
             if (config.branchCurvature > 0) {
-                // Use position and age to generate pseudo-random but smooth curves
-                // Different branches get different curves based on initial position
-                const noiseInput = (tip.parentX + tip.parentY + tip.age * config.curvatureFrequency) * 0.01;
-                const curvatureAngle = Math.sin(noiseInput) * config.branchCurvature;
+                // Use 2D Perlin noise with parent position and age
+                // Each branch gets unique curves based on where it originated
+                const noiseX = tip.parentX * 0.01;
+                const noiseY = tip.age * config.curvatureFrequency;
+                const noiseValue = noise.noise2D(noiseX, noiseY);
 
-                // Apply perpendicular rotation to create curve
+                // Scale noise output (-1 to 1) to desired curvature angle
+                const curvatureAngle = noiseValue * config.branchCurvature;
+
+                // Apply rotation to current velocity direction
                 const currentAngle = Math.atan2(tip.vy, tip.vx);
                 const newAngle = currentAngle + curvatureAngle;
 
