@@ -51,8 +51,8 @@
     // Configuration
     const config = {
         // === TREE POPULATION ===
-        minTrees: isMobile() ? 2 : 3,              // Minimum number of trees to create (reduced on mobile)
-        maxTrees: isMobile() ? 9 : 18,             // Maximum number of trees to create (half on mobile)
+        minTrees: isMobile() ? 1 : 3,              // Minimum number of trees to create (1/3 on mobile)
+        maxTrees: isMobile() ? 6 : 18,             // Maximum number of trees to create (1/3 on mobile)
         minTreePause: 100,           // Minimum frames to pause between tree finish and new tree start
         maxTreePause: 700,           // Maximum frames to pause between tree finish and new tree start
 
