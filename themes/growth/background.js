@@ -1280,8 +1280,8 @@
             const pageChangeObserver = new MutationObserver(() => {
                 const now = Date.now();
 
-                // Trigger page fade out (debounced to 500ms)
-                if (now - lastPageChange > 500) {
+                // Trigger page fade out (debounced to 500ms, disabled on mobile)
+                if (!isMobile() && now - lastPageChange > 500) {
                     lastPageChange = now;
                     startFadeOut();
                 }
