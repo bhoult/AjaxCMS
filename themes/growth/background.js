@@ -543,8 +543,8 @@
                         collided = true;
                     }
 
-                    // Check collision using pixel-based detection (O(1) instead of O(n²))
-                    if (!collided) {
+                    // Check collision using pixel-based detection (only near pile height for performance)
+                    if (!collided && newY >= minAllowedY - leaf.size) {
                         // Sample pixels below the leaf to detect collision with settled leaves
                         const checkX = Math.floor(Math.max(0, Math.min(width - 1, newX)));
                         const checkY = Math.floor(Math.max(0, Math.min(height - 1, newY)));
