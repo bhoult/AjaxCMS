@@ -1,5 +1,5 @@
 /**
- * Growth Theme - Debug: detect content using text ranges for precise boundaries
+ * Growth Theme - Trees that grow from bottom, avoiding content areas
  */
 
 (function() {
@@ -8,26 +8,50 @@
     const canvas = document.getElementById('background');
     const ctx = canvas.getContext('2d');
 
-    // Create overlay canvas for visualization
-    let overlayCanvas = null;
-    let overlayCtx = null;
-
     // Canvas dimensions
     let width, height;
 
-    // Content rectangles (actual text bounds)
+    // Content rectangles for collision detection
     let contentRects = [];
 
-    // Debug mode toggle
-    let debugMode = false;
+    // Active growth tips - only track points that are currently growing
+    let growthTips = [];
+
+    // Configuration
+    const config = {
+        initialTips: 8,              // Number of trees to start with
+        growthSpeed: 1.5,            // Pixels per frame
+        minBranchAngle: 15,          // Minimum fork angle in degrees
+        maxBranchAngle: 55,          // Maximum fork angle in degrees
+        forkChance: 0.008,           // Chance to fork per frame
+        minForkAge: 15,              // Minimum age before forking (reduced for shorter trunk)
+        maxForkAge: 100,             // Maximum age before forced forking
+        initialMinWidth: 3,          // Minimum initial trunk width
+        initialMaxWidth: 30,         // Maximum initial trunk width (based on distance to content)
+        minWidth: 0.01,              // Stop growing when width is nearly invisible
+        widthAttenuation: 0.03,      // Natural width reduction per frame (increased)
+        generationAttenuationRatio: 0.7, // Attenuation multiplier per generation (<1 = slower for smaller branches, >1 = faster)
+        minBranchWidthRatio: 0.7,    // Minimum branch width as ratio of parent (40%)
+        maxBranchWidthRatio: 0.9,    // Maximum branch width as ratio of parent (60%)
+        contentBuffer: 60,           // Distance to start avoiding content
+        bendStrength: 0.05,          // How much to bend away from content
+        widthReduction: 0.9,         // Width reduction when near content
+        widthReductionConeAngle: 90, // Cone angle in degrees for detecting content ahead (0-180)
+        newTipInterval: 180,         // Frames between new trees
+        preRenderFrames: 100,        // Number of frames to pre-render before animation starts
+        frameDelay: 0,              // Milliseconds between frames (16ms ≈ 60fps, 33ms ≈ 30fps, 0 = no delay)
+        color: 'rgba(60, 40, 20, 0.85)', // Brown tree color (darker and more opaque)
+        upwardBias: -0.8,            // Negative Y velocity (upward)
+        horizontalVariance: 0.3      // Random horizontal movement
+    };
+
+    let frameCount = 0;
 
     /**
-     * Get actual text boundaries for an element
+     * Get actual text boundaries for collision detection
      */
     function getTextBoundaries(element) {
         const rects = [];
-
-        // Get all text nodes in this element
         const walker = document.createTreeWalker(
             element,
             NodeFilter.SHOW_TEXT,
@@ -61,36 +85,37 @@
     }
 
     /**
-     * Detect all actual text boundaries on the page
+     * Detect all content boundaries on the page
      */
-    function detectTextBoundaries() {
+    function detectContentBoundaries() {
+        const oldCount = contentRects.length;
         contentRects = [];
 
-        // Find all text-containing elements
-        const textTags = ['P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'SPAN', 'A', 'LI', 'TD', 'TH', 'LABEL', 'BUTTON', 'TIME', 'STRONG', 'B', 'I', 'EM', 'DIV'];
+        // Get all visible text-containing elements
+        const textTags = ['P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'SPAN', 'A', 'LI', 'TD', 'TH', 'LABEL', 'BUTTON', 'TIME', 'STRONG', 'B', 'I', 'EM'];
 
         textTags.forEach(tag => {
             const elements = document.querySelectorAll(tag);
             elements.forEach(element => {
-                // Skip our canvases and containers
-                if (element.id === 'background' ||
-                    element.id === 'background-div' ||
-                    element.id === 'growth-overlay' ||
-                    element.id === 'a' ||
-                    element.id === 'b') {
+                // Skip if element is not visible
+                if (element.offsetParent === null) {
                     return;
                 }
 
-                // Get precise text boundaries
+                // Skip canvas and background containers
+                if (element.id === 'background' || element.id === 'background-div') {
+                    return;
+                }
+
                 const rects = getTextBoundaries(element);
                 contentRects.push(...rects);
             });
         });
 
-        // Also add images
+        // Add images
         const images = document.querySelectorAll('img');
         images.forEach(img => {
-            if (img.offsetWidth > 0 && img.offsetHeight > 0) {
+            if (img.offsetWidth > 0 && img.offsetHeight > 0 && img.offsetParent !== null) {
                 const rect = img.getBoundingClientRect();
                 contentRects.push({
                     left: rect.left,
@@ -101,181 +126,506 @@
             }
         });
 
-        console.log('Detected', contentRects.length, 'content rectangles');
-        return contentRects;
+        if (contentRects.length !== oldCount) {
+            console.log('Content boundaries updated:', oldCount, '->', contentRects.length, 'rectangles');
+        }
     }
 
     /**
-     * Check if a point collides with any content rectangle
+     * Check if a point would collide with content
+     * Returns { collision: boolean, directionX: -1|0|1 }
      */
-    function pointInContent(x, y, buffer = 0) {
+    function checkCollision(x, y) {
         for (let rect of contentRects) {
-            if (x >= rect.left - buffer &&
-                x <= rect.right + buffer &&
-                y >= rect.top - buffer &&
-                y <= rect.bottom + buffer) {
-                return true;
+            // Check if point is inside or very close to content
+            const expandedBuffer = config.contentBuffer;
+            if (x >= rect.left - expandedBuffer &&
+                x <= rect.right + expandedBuffer &&
+                y >= rect.top - expandedBuffer &&
+                y <= rect.bottom + expandedBuffer) {
+
+                // Determine which direction to go to avoid
+                const centerX = (rect.left + rect.right) / 2;
+                return {
+                    collision: true,
+                    directionX: x < centerX ? -1 : 1,
+                    rect: rect
+                };
             }
         }
-        return false;
+        return { collision: false, directionX: 0 };
     }
 
     /**
-     * Draw growth area visualization on overlay
+     * Get distance to nearest content from a point
      */
-    function drawVisualization() {
-        // Clear overlay
-        overlayCtx.clearRect(0, 0, width, height);
+    function getDistanceToNearestContent(x, y) {
+        let minDistance = Infinity;
 
-        // Only show visualization in debug mode
-        if (!debugMode) {
-            return;
+        for (let rect of contentRects) {
+            // Calculate distance to rect center
+            const centerX = (rect.left + rect.right) / 2;
+            const centerY = (rect.top + rect.bottom) / 2;
+            const dx = centerX - x;
+            const dy = centerY - y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance < minDistance) {
+                minDistance = distance;
+            }
         }
 
-        // Detect content boundaries
-        const rects = detectTextBoundaries();
+        return minDistance;
+    }
 
-        if (rects.length === 0) {
-            overlayCtx.fillStyle = '#000000';
-            overlayCtx.font = '24px monospace';
-            overlayCtx.fillText('Waiting for content to load...', 50, 50);
-            return;
-        }
+    /**
+     * Get distance to nearest content directly above a point
+     */
+    function getDistanceToContentAbove(x, y) {
+        let minDistance = Infinity;
 
-        const buffer = 30; // 30px buffer around content
-        const gridSize = 20; // Larger grid for visualization
-
-        // Sample grid and visualize
-        let contentCells = 0;
-        let bufferCells = 0;
-        let growthCells = 0;
-
-        for (let y = 0; y < height; y += gridSize) {
-            for (let x = 0; x < width; x += gridSize) {
-                const inContent = pointInContent(x, y, 0);
-                const inBuffer = !inContent && pointInContent(x, y, buffer);
-
-                if (inContent) {
-                    // Direct content
-                    overlayCtx.fillStyle = 'rgba(255, 0, 0, 0.3)';
-                    overlayCtx.fillRect(x, y, gridSize, gridSize);
-                    contentCells++;
-                } else if (inBuffer) {
-                    // Buffer zone
-                    overlayCtx.fillStyle = 'rgba(255, 100, 0, 0.2)';
-                    overlayCtx.fillRect(x, y, gridSize, gridSize);
-                    bufferCells++;
-                } else {
-                    // Growth zone
-                    overlayCtx.fillStyle = 'rgba(100, 255, 100, 0.15)';
-                    overlayCtx.fillRect(x, y, gridSize, gridSize);
-                    growthCells++;
+        for (let rect of contentRects) {
+            // Only consider content that is above this point
+            if (rect.bottom < y) {
+                // Check if horizontally aligned (within the x range of the rect)
+                if (x >= rect.left - 50 && x <= rect.right + 50) {
+                    // Calculate vertical distance to bottom of rect
+                    const distance = y - rect.bottom;
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                    }
                 }
             }
         }
 
-        // Draw actual text boundaries as thin lines
-        overlayCtx.strokeStyle = 'rgba(0, 0, 255, 0.4)';
-        overlayCtx.lineWidth = 1;
-        contentRects.forEach(rect => {
-            overlayCtx.strokeRect(rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top);
-        });
+        return minDistance;
+    }
 
-        // Draw legend
-        overlayCtx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-        overlayCtx.fillRect(10, height - 140, 540, 130);
+    /**
+     * Get distance to nearest content in the direction of travel
+     */
+    function getDistanceInDirection(x, y, vx, vy) {
+        let minDistance = Infinity;
 
-        overlayCtx.fillStyle = 'rgba(100, 255, 100, 0.8)';
-        overlayCtx.fillRect(20, height - 125, 30, 20);
-        overlayCtx.fillStyle = '#000000';
-        overlayCtx.font = '14px monospace';
-        overlayCtx.fillText('= Growth areas (plants will grow here)', 55, height - 110);
+        // Normalize direction vector
+        const speed = Math.sqrt(vx * vx + vy * vy);
+        if (speed === 0) return Infinity;
 
-        overlayCtx.fillStyle = 'rgba(255, 0, 0, 0.6)';
-        overlayCtx.fillRect(20, height - 95, 30, 20);
-        overlayCtx.fillStyle = '#000000';
-        overlayCtx.fillText('= Actual text content (precise boundaries)', 55, height - 80);
+        const dirX = vx / speed;
+        const dirY = vy / speed;
 
-        overlayCtx.fillStyle = 'rgba(255, 100, 0, 0.4)';
-        overlayCtx.fillRect(20, height - 65, 30, 20);
-        overlayCtx.fillStyle = '#000000';
-        overlayCtx.fillText('= Buffer zone (30px around content)', 55, height - 50);
+        // Calculate alignment threshold from cone angle
+        // Cone angle is the full angle, so half-angle on each side
+        const halfConeAngle = config.widthReductionConeAngle / 2;
+        const alignmentThreshold = Math.cos(halfConeAngle * Math.PI / 180);
 
-        overlayCtx.strokeStyle = 'rgba(0, 0, 255, 0.6)';
-        overlayCtx.lineWidth = 2;
-        overlayCtx.strokeRect(20, height - 35, 30, 20);
-        overlayCtx.fillStyle = '#000000';
-        overlayCtx.fillText('= Actual text boundaries (blue outlines)', 55, height - 20);
+        for (let rect of contentRects) {
+            // Calculate vector to rect center
+            const centerX = (rect.left + rect.right) / 2;
+            const centerY = (rect.top + rect.bottom) / 2;
+            const toContentX = centerX - x;
+            const toContentY = centerY - y;
 
-        overlayCtx.fillStyle = '#666666';
-        overlayCtx.font = '12px monospace';
-        const total = contentCells + bufferCells + growthCells;
-        const growthPct = Math.round((growthCells / total) * 100);
-        overlayCtx.fillText(`${contentRects.length} text rects | ${growthPct}% growth area | Grid: ${gridSize}px`, 20, height - 5);
+            // Calculate dot product to see if content is ahead in direction of travel
+            const dotProduct = toContentX * dirX + toContentY * dirY;
+
+            // Only consider content that is ahead (dot product > 0)
+            if (dotProduct > 0) {
+                // Calculate actual distance
+                const distance = Math.sqrt(toContentX * toContentX + toContentY * toContentY);
+
+                // Weight distance by alignment - content directly ahead matters more
+                // Alignment is dot product / distance (cosine of angle, ranges from 0 to 1)
+                const alignment = dotProduct / distance;
+
+                // Only consider if within cone angle
+                if (alignment > alignmentThreshold) {
+                    const weightedDistance = distance * (2 - alignment); // Closer alignment = lower distance
+                    if (weightedDistance < minDistance) {
+                        minDistance = weightedDistance;
+                    }
+                }
+            }
+        }
+
+        return minDistance;
+    }
+
+    /**
+     * Create a new growth tip
+     */
+    function createTip(x, y, vx, vy, width, parentX, parentY, generation) {
+        return {
+            x: x,
+            y: y,
+            vx: vx,
+            vy: vy,
+            width: width,
+            age: 0,
+            parentX: parentX || x,
+            parentY: parentY || y,
+            generation: generation || 0  // Track branch depth for attenuation
+        };
+    }
+
+    /**
+     * Initialize with starting trees
+     */
+    function initializeTrees() {
+        growthTips = [];
+
+        for (let i = 0; i < config.initialTips; i++) {
+            const x = Math.random() * width;
+            const y = height; // Start at bottom
+
+            // Calculate initial width based on distance to content directly above
+            const distanceToContent = getDistanceToContentAbove(x, y);
+            // Scale width directly proportional to distance - linear with no cap
+            // If no content above (Infinity), use full initialMaxWidth
+            const widthMultiplier = isFinite(distanceToContent) ? distanceToContent / 300 : 1.0;
+            const scaledWidth = config.initialMaxWidth * widthMultiplier * (0.9 + Math.random() * 0.2);
+            const tipWidth = Math.max(config.initialMinWidth, scaledWidth);
+
+            const vx = (Math.random() - 0.5) * config.horizontalVariance;
+            const vy = config.upwardBias;
+
+            growthTips.push(createTip(x, y, vx, vy, tipWidth, x, y, 0));
+        }
+    }
+
+    /**
+     * Update and draw all growth tips
+     */
+    function updateGrowth() {
+        const newTips = [];
+        let avoidanceCount = 0;
+
+        for (let tip of growthTips) {
+            // Store old position for drawing
+            const oldX = tip.x;
+            const oldY = tip.y;
+
+            // Check proximity to content - use for both avoidance and attenuation
+            const proximityThreshold = config.contentBuffer * 6; // Start at 6x the buffer distance
+            const distanceToContent = getDistanceToNearestContent(tip.x, tip.y);
+            const proximityFactor = distanceToContent < proximityThreshold
+                ? 1 - (distanceToContent / proximityThreshold)
+                : 0;
+
+            // Also check distance in direction of travel for width reduction
+            const distanceAhead = getDistanceInDirection(tip.x, tip.y, tip.vx, tip.vy);
+            const aheadProximityFactor = distanceAhead < proximityThreshold
+                ? 1 - (distanceAhead / proximityThreshold)
+                : 0;
+
+            // If we're within the proximity threshold, start avoiding
+            if (distanceToContent < proximityThreshold) {
+                // Find which direction to avoid
+                let nearestRect = null;
+                let minDist = Infinity;
+
+                for (let rect of contentRects) {
+                    const centerX = (rect.left + rect.right) / 2;
+                    const centerY = (rect.top + rect.bottom) / 2;
+                    const dx = centerX - tip.x;
+                    const dy = centerY - tip.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < minDist) {
+                        minDist = dist;
+                        nearestRect = rect;
+                    }
+                }
+
+                if (nearestRect) {
+                    avoidanceCount++;
+
+                    // Calculate direction to content center
+                    const centerX = (nearestRect.left + nearestRect.right) / 2;
+                    const dx = centerX - tip.x;
+
+                    // Determine which side(s) we're approaching from
+                    const approachingFromLeft = tip.x < nearestRect.left;
+                    const approachingFromRight = tip.x > nearestRect.right;
+                    const approachingFromBottom = tip.y > nearestRect.bottom;
+                    const approachingFromTop = tip.y < nearestRect.top;
+
+                    // Apply avoidance forces away from content
+                    if (approachingFromLeft || approachingFromRight) {
+                        // Approaching horizontally - push away horizontally
+                        const directionX = approachingFromLeft ? -1 : 1;
+                        tip.vx += directionX * config.bendStrength * proximityFactor;
+                    } else {
+                        // Inside horizontal bounds - use distance to determine direction
+                        const directionX = dx < 0 ? -1 : 1;
+                        tip.vx += directionX * config.bendStrength * proximityFactor;
+                    }
+
+                    if (approachingFromBottom || approachingFromTop) {
+                        // Approaching vertically - push away vertically
+                        const directionY = approachingFromBottom ? 1 : -1;
+                        tip.vy += directionY * config.bendStrength * proximityFactor;
+                    }
+                }
+            }
+
+            // Normalize velocity to maintain consistent speed
+            const speed = Math.sqrt(tip.vx * tip.vx + tip.vy * tip.vy);
+            if (speed > 0) {
+                tip.vx = (tip.vx / speed) * config.growthSpeed;
+                tip.vy = (tip.vy / speed) * config.growthSpeed;
+            }
+
+            // Update position
+            tip.x += tip.vx;
+            tip.y += tip.vy;
+            tip.age++;
+
+            // Natural width attenuation - controlled by generation ratio
+            // Higher ratio = smaller branches thin faster (shorter)
+            // Lower/negative ratio = smaller branches thin slower (longer)
+            let attenuationRate = config.widthAttenuation * (1 + tip.generation * config.generationAttenuationRatio);
+
+            // Additional attenuation based on proximity to content ahead in direction of travel
+            if (aheadProximityFactor > 0) {
+                // Add extra attenuation when approaching content ahead
+                // Uses configurable widthReduction parameter
+                const proximityAttenuation = config.widthReduction * aheadProximityFactor;
+                attenuationRate += proximityAttenuation;
+            }
+
+            tip.width -= attenuationRate;
+
+            // Only draw if width is above sub-pixel threshold
+            // This prevents rendering caps on invisible branches
+            if (tip.width > 0.15 && isFinite(tip.x) && isFinite(tip.y) && isFinite(tip.width)) {
+                // Create gradient for shading - lighter on left, darker on right
+                const gradient = ctx.createLinearGradient(
+                    tip.x - tip.width / 2, tip.y,
+                    tip.x + tip.width / 2, tip.y
+                );
+                gradient.addColorStop(0, 'rgba(80, 60, 40, 0.85)');  // Lighter left
+                gradient.addColorStop(1, 'rgba(40, 20, 10, 0.85)');  // Darker right
+
+                ctx.strokeStyle = gradient;
+                ctx.lineWidth = tip.width;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(oldX, oldY);
+                ctx.lineTo(tip.x, tip.y);
+                ctx.stroke();
+            }
+
+            // Calculate width ratio for forking
+            const widthRatio = tip.width / config.initialMaxWidth; // 1.0 at base, decreases as it thins
+
+            // Check if should fork - thinner branches fork much more often
+            // Fork chance increases dramatically as width decreases (inverse relationship)
+            const dynamicForkChance = config.forkChance * (5 - widthRatio * 4); // Much higher chance when thin
+
+            // Force fork if age exceeds maximum, otherwise use probability
+            const shouldFork = (tip.age > config.minForkAge &&
+                               Math.random() < dynamicForkChance &&
+                               tip.width > config.minWidth * 2) ||
+                              (tip.age >= config.maxForkAge && tip.width > config.minWidth * 2);
+
+            if (shouldFork) {
+                // Create two new branches using configured width ratios
+                const currentAngle = Math.atan2(tip.vy, tip.vx);
+                const nextGeneration = tip.generation + 1;
+
+                // Calculate branch widths using min/max ratio settings
+                const widthRange = config.maxBranchWidthRatio - config.minBranchWidthRatio;
+                const leftRatio = config.minBranchWidthRatio + Math.random() * widthRange;
+                const leftWidth = tip.width * leftRatio;
+
+                const rightRatio = config.minBranchWidthRatio + Math.random() * widthRange;
+                const rightWidth = tip.width * rightRatio;
+
+                // Position branches at edges of parent branch, offset by branch radius
+                const leftX = tip.x - tip.width / 2 + leftWidth / 2;
+                const rightX = tip.x + tip.width / 2 - rightWidth / 2;
+
+                // Calculate random fork angles within configured range
+                const angleRange = config.maxBranchAngle - config.minBranchAngle;
+                const leftAngleDeg = config.minBranchAngle + Math.random() * angleRange;
+                const rightAngleDeg = config.minBranchAngle + Math.random() * angleRange;
+
+                // Left branch
+                const leftAngle = currentAngle - (leftAngleDeg * Math.PI / 180);
+                const leftVx = Math.cos(leftAngle) * config.growthSpeed;
+                const leftVy = Math.sin(leftAngle) * config.growthSpeed;
+                // Offset by branch radius in direction of travel
+                const leftOffsetX = Math.cos(leftAngle) * (leftWidth / 2);
+                const leftOffsetY = Math.sin(leftAngle) * (leftWidth / 2);
+                newTips.push(createTip(
+                    leftX + leftOffsetX, tip.y + leftOffsetY,
+                    leftVx, leftVy,
+                    leftWidth,
+                    leftX, tip.y,
+                    nextGeneration
+                ));
+
+                // Right branch
+                const rightAngle = currentAngle + (rightAngleDeg * Math.PI / 180);
+                const rightVx = Math.cos(rightAngle) * config.growthSpeed;
+                const rightVy = Math.sin(rightAngle) * config.growthSpeed;
+                // Offset by branch radius in direction of travel
+                const rightOffsetX = Math.cos(rightAngle) * (rightWidth / 2);
+                const rightOffsetY = Math.sin(rightAngle) * (rightWidth / 2);
+                newTips.push(createTip(
+                    rightX + rightOffsetX, tip.y + rightOffsetY,
+                    rightVx, rightVy,
+                    rightWidth,
+                    rightX, tip.y,
+                    nextGeneration
+                ));
+
+            } else if (tip.width > config.minWidth &&
+                       tip.y > -50 &&
+                       tip.x > -50 &&
+                       tip.x < width + 50) {
+                // Keep growing if still viable and width is above invisible threshold
+                newTips.push(tip);
+            }
+            // If width <= minWidth, branch has tapered to invisible - just stop, no cap visible
+        }
+
+        growthTips = newTips;
+
+        // Log avoidance activity every 60 frames
+        if (frameCount % 60 === 0 && avoidanceCount > 0) {
+            console.log('Frame', frameCount, '- Avoiding content:', avoidanceCount, 'tips,', contentRects.length, 'content rects');
+        }
+
+        // Occasionally add new trees from the bottom
+        if (frameCount % config.newTipInterval === 0 && growthTips.length < 100) {
+            const x = Math.random() * width;
+
+            // Calculate initial width based on distance to content directly above
+            const distanceToContent = getDistanceToContentAbove(x, height);
+            // Scale width directly proportional to distance - linear with no cap
+            // If no content above (Infinity), use full initialMaxWidth
+            const widthMultiplier = isFinite(distanceToContent) ? distanceToContent / 300 : 1.0;
+            const scaledWidth = config.initialMaxWidth * widthMultiplier * (0.9 + Math.random() * 0.2);
+            const tipWidth = Math.max(config.initialMinWidth, scaledWidth);
+
+            const vx = (Math.random() - 0.5) * config.horizontalVariance;
+            const vy = config.upwardBias;
+
+            growthTips.push(createTip(x, height, vx, vy, tipWidth, x, height, 0));
+        }
+
+        // Safety: restart if all trees died out
+        if (growthTips.length === 0 && frameCount % 60 === 0) {
+            console.log('All trees died, restarting...');
+            initializeTrees();
+        }
+
+        frameCount++;
+    }
+
+    /**
+     * Animation loop with frame delay control
+     */
+    let lastFrameTime = 0;
+    function animate(timestamp) {
+        // Check if enough time has passed since last frame
+        if (timestamp - lastFrameTime >= config.frameDelay) {
+            updateGrowth();
+            lastFrameTime = timestamp;
+        }
+
+        requestAnimationFrame(animate);
     }
 
     /**
      * Resize canvas
      */
     function resize() {
-        width = overlayCanvas.width = window.innerWidth;
-        height = overlayCanvas.height = window.innerHeight;
-        drawVisualization();
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+
+        // Only reinitialize trees if already initialized (not during first setup)
+        if (initialized) {
+            ctx.clearRect(0, 0, width, height);
+            initializeTrees();
+        }
     }
+
+    // Track if initialized to prevent double-init
+    let initialized = false;
 
     /**
      * Initialize
      */
     function init() {
-        console.log('Growth theme initializing (precise text boundary detection)...');
+        if (initialized) {
+            console.log('Already initialized, skipping...');
+            return;
+        }
+
+        console.log('Growth theme initializing...');
 
         if (!canvas) {
             console.error('Canvas element not found!');
             return;
         }
 
-        // Create overlay canvas for visualization (on top of content)
-        overlayCanvas = document.createElement('canvas');
-        overlayCanvas.id = 'growth-overlay';
-        overlayCanvas.style.position = 'fixed';
-        overlayCanvas.style.top = '0';
-        overlayCanvas.style.left = '0';
-        overlayCanvas.style.width = '100%';
-        overlayCanvas.style.height = '100%';
-        overlayCanvas.style.pointerEvents = 'none'; // Allow clicks to pass through
-        overlayCanvas.style.zIndex = '9999'; // On top of everything
-        document.body.appendChild(overlayCanvas);
-
-        overlayCtx = overlayCanvas.getContext('2d');
-
-        if (!overlayCtx) {
-            console.error('Could not get overlay canvas context!');
+        if (!ctx) {
+            console.error('Canvas context not found!');
             return;
         }
 
-        resize();
+        // Set canvas size
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
         console.log('Canvas size:', width, 'x', height);
 
-        // Redraw on window resize
+        // Initialize trees
+        initializeTrees();
+        console.log('Initial growth tips:', growthTips.length);
+
+        // Detect content boundaries immediately
+        detectContentBoundaries();
+        console.log('Initial content rectangles:', contentRects.length);
+
+        // PRE-RENDER: Run frames instantly to show mature trees
+        console.log('Pre-rendering', config.preRenderFrames, 'frames...');
+        for (let i = 0; i < config.preRenderFrames; i++) {
+            updateGrowth();
+            if (i % 100 === 0) {
+                detectContentBoundaries(); // Update content detection during pre-render
+            }
+        }
+        console.log('Pre-render complete, active tips:', growthTips.length);
+
+        // Mark as initialized after setup is complete
+        initialized = true;
+
+        // Re-detect content frequently for the first 10 seconds (content loads dynamically)
+        let detectionCount = 0;
+        const frequentDetection = setInterval(() => {
+            detectContentBoundaries();
+            detectionCount++;
+            if (detectionCount >= 20) {
+                clearInterval(frequentDetection);
+                // Then continue at slower rate
+                setInterval(detectContentBoundaries, 2000);
+                console.log('Switched to slow content detection');
+            }
+        }, 500); // Every 500ms for first 10 seconds
+
+        // Handle window resize
         window.addEventListener('resize', resize);
 
-        // Redraw periodically to catch content changes
-        setInterval(() => {
-            drawVisualization();
-        }, 1000);
-
-        // Debug mode toggle: Shift + Alt + D
-        window.addEventListener('keydown', (e) => {
-            if (e.shiftKey && e.altKey && e.key.toLowerCase() === 'd') {
-                debugMode = !debugMode;
-                console.log('Debug mode:', debugMode ? 'ON' : 'OFF');
-                drawVisualization();
-            }
-        });
+        // Start animation
+        console.log('Starting animation loop...');
+        animate();
     }
 
     // Start when page loads
     window.addEventListener('load', function() {
-        setTimeout(init, 1000); // Extra delay to ensure content is rendered
+        setTimeout(init, 1000); // Delay to ensure content is rendered
     });
 })();
