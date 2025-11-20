@@ -1,6 +1,10 @@
 ## GL City: 3D Cityscape Theme with Three.js
 
-AjaxCMS now features an impressive 3D cityscape theme powered by **Three.js**, bringing WebGL-rendered graphics to the platform. The `gl_city` theme showcases procedurally generated skyscrapers with realistic lighting, shadows, and a dynamic starfield.
+AjaxCMS features an impressive 3D cityscape theme powered by **Three.js**, bringing WebGL-rendered graphics to the platform. The `gl_city` theme showcases procedurally generated skyscrapers with realistic lighting, shadows, and a dynamic starfield.
+
+{{i | gl-city-theme}}
+
+**[View Live Demo →](http://ajaxcms.org/theme-demos/gl-city.com/?page=pages/menus/01-Welcome.md)**
 
 ### Visual Features
 
@@ -19,57 +23,31 @@ AjaxCMS now features an impressive 3D cityscape theme powered by **Three.js**, b
 
 ### Technical Implementation
 
-The gl_city theme demonstrates AjaxCMS's ability to integrate modern WebGL libraries:
-
-```javascript
-// Three.js initialization
-function initThreeJS() {
-    scene = new THREE.Scene();
-    camera = new THREE.PerspectiveCamera(75, page_width / page_height, 0.1, 3000);
-    renderer = new THREE.WebGLRenderer({
-        canvas: document.getElementById('background'),
-        antialias: true,
-        alpha: true
-    });
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-}
-```
+**WebGL Acceleration:**
+- GPU-accelerated 3D rendering with Three.js
+- Hardware-based shadow mapping
+- Efficient geometry with optimized polygons
+- True 3D space with depth and perspective
 
 **Building Generation:**
-Each building is procedurally generated with random dimensions and window patterns:
-
-```javascript
-// Buildings vary from 40-400 units tall
-var height = 40 + Math.random() * 360;
-var width = 10 + Math.random() * 30;
-var depth = 10 + Math.random() * 30;
-```
-
-**Shadow Mapping:**
-The theme uses Three.js shadow mapping for realistic lighting:
-
-```javascript
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-moonLight.castShadow = true;
-buildingMesh.castShadow = true;
-buildingMesh.receiveShadow = true;
-```
+- Procedurally generated buildings (40-400 units tall)
+- Random dimensions and window patterns
+- Varied positioning creates natural cityscape
+- Infinite scrolling with building recycling
 
 ### Performance Optimizations
 
 **Efficient Rendering:**
-- Uses WebGL hardware acceleration
-- Optimized geometry with minimal polygons
+- WebGL hardware acceleration for smooth 60 FPS
 - Shadow map caching for static objects
-- Proper cleanup on theme change (disposeTheme function)
+- Frustum culling automatically handled by Three.js
+- Proper cleanup on theme change prevents memory leaks
 
 **Adaptive Quality:**
-- Buildings positioned at varying depths to create perspective
-- Instanced geometry for window patterns
-- Frustum culling handled automatically by Three.js
-- Configurable pan speed (68% slower than original for smoother motion)
+- Optimized shadow map size (2048x2048) for quality/performance balance
+- Configurable pan speed for smoother motion
+- Buildings positioned at varying depths for perspective
+- 50+ buildings render smoothly on modern hardware
 
 ### User Interactions
 
@@ -80,41 +58,22 @@ buildingMesh.receiveShadow = true;
 - Automatic return to normal view when exiting overhead mode
 
 **Camera Movement:**
-The camera smoothly tracks the cityscape:
-
-```javascript
-var buildingPanSpeed = 0.16;  // Units per frame
-camera.position.x -= buildingPanSpeed;
-```
-
-### Theme Configuration
-
-The gl_city theme is structured like all AjaxCMS themes:
-
-```
-themes/gl_city/
-├── background.js    # Three.js scene setup and animation
-└── theme.css        # Theme-specific styles
-```
-
-**Loading the theme** (`index.html`):
-
-```javascript
-var default_background = "gl_city";
-```
+- Smooth camera tracking follows cityscape
+- Adjustable pan speed for desired effect
+- Ground-level perspective provides immersive experience
 
 ### Browser Compatibility
 
 The gl_city theme requires:
-- **WebGL support** (available in all modern browsers)
-- **Three.js library** (loaded via CDN in background.js)
+- WebGL support (available in all modern browsers)
+- Three.js library (loaded via CDN)
 - Hardware acceleration enabled (recommended)
 
-Browsers without WebGL will fall back gracefully with a static gradient background.
+Browsers without WebGL fall back gracefully with a static gradient background.
 
 ### Comparison to Other Themes
 
-Unlike canvas-based themes (network, gears, bubbles), gl_city uses **3D graphics hardware acceleration**:
+Unlike canvas-based themes, gl_city uses **3D graphics hardware acceleration**:
 
 | Feature | Canvas Themes | GL City Theme |
 |---------|---------------|---------------|
@@ -123,68 +82,25 @@ Unlike canvas-based themes (network, gears, bubbles), gl_city uses **3D graphics
 | Depth | Simulated | True 3D space |
 | Shadows | Not supported | Real-time shadows |
 | Lighting | Static | Dynamic moon light |
-| Complexity | Low polygon | High polygon 3D models |
+
+### Use Cases
+
+Perfect for:
+- Tech companies and developer portfolios
+- Architecture and real estate sites
+- Futuristic or sci-fi themed content
+- Urban planning and city-focused projects
+- Sites wanting a modern, cutting-edge feel
 
 ### Future Enhancements
 
 Potential improvements for the gl_city theme:
-
-- **Day/night cycle**: Transition from night cityscape to daytime
-- **Weather effects**: Rain, fog, or snow particles
-- **Building interiors**: Glowing windows with varying patterns
-- **Traffic simulation**: Moving lights along streets
-- **User-controlled camera**: Click-and-drag navigation in normal view
-- **Sound integration**: Ambient city sounds synchronized with visuals
-
-### Code Highlights
-
-**Cleanup on theme change:**
-
-```javascript
-function disposeTheme() {
-    if (animationFrameId !== null) {
-        cancelAnimationFrame(animationFrameId);
-    }
-    if (renderer) {
-        renderer.dispose();
-    }
-    // Dispose all geometries and materials
-    buildingMeshes.forEach(mesh => {
-        mesh.geometry.dispose();
-        mesh.material.dispose();
-    });
-}
-```
-
-**Starfield generation:**
-
-```javascript
-var starGeometry = new THREE.BufferGeometry();
-var starVertices = [];
-for (var i = 0; i < 5000; i++) {
-    var x = (Math.random() - 0.5) * 4000;
-    var y = Math.random() * 2000;
-    var z = (Math.random() - 0.5) * 4000;
-    starVertices.push(x, y, z);
-}
-```
-
-### Developer Notes
-
-**Theme Performance:**
-- Tested with 50+ buildings rendering smoothly at 60 FPS
-- Shadow map size: 2048x2048 for quality/performance balance
-- Building recycling as they exit viewport (infinite scrolling effect)
-
-**CDN Dependencies:**
-The theme loads Three.js from CDN:
-
-```javascript
-var script = document.createElement('script');
-script.src = 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js';
-```
-
-This keeps the AjaxCMS core lightweight while enabling advanced 3D graphics when needed.
+- Day/night cycle transitions
+- Weather effects (rain, fog, snow)
+- Building interiors with glowing windows
+- Traffic simulation with moving lights
+- User-controlled camera navigation
+- Ambient city sounds synchronized with visuals
 
 ---
 
