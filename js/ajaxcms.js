@@ -834,12 +834,12 @@ function loadInsert(fname,insert_location,allow_scripts,callback) {
 			if (/\s\s\s\s\s/.test(match)) {
 				var index = globalProtectedHelpers.length;
 				globalProtectedHelpers.push(match);
-				return '___PROTECTED_HELPER_' + index + '___';
+				return '§§§PROTECTED_HELPER_' + index + '§§§';
 			}
 			// Protect normal helpers from markdown (but they stay protected until final processing)
 			var index = globalProtectedHelpers.length;
 			globalProtectedHelpers.push(match);
-			return '___PROTECTED_HELPER_' + index + '___';
+			return '§§§PROTECTED_HELPER_' + index + '§§§';
 		});
 
 		// Check if layout exists before requesting it to avoid 404 errors
@@ -985,7 +985,7 @@ function processInserts(callback) {
 				data = data.replace(/@@@@@/g,'{{').replace(/#####/g,'}}');
 
 				// Restore protected helpers that were protected from markdown processing
-				data = data.replace(/___PROTECTED_HELPER_(\d+)___/g, function(match, index) {
+				data = data.replace(/§§§PROTECTED_HELPER_(\d+)§§§/g, function(match, index) {
 					return globalProtectedHelpers[parseInt(index)];
 				});
 
