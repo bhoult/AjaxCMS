@@ -1,3 +1,25 @@
+/**
+ * AjaxCMS Core - Dynamic front-end content management system with static file backend
+ *
+ * This is the main JavaScript file for AjaxCMS that handles page loading, helper processing,
+ * menu generation, and all client-side routing and content rendering functionality.
+ *
+ * Copyright (C) 2016-2025 Brandon Hoult
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 (function() {
 'use strict';
 
@@ -85,11 +107,15 @@ function findPages() {
 
 /**
  * Filter pages to get only menu items (pages in the menus/ directory)
+ * Includes .html and .md files, plus subdirectories (for dropdown menus)
+ * Excludes layout.html and other file types like .discussion.jsonl
  * @returns {Array} Array of menu page paths
  */
 function findMenus(){
 	return $.grep(pages, function(n,i){
-		return /\/menus\/.+/.test(n) && !/\/layout\.html$/.test(n);
+		// Match: files ending with .html/.md OR directories (ending with /)
+		// Exclude: layout.html
+		return (/\/menus\/.+\.(html|md)$/i.test(n) || /\/menus\/.+\/$/.test(n)) && !/\/layout\.html$/.test(n);
 	});
 }
 

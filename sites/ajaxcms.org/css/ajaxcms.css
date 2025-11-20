@@ -1,0 +1,264 @@
+body {
+	overflow-x: hidden;
+	padding-bottom: 100px;
+}
+
+#background {
+  position:fixed;
+  z-index:-1;
+  width:100%;
+  height:100%;
+  background: linear-gradient(#FFF, #225);
+}
+#background-div {
+  position:fixed;
+  z-index:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+}
+
+nav.navbar {
+margin-top:0px;
+margin-bottom:0px;
+z-index:1;
+border-radius:0px 0px 10px 10px;
+background-color: #f8f8f8;
+border: 1px solid #e7e7e7;
+		}
+
+		/* Make navbar links white text */
+		.navbar-nav .nav-link {
+color: #ffffff !important;
+padding: 15px 1rem;
+line-height: 20px;
+display: flex;
+align-items: center;
+height: 50px;
+		}
+
+		.navbar-nav .nav-link:hover,
+		.navbar-nav .nav-link:focus {
+color: #ffffff !important;
+background-color: rgba(0, 0, 0, 0.1);
+		}
+
+		.navbar-nav .nav-item.active .nav-link {
+color: #ffffff !important;
+font-weight: bold;
+		}
+
+		/* Dropdown toggle styling */
+		.navbar-nav .dropdown-toggle {
+color: #ffffff !important;
+		}
+
+		/* Bootstrap 5 navbar spacing fixes */
+		.navbar-nav .nav-item {
+margin: 0;
+		}
+
+		.navbar-nav .dropdown-menu {
+position: absolute;
+		}
+
+		/* Prevent menu items from shifting when dropdown opens */
+		.navbar-nav .dropdown {
+position: relative;
+		}
+		/* Carousel indicator styling - consistent for all states */
+		.carousel-indicators button {
+width: 30px;
+height: 3px;
+background-color: rgba(255, 255, 255, 0.5);
+border: none;
+margin: 0 3px;
+		}
+
+		.carousel-indicators button.active {
+background-color: rgba(255, 255, 255, 1);
+width: 30px;
+height: 3px;
+		}
+
+
+.container {
+	margin-top:0px !important;
+	margin-bottom:0px !important;
+	margin-left:auto !important;
+	margin-right:auto !important;
+	padding:0px !important;
+	padding-bottom:100px !important;
+	border-radius:4px 4px 0px 0px;
+	color:black;
+}
+
+#a, #b {
+	position:absolute;
+	top: 0px;
+	width:98%!important;
+	max-width:530px;
+	left: 0;
+	right: 0;
+	margin-left: auto;
+	margin-right: auto;
+	z-index:0;
+	background-color:rgba(200,200,255,0.9);
+	border-radius:0px 0px 8px 8px;
+	color:black;
+	margin-bottom:50px;
+	padding-bottom:100px;
+}
+
+@media (min-width: 768px) {
+	#a, #b {
+		max-width:706px;
+	}
+}
+@media (min-width: 992px) {
+	#a, #b {
+		max-width:941px;
+	}
+}
+@media (min-width: 1200px) {
+	#a, #b {
+		max-width:1117px;
+	}
+}
+@media (min-width: 1400px) {
+	#a, #b {
+		max-width:1294px;
+	}
+}
+
+#main>div {
+	padding: 0px 10px 20px 10px;
+}
+
+#main img {
+	margin:10px;
+}
+#main .carousel img {
+	margin:0px;
+}
+img.thumb {
+	width:20px;
+}
+img.icon {
+	width:70px;
+}
+img.small {
+	width:300px;
+}
+img.medium {
+	width:600px;
+}
+img.large {
+	width:900px;
+}
+img.left {
+	float:left;
+}
+img.right {
+	float:right;
+}
+
+.carousel {
+	padding:0px;
+}
+
+/* Image gallery styling for wildcard galleries */
+.image-gallery img {
+	width: 100%;
+	height: auto;
+	border-radius: 4px;
+	cursor: pointer;
+	transition: transform 0.2s;
+}
+
+.image-gallery img:hover {
+	transform: scale(1.05);
+}
+
+/* Lightbox for expanded images */
+.image-lightbox {
+	display: none;
+	position: fixed;
+	z-index: 9999;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(0, 0, 0, 0);
+	cursor: pointer;
+	transition: background-color 0.3s ease;
+}
+
+.image-lightbox.active {
+	background-color: rgba(0, 0, 0, 0.9);
+}
+
+.image-lightbox img {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%) scale(0.8);
+	width: 100%;
+	height: auto;
+	max-height: 100vh;
+	object-fit: contain;
+	opacity: 0;
+	transition: all 0.3s ease;
+}
+
+.image-lightbox.active img {
+	transform: translate(-50%, -50%) scale(1);
+	opacity: 1;
+}
+
+ul.filelist li {
+	list-style-type:none;
+}
+ul.filelist li a.folder:hover {
+	text-decoration:none;
+}
+
+footer {   
+	position:fixed;
+	left:0px;
+	bottom:0px;
+	width:100%;
+	background:white;
+	color:black;
+	text-align:center;
+	padding:5px;
+	font-size:2vw;
+}
+footer a {color:blue;}
+footer a:hover {color:#55F;}
+.blog .blog_entry {
+	border:1px solid black;
+	border-radius:10px;
+	margin:10px;
+	padding:5px;
+	background-color:rgba(255,255,255,0.8);
+	position:relative;
+	cursor: pointer; 
+}
+.blog .blog_entry h1 {
+	margin-top:0px;
+	font-size:150%;
+}
+.blog .blog_entry time {
+	position:absolute;
+	top:5px;
+	right:20px;
+}
+
+
+@media (min-width: 544px) {  }
+@media (min-width: 768px) { footer {font-size:14px;} }
+@media (min-width: 992px) {  }
+@media (min-width: 1200px) {  }
+
+

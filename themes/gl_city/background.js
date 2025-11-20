@@ -1,4 +1,24 @@
-/* (c) 2025 GL-City Theme - Three.js 3D Cityscape with Shadow Mapping */
+/**
+ * AjaxCMS Theme - Gl City
+ *
+ * Animated canvas background theme for AjaxCMS providing visual effects and coordinated color schemes.
+ *
+ * Copyright (C) 2016-2025 Brandon Hoult
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 
 // Global variables
 var scene, camera, renderer;
@@ -2647,6 +2667,32 @@ var startBackground = function() {
 	}, 100);
 };
 
+// Wait for content to actually load before starting theme
+// This prevents the race condition where theme starts before page content is rendered
+var waitForContent = function(callback) {
+	console.log('Waiting for AjaxCMS content to load...');
+
+	var checkContent = function() {
+		// Check if content divs exist and have actual content
+		var contentA = $('#a');
+		var contentB = $('#b');
+
+		var hasContent = (contentA.length > 0 && contentA.children().length > 0) ||
+		                 (contentB.length > 0 && contentB.children().length > 0);
+
+		if (hasContent) {
+			console.log('Content detected, starting theme');
+			callback();
+		} else {
+			// Content not loaded yet, check again soon
+			setTimeout(checkContent, 100);
+		}
+	};
+
+	// Start checking after a brief delay
+	setTimeout(checkContent, 200);
+};
+
 // Auto-start when document is ready, but defer to allow page content to load first
 $(document).ready(function() {
 	console.log('Document ready, checking for THREE.js...');
@@ -2654,20 +2700,14 @@ $(document).ready(function() {
 	// Wait for THREE.js to load
 	var checkThree = function() {
 		if (typeof THREE !== 'undefined') {
-			console.log('THREE.js detected, deferring background start to allow content to load');
-			// Wait longer to ensure AjaxCMS has started loading content
-			// Use requestIdleCallback if available, otherwise setTimeout
-			if (window.requestIdleCallback) {
-				requestIdleCallback(function() {
+			console.log('THREE.js detected, waiting for AjaxCMS content to load');
+			// Wait for actual content to be present in the DOM
+			waitForContent(function() {
+				// Content is loaded, now safe to start theme
+				requestAnimationFrame(function() {
 					startBackground();
-				}, { timeout: 1000 });
-			} else {
-				setTimeout(function() {
-					requestAnimationFrame(function() {
-						startBackground();
-					});
-				}, 800);
-			}
+				});
+			});
 		} else {
 			console.log('THREE.js not yet loaded, waiting...');
 			setTimeout(checkThree, 100);

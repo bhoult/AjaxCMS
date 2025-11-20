@@ -20,3 +20,8 @@
 {"id":"1763666317625-dpag8zv9s","parentId":"1763666312377-jchiqpx8s","timestamp":"2025-11-20T19:18:37.625Z","ip":"::1","author":"brandon","content":"test"}
 {"id":"1763666536481-u2mvyhwpj","parentId":"1763666235820-qh39q1pb5","timestamp":"2025-11-20T19:22:16.481Z","ip":"::1","author":"brandon","content":"test"}
 {"id":"1763666547466-i1ts1jgdv","parentId":"1763666536481-u2mvyhwpj","timestamp":"2025-11-20T19:22:27.466Z","ip":"::1","author":"brandon","content":"another test"}
+{"id":"1763668453982-9fttf2mry","parentId":null,"timestamp":"2025-11-20T19:54:13.982Z","ip":"::1","author":"brandon","content":"&lt;script&gt;alert(&#x27;xss&#x27;)&lt;/script&gt;"}
+{"id":"1763668466181-gbpkej8t7","parentId":null,"timestamp":"2025-11-20T19:54:26.181Z","ip":"::1","author":"brandon","content":"s"}
+{"id":"1763668470367-j9jvj8waa","parentId":null,"timestamp":"2025-11-20T19:54:30.367Z","ip":"::1","author":"brandon","content":"s"}
+{"id":"1763668472145-o5xnh5l1e","parentId":null,"timestamp":"2025-11-20T19:54:32.145Z","ip":"::1","author":"brandon","content":"s"}
+{"id":"1763668473706-bhdsccpfp","parentId":null,"timestamp":"2025-11-20T19:54:33.706Z","ip":"::1","author":"brandon","content":"s"}

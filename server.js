@@ -1,3 +1,26 @@
+/**
+ * AjaxCMS Server - Node.js/Express server for hosting AjaxCMS sites
+ *
+ * This server provides JSON directory listing APIs, static file serving with resource fallback,
+ * multi-site hosting support (path-based and domain-based routing), discussion system endpoints,
+ * and server-side rendering for SEO with graceful degradation to client-side rendering.
+ *
+ * Copyright (C) 2016-2025 Brandon Hoult
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 const express = require('express');
 const fs = require('fs').promises;
 const fsSync = require('fs');
@@ -15,6 +38,79 @@ const SITES_DIR = process.env.SITES_DIR || './sites';
 const ENABLE_SSL = process.env.ENABLE_SSL === 'true';
 const MAINTAINER_EMAIL = process.env.MAINTAINER_EMAIL || '';
 const LOGS_DIR = './logs';
+
+// Discussion system configuration
+const MAX_DISCUSSION_FILE_SIZE = 10 * 1024 * 1024; // 10MB limit per discussion file
+const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute in milliseconds
+const RATE_LIMIT_MAX_COMMENTS = 5; // Max comments per IP per window
+
+// Rate limiting: Map of IP -> array of timestamps
+const rateLimitMap = new Map();
+
+/**
+ * Escape HTML entities to prevent XSS attacks
+ * @param {string} text - Text to escape
+ * @returns {string} Escaped text safe for HTML insertion
+ */
+function escapeHtml(text) {
+  if (typeof text !== 'string') return '';
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
+/**
+ * Check if IP is rate limited
+ * @param {string} ip - Client IP address
+ * @returns {boolean} True if rate limited, false otherwise
+ */
+function isRateLimited(ip) {
+  const now = Date.now();
+
+  // Get timestamps for this IP
+  if (!rateLimitMap.has(ip)) {
+    rateLimitMap.set(ip, []);
+  }
+
+  const timestamps = rateLimitMap.get(ip);
+
+  // Remove timestamps outside the window
+  const validTimestamps = timestamps.filter(ts => now - ts < RATE_LIMIT_WINDOW);
+  rateLimitMap.set(ip, validTimestamps);
+
+  // Check if limit exceeded
+  return validTimestamps.length >= RATE_LIMIT_MAX_COMMENTS;
+}
+
+/**
+ * Record a comment submission for rate limiting
+ * @param {string} ip - Client IP address
+ */
+function recordCommentSubmission(ip) {
+  const now = Date.now();
+
+  if (!rateLimitMap.has(ip)) {
+    rateLimitMap.set(ip, []);
+  }
+
+  rateLimitMap.get(ip).push(now);
+}
+
+// Clean up rate limit map every 5 minutes to prevent memory leaks
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, timestamps] of rateLimitMap.entries()) {
+    const validTimestamps = timestamps.filter(ts => now - ts < RATE_LIMIT_WINDOW);
+    if (validTimestamps.length === 0) {
+      rateLimitMap.delete(ip);
+    } else {
+      rateLimitMap.set(ip, validTimestamps);
+    }
+  }
+}, 5 * 60 * 1000);
 
 // Middleware to parse JSON request bodies
 app.use(express.json({ limit: '1mb' }));
@@ -261,45 +357,119 @@ app.get('*/api/list', async (req, res) => {
     }
 
     const dirParam = req.query.dir || '.';
-    const fullPath = path.join(req.sitePath, dirParam);
+    let fullPath = path.join(req.sitePath, dirParam);
 
     // Security check - prevent directory traversal
     if (!fullPath.startsWith(path.resolve(req.sitePath))) {
       return res.status(403).json({ error: 'Access denied' });
     }
 
-    // Check if directory exists
+    // Load from both site-specific and global directories
+    let sitePathExists = false;
+    let globalPathExists = false;
+    let latestMtime = 0;
+
+    // Try site-specific directory first
     try {
       const stats = await fs.stat(fullPath);
-      if (!stats.isDirectory()) {
-        return res.status(400).json({ error: 'Not a directory' });
+      if (stats.isDirectory()) {
+        sitePathExists = true;
+        latestMtime = Math.max(latestMtime, stats.mtimeMs);
       }
     } catch (err) {
+      // Site-specific directory doesn't exist, that's okay
+    }
+
+    // Check for global shared directory
+    let globalPath = null;
+    if (dirParam.startsWith('./pages') || dirParam.startsWith('./js') ||
+        dirParam.startsWith('./css') || dirParam.startsWith('./themes') ||
+        dirParam.startsWith('./images') || dirParam.startsWith('./node_modules')) {
+      globalPath = path.join(__dirname, dirParam.substring(2)); // Remove './'
+
+      // Security check for global path
+      const allowedPaths = [
+        path.resolve(__dirname, 'pages'),
+        path.resolve(__dirname, 'js'),
+        path.resolve(__dirname, 'css'),
+        path.resolve(__dirname, 'themes'),
+        path.resolve(__dirname, 'images'),
+        path.resolve(__dirname, 'node_modules')
+      ];
+
+      const resolvedGlobal = path.resolve(globalPath);
+      const isAllowed = allowedPaths.some(allowed => resolvedGlobal.startsWith(allowed));
+
+      if (isAllowed) {
+        try {
+          const stats = await fs.stat(globalPath);
+          if (stats.isDirectory()) {
+            globalPathExists = true;
+            latestMtime = Math.max(latestMtime, stats.mtimeMs);
+          }
+        } catch (err) {
+          // Global directory doesn't exist, that's okay
+        }
+      }
+    }
+
+    // If neither directory exists, return 404
+    if (!sitePathExists && !globalPathExists) {
       return res.status(404).json({ error: 'Directory not found' });
     }
 
-    // Read directory contents
-    const items = await fs.readdir(fullPath, { withFileTypes: true });
+    // Create ETag from latest modification timestamp
+    const etag = `"${latestMtime}"`;
+
+    // Check if client has cached version
+    const clientEtag = req.headers['if-none-match'];
+    if (clientEtag === etag) {
+      // Directory hasn't changed, send 304 Not Modified
+      return res.status(304).end();
+    }
+
+    // Set cache headers
+    res.setHeader('ETag', etag);
+    res.setHeader('Cache-Control', 'public, max-age=60'); // Cache for 60 seconds
 
     const files = [];
     const directories = [];
 
-    for (const item of items) {
-      const itemPath = path.join(dirParam, item.name);
+    // Helper to read directory and add to arrays
+    async function readDir(dirPath) {
+      try {
+        const items = await fs.readdir(dirPath, { withFileTypes: true });
 
-      if (item.isDirectory()) {
-        directories.push({
-          name: item.name,
-          path: itemPath,
-          type: 'directory'
-        });
-      } else {
-        files.push({
-          name: item.name,
-          path: itemPath,
-          type: 'file'
-        });
+        for (const item of items) {
+          const itemPath = path.join(dirParam, item.name);
+
+          if (item.isDirectory()) {
+            directories.push({
+              name: item.name,
+              path: itemPath,
+              type: 'directory'
+            });
+          } else {
+            files.push({
+              name: item.name,
+              path: itemPath,
+              type: 'file'
+            });
+          }
+        }
+      } catch (err) {
+        console.error(`Error reading directory ${dirPath}:`, err);
       }
+    }
+
+    // Read from site-specific directory
+    if (sitePathExists) {
+      await readDir(fullPath);
+    }
+
+    // Read from global directory (merged with site-specific)
+    if (globalPathExists) {
+      await readDir(globalPath);
     }
 
     res.json({
@@ -323,15 +493,83 @@ app.get('*/api/list-recursive', async (req, res) => {
     }
 
     const dirParam = req.query.dir || '.';
-    const fullPath = path.join(req.sitePath, dirParam);
+    let fullPath = path.join(req.sitePath, dirParam);
 
     // Security check
     if (!fullPath.startsWith(path.resolve(req.sitePath))) {
       return res.status(403).json({ error: 'Access denied' });
     }
 
+    // Get stats and load files from both site-specific and global directories
     const files = [];
+    let sitePathExists = false;
+    let globalPathExists = false;
+    let latestMtime = 0;
 
+    // Try site-specific directory first
+    try {
+      const stats = await fs.stat(fullPath);
+      if (stats.isDirectory()) {
+        sitePathExists = true;
+        latestMtime = Math.max(latestMtime, stats.mtimeMs);
+      }
+    } catch (err) {
+      // Site-specific directory doesn't exist, that's okay
+    }
+
+    // Check for global shared directory
+    let globalPath = null;
+    if (dirParam.startsWith('./pages') || dirParam.startsWith('./js') ||
+        dirParam.startsWith('./css') || dirParam.startsWith('./themes') ||
+        dirParam.startsWith('./images') || dirParam.startsWith('./node_modules')) {
+      globalPath = path.join(__dirname, dirParam.substring(2)); // Remove './'
+
+      // Security check for global path
+      const allowedPaths = [
+        path.resolve(__dirname, 'pages'),
+        path.resolve(__dirname, 'js'),
+        path.resolve(__dirname, 'css'),
+        path.resolve(__dirname, 'themes'),
+        path.resolve(__dirname, 'images'),
+        path.resolve(__dirname, 'node_modules')
+      ];
+
+      const resolvedGlobal = path.resolve(globalPath);
+      const isAllowed = allowedPaths.some(allowed => resolvedGlobal.startsWith(allowed));
+
+      if (isAllowed) {
+        try {
+          const stats = await fs.stat(globalPath);
+          if (stats.isDirectory()) {
+            globalPathExists = true;
+            latestMtime = Math.max(latestMtime, stats.mtimeMs);
+          }
+        } catch (err) {
+          // Global directory doesn't exist, that's okay
+        }
+      }
+    }
+
+    // If neither directory exists, return 404
+    if (!sitePathExists && !globalPathExists) {
+      return res.status(404).json({ error: 'Directory not found' });
+    }
+
+    // Create ETag from latest modification timestamp
+    const etag = `"${latestMtime}"`;
+
+    // Check if client has cached version
+    const clientEtag = req.headers['if-none-match'];
+    if (clientEtag === etag) {
+      // Directory hasn't changed, send 304 Not Modified
+      return res.status(304).end();
+    }
+
+    // Set cache headers
+    res.setHeader('ETag', etag);
+    res.setHeader('Cache-Control', 'public, max-age=300'); // Cache for 5 minutes
+
+    // Helper function to recursively walk directory
     async function walkDirectory(dir, basePath = '') {
       try {
         const items = await fs.readdir(dir, { withFileTypes: true });
@@ -355,7 +593,15 @@ app.get('*/api/list-recursive', async (req, res) => {
       }
     }
 
-    await walkDirectory(fullPath);
+    // Load files from site-specific directory
+    if (sitePathExists) {
+      await walkDirectory(fullPath);
+    }
+
+    // Load files from global directory (merged with site-specific)
+    if (globalPathExists) {
+      await walkDirectory(globalPath);
+    }
 
     res.json({
       path: dirParam,
@@ -393,42 +639,30 @@ app.get('*/api/discussion', async (req, res) => {
 
     // Try to read the discussion file
     try {
-      const fileContent = await fs.readFile(jsonPath, 'utf-8');
-      let discussions = [];
+      const stats = await fs.stat(jsonPath);
 
-      // Try to detect format: old JSON or new JSONL
-      const trimmedContent = fileContent.trim();
+      // Create ETag from file modification timestamp
+      const etag = `"${stats.mtimeMs}"`;
 
-      // Check if it's old JSON format by looking for newline in first 200 chars
-      // Old format: {"discussions":[...], no newlines except in content
-      // New format: {...}\n{...}\n - newlines after each object
-      const hasEarlyNewline = trimmedContent.indexOf('\n') > 0 && trimmedContent.indexOf('\n') < 200;
-
-      if (!hasEarlyNewline && trimmedContent.startsWith('{')) {
-        // Old JSON format - parse entire file
-        try {
-          const data = JSON.parse(fileContent);
-          discussions = data.discussions || [];
-
-          // Migrate to JSONL format
-          if (discussions.length > 0) {
-            const jsonlContent = discussions.map(d => JSON.stringify(d)).join('\n') + '\n';
-            await fs.writeFile(jsonPath, jsonlContent, 'utf-8');
-          }
-        } catch (parseErr) {
-          // If parsing as old format fails, try JSONL
-          discussions = trimmedContent
-            .split('\n')
-            .filter(line => line.trim())
-            .map(line => JSON.parse(line));
-        }
-      } else {
-        // New JSONL format - parse line by line
-        discussions = trimmedContent
-          .split('\n')
-          .filter(line => line.trim()) // Skip empty lines
-          .map(line => JSON.parse(line));
+      // Check if client has cached version
+      const clientEtag = req.headers['if-none-match'];
+      if (clientEtag === etag) {
+        // File hasn't changed, send 304 Not Modified
+        return res.status(304).end();
       }
+
+      // Set cache headers
+      res.setHeader('ETag', etag);
+      res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+
+      const fileContent = await fs.readFile(jsonPath, 'utf-8');
+
+      // Parse JSONL format - one JSON object per line
+      const discussions = fileContent
+        .trim()
+        .split('\n')
+        .filter(line => line.trim()) // Skip empty lines
+        .map(line => JSON.parse(line));
 
       // Return discussions with client's IP
       res.json({
@@ -437,6 +671,7 @@ app.get('*/api/discussion', async (req, res) => {
       });
     } catch (err) {
       // File doesn't exist yet, return empty discussion array
+      // No caching for non-existent files
       res.json({
         discussions: [],
         clientIp: clientIp
@@ -463,20 +698,24 @@ app.post('*/api/discussion', async (req, res) => {
       return res.status(400).json({ error: 'Page and content are required' });
     }
 
-    // Sanitize content to prevent XSS
-    const sanitizedContent = content
-      .trim()
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .substring(0, 5000); // Limit content length
+    // Get client IP address
+    const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
+
+    // Check rate limiting
+    if (isRateLimited(clientIp)) {
+      return res.status(429).json({
+        error: 'Rate limit exceeded. Please wait before posting again.',
+        retryAfter: Math.ceil(RATE_LIMIT_WINDOW / 1000) // seconds
+      });
+    }
+
+    // Sanitize content to prevent XSS using proper HTML escaping
+    const sanitizedContent = escapeHtml(content.trim()).substring(0, 5000);
 
     // Sanitize author name if provided
     const sanitizedAuthor = author
-      ? author.trim().replace(/</g, '&lt;').replace(/>/g, '&gt;').substring(0, 50)
+      ? escapeHtml(author.trim()).substring(0, 50)
       : 'Anonymous';
-
-    // Get client IP address
-    const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
 
     // Get the discussion file path
     const jsonPath = path.join(req.sitePath, page.replace(/\.(html|md)$/, '.discussion.jsonl'));
@@ -484,6 +723,19 @@ app.post('*/api/discussion', async (req, res) => {
     // Security check
     if (!jsonPath.startsWith(path.resolve(req.sitePath))) {
       return res.status(403).json({ error: 'Access denied' });
+    }
+
+    // Check file size limit before appending
+    try {
+      const stats = await fs.stat(jsonPath);
+      if (stats.size >= MAX_DISCUSSION_FILE_SIZE) {
+        return res.status(413).json({
+          error: 'Discussion file size limit exceeded. Cannot add more comments.',
+          maxSize: MAX_DISCUSSION_FILE_SIZE
+        });
+      }
+    } catch (err) {
+      // File doesn't exist yet, that's fine
     }
 
     // Ensure the parent directory exists
@@ -502,6 +754,9 @@ app.post('*/api/discussion', async (req, res) => {
 
     // Append comment as a new line (JSONL format)
     await fs.appendFile(jsonPath, JSON.stringify(newComment) + '\n', 'utf-8');
+
+    // Record this submission for rate limiting
+    recordCommentSubmission(clientIp);
 
     // Return the new comment
     res.json({

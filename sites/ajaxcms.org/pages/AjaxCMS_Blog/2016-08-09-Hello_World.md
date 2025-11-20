@@ -1,6 +1,6 @@
 Welcome to AjaxCMS.
 
-AjaxCMS is a JavaScript-based front-end CMS with a minimal static file backend. The core of AjaxCMS is released as an open source project under the MIT license. For more information, visit our {{a | Home | Homepage}} or check out the [GitHub repository](https://github.com/bhoult/AjaxCMS).
+AjaxCMS is a JavaScript-based front-end CMS with a minimal static file backend. The core of AjaxCMS is released as an open source project under the GPL-3.0 license. For more information, visit our {{a | Home | Homepage}} or check out the [GitHub repository](https://github.com/bhoult/AjaxCMS).
 
 ### Introduction: A Different Approach to Content Management
 AjaxCMS takes a fundamentally different approach from traditional CMS platforms like WordPress, Joomla, or Drupal. Traditional systems store content in databases, process it with server-side code (PHP, Python, etc.), and send rendered HTML to the browser. The browser's role is mostly passive—just displaying the HTML with minimal JavaScript interactivity.
@@ -59,7 +59,7 @@ AJAX (Asynchronous JavaScript and XML) enables loading page fragments without fu
 ### Conclusion
 AjaxCMS represents a modern approach to content management—embracing browser capabilities, minimizing server complexity, and delivering fast, secure websites. We continue to add features and improvements, and we welcome community feedback and contributions.
 
-The source code is available on [GitHub](https://github.com/bhoult/AjaxCMS) under the MIT license.
+The source code is available on [GitHub](https://github.com/bhoult/AjaxCMS) under the GPL-3.0 license.
 
 <div id="disqus_thread"></div>
 <script>
