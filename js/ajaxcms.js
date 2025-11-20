@@ -330,17 +330,20 @@ function parseHelper(helperString) {
 
 	// separate parts and attributes
 	for (var i=0; i<pieces.length; i++) {
-		if (/=&gt;/.test(pieces[i])){
-			attributes.push(pieces[i]);
+		if (/=&gt;|=>/.test(pieces[i])){
+			// Split on => or =&gt; to separate param from attributes
+			var splitPieces = pieces[i].split(/\s*(?:=&gt;|=>)\s*/);
+			// First part (before =>) goes to parts if not empty
+			if (splitPieces[0] && splitPieces[0].trim() !== '') {
+				parts.push(splitPieces[0]);
+			}
+			// Second part (after =>) is the attribute(s)
+			if (splitPieces[1]) {
+				attributes.push(splitPieces[1].trim());
+			}
 		} else {
 			parts.push(pieces[i]);
 		}
-	}
-
-	// Convert attributes to string attr => value becomes attr='value'
-	for (var i=0; i<attributes.length; i++){
-		var apieces = attributes[i].split('=&gt;');
-		attributes[i] = apieces[0].trim()+"=\""+apieces[1].trim()+"\"";
 	}
 	var attributes_string = attributes.join(" ");
 
