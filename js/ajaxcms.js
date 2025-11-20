@@ -975,7 +975,7 @@ function processInserts(callback) {
 
 			// Run Callback if it exists
 			if (rcount == 0 && callback && typeof(callback) === "function") {
-				data = data.replace(/@@@@@/,'{{').replace(/#####/,'}}');
+				data = data.replace(/@@@@@/g,'{{').replace(/#####/g,'}}');
 
 				// If there are more inserts in the new version then recurse.
 				var more_inserts = data.match(/{{\s*insert.*?}}/gi);
