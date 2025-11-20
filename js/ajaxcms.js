@@ -1201,6 +1201,8 @@ function processPageContent(contentData, url, callback) {
  */
 function loadPageBasic(data,url) {
 	$("main").html( data );
+	// Scroll to top of page
+	window.scrollTo(0, 0);
 }
 
 /**
@@ -1212,6 +1214,9 @@ function loadPageBasic(data,url) {
  */
 function loadPageSlide(data,url) {
 	in_transition = true;
+
+	// Scroll to top of page
+	window.scrollTo(0, 0);
 
 	if (menuIndex(url) > menuIndex(current_page)) {
 		// Moving forward in menu - slide left to right
