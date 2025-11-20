@@ -28,4 +28,4 @@ coverage/
 
 # Sites directory (multi-site installations)
 # Ignore discussion JSON files (user-generated content)
-sites/**/*.json
+sites/**/*.jsonl
