@@ -1,4 +1,4 @@
-/* (c) 2016 Softwyre Inc / Brandon Hoult. for More Invformation email: brandon.hoult@softwyre.com */
+/* (c) 2016 Softwyre Inc / Brandon Hoult. for More Invformation email: bhoult@gmail.com */
 
 velocity = 8;
 padding = 400;    	// How far from the edge does repulsion start.

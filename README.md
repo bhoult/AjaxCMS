@@ -250,7 +250,7 @@ See [LICENSE](LICENSE) file for details.
 
 ## Contact
 
-Questions? Contact brandon.hoult@softwyre.com
+Questions? Contact bhoult@gmail.com
 
 ---
 

@@ -68,7 +68,7 @@ AjaxCMS is free and open source under the MIT license.
 
 **Source Code:** [github.com/bhoult/AjaxCMS](https://github.com/bhoult/AjaxCMS)
 **Demo Site:** [ajaxcms.org](http://ajaxcms.org)
-**Questions?** Email [brandon.hoult@softwyre.com](mailto:brandon.hoult@softwyre.com)
+**Questions?** Email [bhoult@gmail.com](mailto:bhoult@gmail.com)
 
 ---
 

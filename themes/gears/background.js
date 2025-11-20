@@ -1,4 +1,4 @@
-/* (c) 2016 Softwyre Inc / Brandon Hoult. for More Information email: brandon.hoult@softwyre.com */
+/* (c) 2016 Softwyre Inc / Brandon Hoult. for More Information email: bhoult@gmail.com */
 
 $('#background-div').append("<div id='wrapper' style='display:none'></div>");
 $('#background-div #wrapper').append("<img id='gear_1' class='large' src='themes/gears/images/gear1.svg'>");

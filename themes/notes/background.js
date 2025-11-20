@@ -1,4 +1,4 @@
-/* (c) 2016 Softwyre Inc / Brandon Hoult. for More Information email: brandon.hoult@softwyre.com */
+/* (c) 2016 Softwyre Inc / Brandon Hoult. for More Information email: bhoult@gmail.com */
 
 $('#background').css('background', 'linear-gradient(#000,#FFF');
 
