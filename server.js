@@ -16,6 +16,9 @@ const ENABLE_SSL = process.env.ENABLE_SSL === 'true';
 const MAINTAINER_EMAIL = process.env.MAINTAINER_EMAIL || '';
 const LOGS_DIR = './logs';
 
+// Middleware to parse JSON request bodies
+app.use(express.json({ limit: '1mb' }));
+
 // Ensure logs directory exists
 try {
   if (!fsSync.existsSync(LOGS_DIR)) {
@@ -361,6 +364,142 @@ app.get('*/api/list-recursive', async (req, res) => {
 
   } catch (err) {
     console.error('Error listing directory recursively:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// API endpoint to get discussion data for a page
+app.get('*/api/discussion', async (req, res) => {
+  try {
+    if (!req.sitePath) {
+      return res.status(400).json({ error: 'No site specified' });
+    }
+
+    const pageParam = req.query.page;
+    if (!pageParam) {
+      return res.status(400).json({ error: 'Page parameter required' });
+    }
+
+    // Get the JSON file path (same as page but with .json extension)
+    const jsonPath = path.join(req.sitePath, pageParam.replace(/\.(html|md)$/, '.json'));
+
+    // Security check
+    if (!jsonPath.startsWith(path.resolve(req.sitePath))) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    // Get client IP
+    const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
+
+    // Try to read the discussion file
+    try {
+      const discussionData = await fs.readFile(jsonPath, 'utf-8');
+      const data = JSON.parse(discussionData);
+      // Return discussions with client's IP so client can find their own previous name
+      res.json({
+        ...data,
+        clientIp: clientIp
+      });
+    } catch (err) {
+      // File doesn't exist yet, return empty discussion structure
+      res.json({
+        discussions: [],
+        metadata: {
+          created: new Date().toISOString(),
+          lastModified: new Date().toISOString()
+        },
+        clientIp: clientIp
+      });
+    }
+
+  } catch (err) {
+    console.error('Error fetching discussion:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// API endpoint to post a new comment/reply to a discussion
+app.post('*/api/discussion', async (req, res) => {
+  try {
+    if (!req.sitePath) {
+      return res.status(400).json({ error: 'No site specified' });
+    }
+
+    const { page, parentId, author, content } = req.body;
+
+    // Validate required fields
+    if (!page || !content) {
+      return res.status(400).json({ error: 'Page and content are required' });
+    }
+
+    // Sanitize content to prevent XSS
+    const sanitizedContent = content
+      .trim()
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .substring(0, 5000); // Limit content length
+
+    // Sanitize author name if provided
+    const sanitizedAuthor = author
+      ? author.trim().replace(/</g, '&lt;').replace(/>/g, '&gt;').substring(0, 50)
+      : 'Anonymous';
+
+    // Get client IP address
+    const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
+
+    // Get the JSON file path
+    const jsonPath = path.join(req.sitePath, page.replace(/\.(html|md)$/, '.json'));
+
+    // Security check
+    if (!jsonPath.startsWith(path.resolve(req.sitePath))) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    // Ensure the parent directory exists
+    const dirPath = path.dirname(jsonPath);
+    await fs.mkdir(dirPath, { recursive: true });
+
+    // Read existing discussion or create new structure
+    let discussionData;
+    try {
+      const existingData = await fs.readFile(jsonPath, 'utf-8');
+      discussionData = JSON.parse(existingData);
+    } catch (err) {
+      // File doesn't exist, create new structure
+      discussionData = {
+        discussions: [],
+        metadata: {
+          created: new Date().toISOString(),
+          lastModified: new Date().toISOString()
+        }
+      };
+    }
+
+    // Create new comment
+    const newComment = {
+      id: Date.now().toString() + '-' + Math.random().toString(36).slice(2, 11),
+      parentId: parentId || null,
+      timestamp: new Date().toISOString(),
+      ip: clientIp,
+      author: sanitizedAuthor,
+      content: sanitizedContent
+    };
+
+    // Add to discussions array
+    discussionData.discussions.push(newComment);
+    discussionData.metadata.lastModified = new Date().toISOString();
+
+    // Write back to file
+    await fs.writeFile(jsonPath, JSON.stringify(discussionData, null, 2), 'utf-8');
+
+    // Return the new comment
+    res.json({
+      success: true,
+      comment: newComment
+    });
+
+  } catch (err) {
+    console.error('Error posting discussion:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

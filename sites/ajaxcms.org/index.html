@@ -325,7 +325,297 @@
 			@media (min-width: 768px) { footer {font-size:14px;} }
 			@media (min-width: 992px) {  }
 			@media (min-width: 1200px) {  }
-			
+
+			/* Discussion System Styles */
+			.discussion-container {
+				margin: 15px 0;
+				padding: 10px;
+				background-color: rgba(255, 255, 255, 0.95);
+				border-radius: 8px;
+				box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+			}
+
+			.discussion-header {
+				margin-top: 0;
+				margin-bottom: 10px;
+				padding-bottom: 6px;
+				border-bottom: 2px solid #007bff;
+				color: #333;
+			}
+
+			.discussion-threads {
+				margin-bottom: 10px;
+				min-height: 20px;
+			}
+
+			.discussion-empty,
+			.discussion-error {
+				padding: 20px;
+				text-align: center;
+				color: #666;
+				font-style: italic;
+			}
+
+			.discussion-error {
+				color: #dc3545;
+			}
+
+			.discussion-comment {
+				margin: 6px 0;
+				padding: 0;
+				background-color: rgba(248, 249, 250, 0.95);
+				border-left: 3px solid #007bff;
+				border-radius: 4px;
+				transition: background-color 0.2s;
+			}
+
+			.discussion-comment:hover {
+				background-color: rgba(240, 243, 246, 0.95);
+			}
+
+			.discussion-comment-header {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				margin: 0;
+				padding: 6px 10px;
+				background-color: rgba(230, 235, 240, 0.6);
+				border-bottom: 1px solid #dee2e6;
+			}
+
+			.discussion-header-left,
+			.discussion-header-center,
+			.discussion-header-right {
+				display: flex;
+				align-items: center;
+				gap: 0;
+			}
+
+			.discussion-header-left {
+				flex: 1;
+			}
+
+			.discussion-header-center {
+				flex: 1;
+				justify-content: center;
+			}
+
+			.discussion-header-right {
+				flex: 1;
+				justify-content: flex-end;
+				gap: 6px;
+			}
+
+			.discussion-replies {
+				max-height: 2000px;
+				overflow: hidden;
+				transition: max-height 0.8s ease-out, opacity 0.6s ease-out;
+				opacity: 1;
+			}
+
+			.discussion-comment-collapsed .discussion-replies {
+				max-height: 0;
+				opacity: 0;
+				transition: max-height 0.8s ease-in, opacity 0.4s ease-in;
+			}
+
+			.discussion-toggle-icon {
+				display: inline-block;
+				width: 10px;
+				margin-right: 3px;
+				font-size: 0.75em;
+				color: #007bff;
+				text-align: left;
+				transition: transform 0.2s;
+			}
+
+			.discussion-reply-count {
+				font-size: 0.95em;
+				color: #495057;
+				font-weight: 600;
+				background-color: rgba(255, 255, 255, 0.7);
+				padding: 3px 10px;
+				border-radius: 12px;
+				border: 1px solid rgba(0, 123, 255, 0.3);
+			}
+
+			.discussion-author {
+				font-weight: bold;
+				color: #007bff;
+			}
+
+			.discussion-timestamp {
+				font-size: 0.85em;
+				color: #6c757d;
+			}
+
+			.discussion-relative-time {
+				font-size: 0.85em;
+				color: #6c757d;
+				font-style: italic;
+			}
+
+			.discussion-comment-content {
+				margin: 0;
+				padding: 8px 10px;
+				line-height: 1.5;
+				white-space: pre-wrap;
+				word-wrap: break-word;
+				color: #333;
+			}
+
+			.discussion-reply-btn,
+			.discussion-reply-submit,
+			.discussion-reply-cancel,
+			.discussion-submit {
+				padding: 6px 12px;
+				margin: 5px 5px 0 0;
+				border: none;
+				border-radius: 4px;
+				cursor: pointer;
+				font-size: 0.9em;
+				transition: all 0.2s;
+			}
+
+			.discussion-reply-btn {
+				background-color: #6c757d;
+				color: white;
+			}
+
+			.discussion-reply-btn:hover {
+				background-color: #5a6268;
+			}
+
+			.discussion-reply-submit,
+			.discussion-submit {
+				background-color: #007bff;
+				color: white;
+				font-weight: 500;
+			}
+
+			.discussion-reply-submit:hover,
+			.discussion-submit:hover {
+				background-color: #0056b3;
+			}
+
+			.discussion-reply-submit:disabled,
+			.discussion-submit:disabled {
+				background-color: #6c757d;
+				cursor: not-allowed;
+				opacity: 0.6;
+			}
+
+			.discussion-reply-cancel {
+				background-color: #f8f9fa;
+				color: #333;
+				border: 1px solid #dee2e6;
+			}
+
+			.discussion-reply-cancel:hover {
+				background-color: #e9ecef;
+			}
+
+			.discussion-form,
+			.discussion-reply-form {
+				margin-top: 10px;
+				padding: 10px;
+				background-color: rgba(255, 255, 255, 0.98);
+				border-radius: 6px;
+				border: 1px solid #dee2e6;
+				box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+			}
+
+			.discussion-form h4 {
+				margin-top: 0;
+				margin-bottom: 8px;
+				color: #333;
+				font-size: 1.1em;
+				font-weight: 600;
+				border-bottom: 2px solid #f0f0f0;
+				padding-bottom: 6px;
+			}
+
+			.discussion-author,
+			.discussion-reply-author {
+				display: block;
+				width: 100%;
+				max-width: 300px;
+				padding: 4px 0;
+				margin-bottom: 6px;
+				border: none;
+				font-size: 0.95em;
+				font-family: inherit;
+				background-color: transparent;
+			}
+
+			.discussion-author:focus,
+			.discussion-reply-author:focus {
+				outline: none;
+			}
+
+			.discussion-content:focus,
+			.discussion-reply-content:focus {
+				outline: none;
+				border-color: #007bff;
+				background-color: #fff;
+				box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.15);
+			}
+
+			.discussion-content,
+			.discussion-reply-content {
+				display: block;
+				width: 100%;
+				padding: 6px 8px;
+				margin-bottom: 8px;
+				border: 1px solid #ddd;
+				border-radius: 4px;
+				font-size: 0.95em;
+				font-family: inherit;
+				line-height: 1.4;
+				resize: vertical;
+				min-height: 60px;
+				transition: all 0.2s ease;
+				background-color: #fafafa;
+			}
+
+			.discussion-content:hover,
+			.discussion-reply-content:hover {
+				border-color: #bbb;
+				background-color: #fff;
+			}
+
+			.discussion-reply-form {
+				margin-top: 10px;
+				background-color: rgba(248, 252, 255, 0.95);
+				border-left: 3px solid #007bff;
+			}
+
+			/* Mobile responsiveness */
+			@media (max-width: 768px) {
+				.discussion-container {
+					padding: 15px;
+					margin: 20px 0;
+				}
+
+				.discussion-comment {
+					padding: 10px;
+				}
+
+				.discussion-comment-header {
+					flex-direction: column;
+					align-items: flex-start;
+					gap: 5px;
+				}
+
+				.discussion-reply-btn,
+				.discussion-reply-submit,
+				.discussion-reply-cancel,
+				.discussion-submit {
+					font-size: 0.85em;
+					padding: 5px 10px;
+				}
+			}
+
 		</style>
 	</head>
 	

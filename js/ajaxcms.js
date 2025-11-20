@@ -41,6 +41,7 @@ var theme_ready = false;  // Flag to track when theme initialization is complete
 // URL and page state management
 var base_url = window.location.href.replace(/\?.*/,'');  // Base URL without query params
 var current_page;   // Currently displayed page path
+var loading_page;   // Page being loaded (set before helpers are processed)
 var just_pages;     // Filtered array of actual pages (excludes directories and layouts)
 var menu_pages;     // Pages that appear in the navigation menu
 var data;           // Global variable holding current page content during processing
@@ -698,6 +699,24 @@ function process_page(sdata) {
 			return "<ul "+attributes_string+" class=\"blog_list\">"+output+"</ul>"
 		}
 
+		// {{discussion}}
+		if (parts[0] == 'discussion') {
+			var discussionId = 'discussion_' + Math.floor(Math.random() * 9999999999);
+
+			// Use loading_page (set before helpers are processed) instead of current_page (set after transition)
+			// Return discussion container that will be populated by JavaScript
+			return "<div "+attributes_string+" id=\""+discussionId+"\" class=\"discussion-container\" data-page=\""+loading_page+"\">" +
+					"<h3 class=\"discussion-header\">Discussion</h3>" +
+					"<div class=\"discussion-form\">" +
+					"<h4>Add Comment</h4>" +
+					"<input type=\"text\" class=\"discussion-author\" placeholder=\"Your name (optional)\" maxlength=\"50\">" +
+					"<textarea class=\"discussion-content\" placeholder=\"Write your comment...\" maxlength=\"5000\" rows=\"4\"></textarea>" +
+					"<button class=\"discussion-submit\" onclick=\"submitDiscussion('"+discussionId+"'); return false;\">Post Comment</button>" +
+					"</div>" +
+					"<div class=\"discussion-threads\">Loading discussions...</div>" +
+					"</div>";
+		}
+
 		// If all else fails return the original tag.
 		return "{{"+pieces.join("|")+"}}"
 	});
@@ -1033,6 +1052,9 @@ var globalProtectedCodeBlocks = [];
 var globalProtectedHelpers = [];
 
 function processPageContent(contentData, url, callback) {
+	// Set the page being loaded so helpers can access it
+	loading_page = url;
+
 	// Step 0.5: Protect markdown code blocks BEFORE any helper processing
 	// This prevents {{blog}}, {{bloglist}}, etc. in documentation from being processed
 	globalProtectedCodeBlocks = [];
@@ -1130,6 +1152,12 @@ function processPageContent(contentData, url, callback) {
 			if (document.querySelector('.blog_entry')) {
 				initializeBlogExcerpts();
 			}
+
+			// Step 10: Initialize discussion containers if present
+			var discussionContainers = document.querySelectorAll('.discussion-container');
+			discussionContainers.forEach(function(container) {
+				loadDiscussions(container.id);
+			});
 		}, TRANSITION_DURATION + 50);
 
 		// Call completion callback if provided
@@ -1697,6 +1725,489 @@ function themeReady() {
 	}
 }
 
+/**
+ * Load and render discussions for a discussion container
+ * @param {string} discussionId - The ID of the discussion container element
+ */
+function loadDiscussions(discussionId) {
+	var container = document.getElementById(discussionId);
+	if (!container) {
+		console.error('Discussion container not found:', discussionId);
+		return;
+	}
+
+	var pagePath = container.getAttribute('data-page');
+	// Strip ./ prefix if present (pages are stored as ./pages/... but API expects pages/...)
+	if (pagePath && pagePath.indexOf('./') === 0) {
+		pagePath = pagePath.substring(2);
+	}
+	var threadsContainer = container.querySelector('.discussion-threads');
+
+	// Fetch discussions from API
+	$.ajax({
+		url: './api/discussion?page=' + encodeURIComponent(pagePath),
+		method: 'GET',
+		success: function(data) {
+			renderDiscussions(threadsContainer, data.discussions);
+
+			// Find user's first name based on IP (client-side lookup)
+			var userName = null;
+			if (data.clientIp && data.discussions && data.discussions.length > 0) {
+				// Search forwards to find first comment from this IP
+				for (var i = 0; i < data.discussions.length; i++) {
+					if (data.discussions[i].ip === data.clientIp && data.discussions[i].author !== 'Anonymous') {
+						userName = data.discussions[i].author;
+						break;
+					}
+				}
+			}
+
+			// Store discussions and userName for validation
+			container.setAttribute('data-discussions', JSON.stringify(data.discussions || []));
+			container.setAttribute('data-user-name', userName || '');
+
+			// Auto-populate the name field
+			if (userName) {
+				var authorInput = container.querySelector('.discussion-form .discussion-author');
+				if (authorInput) {
+					authorInput.value = userName;
+					// Lock the name field - user cannot change their name once set
+					authorInput.readOnly = true;
+					authorInput.style.cursor = 'not-allowed';
+					authorInput.style.backgroundColor = '#f0f0f0';
+				}
+			}
+		},
+		error: function(xhr, status, error) {
+			threadsContainer.innerHTML = '<p class="discussion-error">Failed to load discussions. Please try again later.</p>';
+			console.error('Failed to load discussions:', error);
+		}
+	});
+}
+
+/**
+ * Render discussions in a threaded format
+ * @param {HTMLElement} container - The container to render discussions into
+ * @param {Array} discussions - Array of discussion objects
+ */
+function renderDiscussions(container, discussions) {
+	if (discussions.length === 0) {
+		container.innerHTML = '<p class="discussion-empty">No comments yet. Be the first to comment!</p>';
+		return;
+	}
+
+	// Build a tree structure from flat array
+	var commentsById = {};
+	var rootComments = [];
+
+	// First pass: index all comments by ID
+	discussions.forEach(function(comment) {
+		commentsById[comment.id] = Object.assign({}, comment, { replies: [] });
+	});
+
+	// Second pass: build tree structure
+	discussions.forEach(function(comment) {
+		if (comment.parentId && commentsById[comment.parentId]) {
+			commentsById[comment.parentId].replies.push(commentsById[comment.id]);
+		} else {
+			rootComments.push(commentsById[comment.id]);
+		}
+	});
+
+	// Sort root comments by timestamp (newest first)
+	rootComments.sort(function(a, b) {
+		return new Date(b.timestamp) - new Date(a.timestamp);
+	});
+
+	// Render the tree
+	container.innerHTML = renderCommentTree(rootComments);
+}
+
+/**
+ * Count total number of replies (including nested)
+ * @param {Object} comment - Comment object with replies
+ * @returns {number} Total count of all nested replies
+ */
+function countReplies(comment) {
+	var count = 0;
+	if (comment.replies && comment.replies.length > 0) {
+		count = comment.replies.length;
+		comment.replies.forEach(function(reply) {
+			count += countReplies(reply);
+		});
+	}
+	return count;
+}
+
+/**
+ * Convert a timestamp to relative time string
+ * @param {string} timestamp - ISO timestamp string
+ * @returns {string} Relative time string (e.g., "2 hours ago", "yesterday")
+ */
+function getRelativeTime(timestamp) {
+	var now = new Date();
+	var then = new Date(timestamp);
+	var diffMs = now - then;
+	var diffSecs = Math.floor(diffMs / 1000);
+	var diffMins = Math.floor(diffSecs / 60);
+	var diffHours = Math.floor(diffMins / 60);
+	var diffDays = Math.floor(diffHours / 24);
+	var diffWeeks = Math.floor(diffDays / 7);
+	var diffMonths = Math.floor(diffDays / 30);
+	var diffYears = Math.floor(diffDays / 365);
+
+	if (diffSecs < 60) return 'just now';
+	if (diffMins < 60) return diffMins + (diffMins === 1 ? ' minute ago' : ' minutes ago');
+	if (diffHours < 24) return diffHours + (diffHours === 1 ? ' hour ago' : ' hours ago');
+	if (diffDays === 1) return 'yesterday';
+	if (diffDays < 7) return diffDays + ' days ago';
+	if (diffWeeks === 1) return 'last week';
+	if (diffWeeks < 4) return diffWeeks + ' weeks ago';
+	if (diffMonths === 1) return 'a month ago';
+	if (diffMonths < 12) return diffMonths + ' months ago';
+	if (diffYears === 1) return 'a year ago';
+	return diffYears + ' years ago';
+}
+
+/**
+ * Recursively render a tree of comments
+ * @param {Array} comments - Array of comment objects with replies
+ * @param {number} depth - Current depth in the tree (for styling)
+ * @returns {string} HTML string of rendered comments
+ */
+function renderCommentTree(comments, depth) {
+	depth = depth || 0;
+	var html = '';
+
+	comments.forEach(function(comment) {
+		var date = new Date(comment.timestamp);
+		var formattedDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+		var relativeTime = getRelativeTime(comment.timestamp);
+		var replyCount = countReplies(comment);
+		var isTopLevel = depth === 0;
+
+		html += '<div class="discussion-comment' + (isTopLevel ? ' discussion-comment-collapsed' : '') + '" data-comment-id="' + comment.id + '" style="margin-left: ' + (depth * 20) + 'px;">';
+		html += '<div class="discussion-comment-header" ' + (isTopLevel && replyCount > 0 ? 'onclick="toggleComment(\'' + comment.id + '\'); return false;" style="cursor: pointer;"' : '') + '>';
+		html += '<div class="discussion-header-left">';
+		if (isTopLevel) {
+			// Always show icon space for alignment, but only show caret if there are replies
+			html += '<span class="discussion-toggle-icon">' + (replyCount > 0 ? '▶' : '') + '</span>';
+		}
+		html += '<span class="discussion-author">' + comment.author + '</span>';
+		html += '</div>';
+		html += '<div class="discussion-header-center">';
+		if (isTopLevel && replyCount > 0) {
+			html += '<span class="discussion-reply-count">' + replyCount + ' ' + (replyCount === 1 ? 'reply' : 'replies') + '</span>';
+		}
+		html += '</div>';
+		html += '<div class="discussion-header-right">';
+		html += '<span class="discussion-relative-time">' + relativeTime + '</span>';
+		html += '<span class="discussion-timestamp">' + formattedDate + '</span>';
+		html += '</div>';
+		html += '</div>';
+		html += '<div class="discussion-comment-body">';
+		html += '<div class="discussion-comment-content" ' + (isTopLevel && replyCount > 0 ? 'onclick="toggleComment(\'' + comment.id + '\'); return false;" style="cursor: pointer;"' : '') + '>' + comment.content + '</div>';
+		html += '<button class="discussion-reply-btn" onclick="showReplyForm(\'' + comment.id + '\'); return false;">Reply</button>';
+		html += '<div class="discussion-reply-form" id="reply-form-' + comment.id + '" style="display: none;">';
+		html += '<input type="text" class="discussion-reply-author" placeholder="Your name (optional)" maxlength="50">';
+		html += '<textarea class="discussion-reply-content" placeholder="Write your reply..." maxlength="5000" rows="3"></textarea>';
+		html += '<button class="discussion-reply-submit" onclick="submitReply(\'' + comment.id + '\'); return false;">Post Reply</button>';
+		html += '<button class="discussion-reply-cancel" onclick="hideReplyForm(\'' + comment.id + '\'); return false;">Cancel</button>';
+		html += '</div>';
+
+		// Render replies recursively
+		if (comment.replies && comment.replies.length > 0) {
+			// Sort replies by timestamp (oldest first for replies)
+			comment.replies.sort(function(a, b) {
+				return new Date(a.timestamp) - new Date(b.timestamp);
+			});
+			html += '<div class="discussion-replies">';
+			html += renderCommentTree(comment.replies, depth + 1);
+			html += '</div>';
+		}
+
+		html += '</div>'; // Close discussion-comment-body
+		html += '</div>';
+	});
+
+	return html;
+}
+
+/**
+ * Toggle expand/collapse of a comment thread
+ * @param {string} commentId - The ID of the comment to toggle
+ */
+function toggleComment(commentId) {
+	var commentElement = document.querySelector('[data-comment-id="' + commentId + '"]');
+	if (commentElement) {
+		var toggleIcon = commentElement.querySelector('.discussion-toggle-icon');
+		if (commentElement.classList.contains('discussion-comment-collapsed')) {
+			commentElement.classList.remove('discussion-comment-collapsed');
+			commentElement.classList.add('discussion-comment-expanded');
+			if (toggleIcon) toggleIcon.textContent = '▼';
+		} else {
+			commentElement.classList.remove('discussion-comment-expanded');
+			commentElement.classList.add('discussion-comment-collapsed');
+			if (toggleIcon) toggleIcon.textContent = '▶';
+		}
+	}
+}
+
+/**
+ * Submit a new top-level comment
+ * @param {string} discussionId - The ID of the discussion container
+ */
+function submitDiscussion(discussionId) {
+	var container = document.getElementById(discussionId);
+	if (!container) {
+		console.error('Discussion container not found:', discussionId);
+		return;
+	}
+
+	var pagePath = container.getAttribute('data-page');
+	// Strip ./ prefix if present (pages are stored as ./pages/... but API expects pages/...)
+	if (pagePath && pagePath.indexOf('./') === 0) {
+		pagePath = pagePath.substring(2);
+	}
+
+	// Query for form elements ONLY within the .discussion-form container
+	var formContainer = container.querySelector('.discussion-form');
+	if (!formContainer) {
+		console.error('Discussion form container not found');
+		return;
+	}
+
+	var authorInput = formContainer.querySelector('.discussion-author');
+	var contentInput = formContainer.querySelector('.discussion-content');
+	var submitButton = formContainer.querySelector('.discussion-submit');
+
+	if (!authorInput || !contentInput || !submitButton) {
+		console.error('Form elements not found');
+		return;
+	}
+
+	var author = authorInput.value.trim();
+	var content = contentInput.value.trim();
+
+	if (!content) {
+		alert('Please enter a comment.');
+		return;
+	}
+
+	// Validate name is not already in use (client-side check)
+	// Only needed for first-time users; existing users have locked name field
+	if (author && author !== 'Anonymous') {
+		var currentUserName = container.getAttribute('data-user-name');
+
+		// If user has no prior name, check if the chosen name is available
+		if (!currentUserName) {
+			var discussionsJson = container.getAttribute('data-discussions');
+			if (discussionsJson) {
+				try {
+					var discussions = JSON.parse(discussionsJson);
+					// Check if this name is used by anyone
+					var nameInUse = discussions.some(function(comment) {
+						return comment.author === author;
+					});
+
+					if (nameInUse) {
+						alert('This name is already in use. Please choose a different name.');
+						return;
+					}
+				} catch (e) {
+					console.error('Error parsing discussions:', e);
+				}
+			}
+		}
+	}
+
+	// Disable submit button during request
+	submitButton.disabled = true;
+	submitButton.textContent = 'Posting...';
+
+	// Post to API
+	$.ajax({
+		url: './api/discussion',
+		method: 'POST',
+		contentType: 'application/json',
+		data: JSON.stringify({
+			page: pagePath,
+			author: author || 'Anonymous',
+			content: content
+		}),
+		success: function(response) {
+			// Clear form (but keep the name for next comment)
+			contentInput.value = '';
+
+			// Re-enable button BEFORE reloading discussions
+			submitButton.disabled = false;
+			submitButton.textContent = 'Post Comment';
+
+			// Reload discussions (server will return userName based on IP)
+			loadDiscussions(discussionId);
+		},
+		error: function(xhr, status, error) {
+			var errorMessage = 'Failed to post comment. Please try again.';
+
+			// Try to get specific error message from server
+			if (xhr.responseJSON && xhr.responseJSON.error) {
+				errorMessage = xhr.responseJSON.error;
+			}
+
+			alert(errorMessage);
+			submitButton.disabled = false;
+			submitButton.textContent = 'Post Comment';
+			console.error('Failed to post discussion:', error);
+		}
+	});
+}
+
+/**
+ * Show the reply form for a specific comment
+ * @param {string} commentId - The ID of the comment to reply to
+ */
+function showReplyForm(commentId) {
+	var replyForm = document.getElementById('reply-form-' + commentId);
+	if (replyForm) {
+		replyForm.style.display = 'block';
+
+		// Auto-populate the name field if user has posted before
+		var discussionContainer = replyForm.closest('.discussion-container');
+		if (discussionContainer) {
+			var userName = discussionContainer.getAttribute('data-user-name');
+			if (userName) {
+				var authorInput = replyForm.querySelector('.discussion-reply-author');
+				if (authorInput) {
+					authorInput.value = userName;
+					// Lock the name field - user cannot change their name once set
+					authorInput.readOnly = true;
+					authorInput.style.cursor = 'not-allowed';
+					authorInput.style.backgroundColor = '#f0f0f0';
+				}
+			}
+		}
+	}
+}
+
+/**
+ * Hide the reply form for a specific comment
+ * @param {string} commentId - The ID of the comment
+ */
+function hideReplyForm(commentId) {
+	var replyForm = document.getElementById('reply-form-' + commentId);
+	if (replyForm) {
+		replyForm.style.display = 'none';
+		// Clear form fields (but not locked name field)
+		var authorInput = replyForm.querySelector('.discussion-reply-author');
+		var contentInput = replyForm.querySelector('.discussion-reply-content');
+		if (authorInput && !authorInput.readOnly) authorInput.value = '';
+		if (contentInput) contentInput.value = '';
+	}
+}
+
+/**
+ * Submit a reply to a comment
+ * @param {string} parentId - The ID of the parent comment
+ */
+function submitReply(parentId) {
+	var replyForm = document.getElementById('reply-form-' + parentId);
+	if (!replyForm) return;
+
+	var authorInput = replyForm.querySelector('.discussion-reply-author');
+	var contentInput = replyForm.querySelector('.discussion-reply-content');
+	var submitButton = replyForm.querySelector('.discussion-reply-submit');
+
+	var author = authorInput.value.trim();
+	var content = contentInput.value.trim();
+
+	if (!content) {
+		alert('Please enter a reply.');
+		return;
+	}
+
+	// Find the discussion container to get the page path
+	var discussionContainer = replyForm.closest('.discussion-container');
+	if (!discussionContainer) {
+		console.error('Could not find discussion container');
+		return;
+	}
+
+	// Validate name is not already in use (client-side check)
+	// Only needed for first-time users; existing users have locked name field
+	if (author && author !== 'Anonymous') {
+		var currentUserName = discussionContainer.getAttribute('data-user-name');
+
+		// If user has no prior name, check if the chosen name is available
+		if (!currentUserName) {
+			var discussionsJson = discussionContainer.getAttribute('data-discussions');
+			if (discussionsJson) {
+				try {
+					var discussions = JSON.parse(discussionsJson);
+					// Check if this name is used by anyone
+					var nameInUse = discussions.some(function(comment) {
+						return comment.author === author;
+					});
+
+					if (nameInUse) {
+						alert('This name is already in use. Please choose a different name.');
+						return;
+					}
+				} catch (e) {
+					console.error('Error parsing discussions:', e);
+				}
+			}
+		}
+	}
+
+	var pagePath = discussionContainer.getAttribute('data-page');
+	// Strip ./ prefix if present (pages are stored as ./pages/... but API expects pages/...)
+	if (pagePath && pagePath.indexOf('./') === 0) {
+		pagePath = pagePath.substring(2);
+	}
+	var discussionId = discussionContainer.id;
+
+	// Disable submit button during request
+	submitButton.disabled = true;
+	submitButton.textContent = 'Posting...';
+
+	// Post to API
+	$.ajax({
+		url: './api/discussion',
+		method: 'POST',
+		contentType: 'application/json',
+		data: JSON.stringify({
+			page: pagePath,
+			parentId: parentId,
+			author: author || 'Anonymous',
+			content: content
+		}),
+		success: function(response) {
+			// Hide and clear form
+			hideReplyForm(parentId);
+
+			// Reload discussions
+			loadDiscussions(discussionId);
+
+			// Re-enable button
+			submitButton.disabled = false;
+			submitButton.textContent = 'Post Reply';
+		},
+		error: function(xhr, status, error) {
+			var errorMessage = 'Failed to post reply. Please try again.';
+
+			// Try to get specific error message from server
+			if (xhr.responseJSON && xhr.responseJSON.error) {
+				errorMessage = xhr.responseJSON.error;
+			}
+
+			alert(errorMessage);
+			submitButton.disabled = false;
+			submitButton.textContent = 'Post Reply';
+			console.error('Failed to post reply:', error);
+		}
+	});
+}
+
 // Expose functions to global scope so onclick handlers in generated HTML can call them
 window.loadPage = loadPage;
 window.toggleBlogEntry = toggleBlogEntry;
@@ -1705,5 +2216,11 @@ window.updateBlogPage = updateBlogPage;
 window.openLightbox = openLightbox;
 window.closeLightbox = closeLightbox;
 window.themeReady = themeReady;
+window.submitDiscussion = submitDiscussion;
+window.loadDiscussions = loadDiscussions;
+window.showReplyForm = showReplyForm;
+window.hideReplyForm = hideReplyForm;
+window.submitReply = submitReply;
+window.toggleComment = toggleComment;
 
 })();

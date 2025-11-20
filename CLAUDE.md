@@ -62,6 +62,7 @@ Demo and documentation: http://ajaxcms.org
      - Blog lists: `{{bloglist | directory | start | stop}}`
      - Blog content: `{{blog | directory | start | stop}}`
      - Inserts: `{{insert | page_name | allow_scripts}}`
+     - Discussions: `{{discussion}}` - Adds threaded comment system with JSON storage
 
 4. **Helper Protection System** (`js/ajaxcms.js:832-843, 988-990`):
    - Prevents markdown and async operations from corrupting helper syntax
@@ -295,3 +296,78 @@ When debugging helper issues:
 - Verify helper syntax: pipes (`|`) for params, `=>` for attributes
 - For blog posts: helpers must be protected before markdown processing
 - Image helpers: ensure image file names match helper parameters exactly
+
+## Discussion System
+
+The `{{discussion}}` helper adds a hierarchical comment system to any page. Discussions are stored in JSON files alongside the page content.
+
+### Usage
+
+Add `{{discussion}}` to any page to enable comments:
+
+```html
+<h1>My Page</h1>
+<p>Page content...</p>
+
+{{discussion}}
+```
+
+### Architecture
+
+**Backend (server.js:371-496)**:
+- **GET `/api/discussion?page=path`**: Fetches discussion JSON for a page
+- **POST `/api/discussion`**: Adds new comment/reply with sanitization
+- JSON files created automatically (e.g., `pages/example.html` → `pages/example.json`)
+- IP address tracking (stored but not displayed to users)
+- XSS protection via HTML entity escaping
+
+**Frontend (js/ajaxcms.js)**:
+- Discussion helper (lines 702-717): Generates HTML container with form
+- `loadDiscussions()`: Fetches and renders comment tree
+- `submitDiscussion()`: Posts top-level comments
+- `submitReply()`: Posts threaded replies
+- Automatic initialization after page transitions
+
+**Data Storage**:
+```json
+{
+  "discussions": [
+    {
+      "id": "unique-id",
+      "parentId": null,
+      "timestamp": "2025-11-20T17:00:00.000Z",
+      "ip": "127.0.0.1",
+      "author": "User Name",
+      "content": "Comment text"
+    }
+  ],
+  "metadata": {
+    "created": "2025-11-20T17:00:00.000Z",
+    "lastModified": "2025-11-20T17:00:00.000Z"
+  }
+}
+```
+
+### Security
+
+- All HTML tags escaped (`<` → `&lt;`, `>` → `&gt;`)
+- Content limited to 5,000 characters
+- Author names limited to 50 characters
+- Append-only (no editing/deletion)
+- IP addresses recorded but not displayed
+
+### Styling
+
+Discussion CSS is in `index.html` (lines 249-453):
+- Professional comment cards with blue accent
+- Threaded indentation (20px per level)
+- Hover effects and transitions
+- Mobile responsive layout
+- Bootstrap-compatible color scheme
+
+### Troubleshooting
+
+Common issues:
+- **Comments disappear on reload**: Check that `loading_page` variable is set correctly (should match page path without `./` prefix)
+- **JSON file not created**: Verify page path is correct and server has write permissions
+- **Comments not loading**: Check browser console for API errors, verify page path formatting
