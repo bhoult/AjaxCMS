@@ -315,9 +315,11 @@ Add `{{discussion}}` to any page to enable comments:
 ### Architecture
 
 **Backend (server.js:371-496)**:
-- **GET `/api/discussion?page=path`**: Fetches discussion JSON for a page
-- **POST `/api/discussion`**: Adds new comment/reply with sanitization
-- JSON files created automatically (e.g., `pages/example.html` → `pages/example.json`)
+- **GET `/api/discussion?page=path`**: Fetches discussion data for a page
+- **POST `/api/discussion`**: Appends new comment/reply with sanitization
+- JSONL files created automatically (e.g., `pages/example.html` → `pages/example.discussion.jsonl`)
+- Uses line-delimited JSON (JSONL) format for efficient append-only writes
+- Automatic migration from old `.json` format to `.discussion.jsonl` on first GET request
 - IP address tracking (stored but not displayed to users)
 - XSS protection via HTML entity escaping
 
@@ -328,25 +330,18 @@ Add `{{discussion}}` to any page to enable comments:
 - `submitReply()`: Posts threaded replies
 - Automatic initialization after page transitions
 
-**Data Storage**:
-```json
-{
-  "discussions": [
-    {
-      "id": "unique-id",
-      "parentId": null,
-      "timestamp": "2025-11-20T17:00:00.000Z",
-      "ip": "127.0.0.1",
-      "author": "User Name",
-      "content": "Comment text"
-    }
-  ],
-  "metadata": {
-    "created": "2025-11-20T17:00:00.000Z",
-    "lastModified": "2025-11-20T17:00:00.000Z"
-  }
-}
+**Data Storage** (JSONL format):
+Each comment is stored as a separate JSON object on its own line (line-delimited JSON):
+```jsonl
+{"id":"1763659140561-xfk0qrz3d","parentId":null,"timestamp":"2025-11-20T17:19:00.561Z","ip":"::1","author":"brandon","content":"test"}
+{"id":"1763659170620-g1r87bhdd","parentId":"1763659140561-xfk0qrz3d","timestamp":"2025-11-20T17:19:30.620Z","ip":"::1","author":"reply","content":"reply to test"}
 ```
+
+Benefits of JSONL:
+- **Fast appends**: New comments added via `fs.appendFile()` without reading entire file
+- **Atomic writes**: Safer for concurrent comment posting
+- **Scalability**: No need to parse thousands of comments to add one more
+- **Backward compatible**: Old JSON format automatically migrated on first GET request
 
 ### Security
 

@@ -1728,8 +1728,9 @@ function themeReady() {
 /**
  * Load and render discussions for a discussion container
  * @param {string} discussionId - The ID of the discussion container element
+ * @param {Array<string>} expandedCommentIds - Optional array of comment IDs that should be expanded after render
  */
-function loadDiscussions(discussionId) {
+function loadDiscussions(discussionId, expandedCommentIds) {
 	var container = document.getElementById(discussionId);
 	if (!container) {
 		console.error('Discussion container not found:', discussionId);
@@ -1749,6 +1750,20 @@ function loadDiscussions(discussionId) {
 		method: 'GET',
 		success: function(data) {
 			renderDiscussions(threadsContainer, data.discussions);
+
+			// Restore expanded state for specified comments
+			if (expandedCommentIds && expandedCommentIds.length > 0) {
+				expandedCommentIds.forEach(function(commentId) {
+					var commentElement = document.querySelector('[data-comment-id="' + commentId + '"]');
+					if (commentElement && commentElement.classList.contains('discussion-comment-collapsed')) {
+						// Expand the comment
+						var toggleIcon = commentElement.querySelector('.discussion-toggle-icon');
+						commentElement.classList.remove('discussion-comment-collapsed');
+						commentElement.classList.add('discussion-comment-expanded');
+						if (toggleIcon) toggleIcon.textContent = '▼';
+					}
+				});
+			}
 
 			// Find user's first name based on IP (client-side lookup)
 			var userName = null;
@@ -2185,8 +2200,27 @@ function submitReply(parentId) {
 			// Hide and clear form
 			hideReplyForm(parentId);
 
-			// Reload discussions
-			loadDiscussions(discussionId);
+			// Capture currently expanded comments before reload
+			var expandedComments = [];
+			discussionContainer.querySelectorAll('.discussion-comment-expanded').forEach(function(el) {
+				var commentId = el.getAttribute('data-comment-id');
+				if (commentId) {
+					expandedComments.push(commentId);
+				}
+			});
+
+			// Find the top-level parent comment that should remain expanded
+			// Traverse up from the reply form to find the top-level comment
+			var topLevelComment = replyForm.closest('.discussion-comment-collapsed, .discussion-comment-expanded');
+			if (topLevelComment) {
+				var topLevelId = topLevelComment.getAttribute('data-comment-id');
+				if (topLevelId && expandedComments.indexOf(topLevelId) === -1) {
+					expandedComments.push(topLevelId);
+				}
+			}
+
+			// Reload discussions with expanded state preserved
+			loadDiscussions(discussionId, expandedComments);
 
 			// Re-enable button
 			submitButton.disabled = false;

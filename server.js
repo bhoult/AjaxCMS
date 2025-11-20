@@ -380,8 +380,8 @@ app.get('*/api/discussion', async (req, res) => {
       return res.status(400).json({ error: 'Page parameter required' });
     }
 
-    // Get the JSON file path (same as page but with .json extension)
-    const jsonPath = path.join(req.sitePath, pageParam.replace(/\.(html|md)$/, '.json'));
+    // Get the discussion file path (same as page but with .discussion.jsonl extension)
+    const jsonPath = path.join(req.sitePath, pageParam.replace(/\.(html|md)$/, '.discussion.jsonl'));
 
     // Security check
     if (!jsonPath.startsWith(path.resolve(req.sitePath))) {
@@ -393,21 +393,52 @@ app.get('*/api/discussion', async (req, res) => {
 
     // Try to read the discussion file
     try {
-      const discussionData = await fs.readFile(jsonPath, 'utf-8');
-      const data = JSON.parse(discussionData);
-      // Return discussions with client's IP so client can find their own previous name
+      const fileContent = await fs.readFile(jsonPath, 'utf-8');
+      let discussions = [];
+
+      // Try to detect format: old JSON or new JSONL
+      const trimmedContent = fileContent.trim();
+
+      // Check if it's old JSON format by looking for newline in first 200 chars
+      // Old format: {"discussions":[...], no newlines except in content
+      // New format: {...}\n{...}\n - newlines after each object
+      const hasEarlyNewline = trimmedContent.indexOf('\n') > 0 && trimmedContent.indexOf('\n') < 200;
+
+      if (!hasEarlyNewline && trimmedContent.startsWith('{')) {
+        // Old JSON format - parse entire file
+        try {
+          const data = JSON.parse(fileContent);
+          discussions = data.discussions || [];
+
+          // Migrate to JSONL format
+          if (discussions.length > 0) {
+            const jsonlContent = discussions.map(d => JSON.stringify(d)).join('\n') + '\n';
+            await fs.writeFile(jsonPath, jsonlContent, 'utf-8');
+          }
+        } catch (parseErr) {
+          // If parsing as old format fails, try JSONL
+          discussions = trimmedContent
+            .split('\n')
+            .filter(line => line.trim())
+            .map(line => JSON.parse(line));
+        }
+      } else {
+        // New JSONL format - parse line by line
+        discussions = trimmedContent
+          .split('\n')
+          .filter(line => line.trim()) // Skip empty lines
+          .map(line => JSON.parse(line));
+      }
+
+      // Return discussions with client's IP
       res.json({
-        ...data,
+        discussions: discussions,
         clientIp: clientIp
       });
     } catch (err) {
-      // File doesn't exist yet, return empty discussion structure
+      // File doesn't exist yet, return empty discussion array
       res.json({
         discussions: [],
-        metadata: {
-          created: new Date().toISOString(),
-          lastModified: new Date().toISOString()
-        },
         clientIp: clientIp
       });
     }
@@ -447,8 +478,8 @@ app.post('*/api/discussion', async (req, res) => {
     // Get client IP address
     const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
 
-    // Get the JSON file path
-    const jsonPath = path.join(req.sitePath, page.replace(/\.(html|md)$/, '.json'));
+    // Get the discussion file path
+    const jsonPath = path.join(req.sitePath, page.replace(/\.(html|md)$/, '.discussion.jsonl'));
 
     // Security check
     if (!jsonPath.startsWith(path.resolve(req.sitePath))) {
@@ -458,22 +489,6 @@ app.post('*/api/discussion', async (req, res) => {
     // Ensure the parent directory exists
     const dirPath = path.dirname(jsonPath);
     await fs.mkdir(dirPath, { recursive: true });
-
-    // Read existing discussion or create new structure
-    let discussionData;
-    try {
-      const existingData = await fs.readFile(jsonPath, 'utf-8');
-      discussionData = JSON.parse(existingData);
-    } catch (err) {
-      // File doesn't exist, create new structure
-      discussionData = {
-        discussions: [],
-        metadata: {
-          created: new Date().toISOString(),
-          lastModified: new Date().toISOString()
-        }
-      };
-    }
 
     // Create new comment
     const newComment = {
@@ -485,12 +500,8 @@ app.post('*/api/discussion', async (req, res) => {
       content: sanitizedContent
     };
 
-    // Add to discussions array
-    discussionData.discussions.push(newComment);
-    discussionData.metadata.lastModified = new Date().toISOString();
-
-    // Write back to file
-    await fs.writeFile(jsonPath, JSON.stringify(discussionData, null, 2), 'utf-8');
+    // Append comment as a new line (JSONL format)
+    await fs.appendFile(jsonPath, JSON.stringify(newComment) + '\n', 'utf-8');
 
     // Return the new comment
     res.json({
