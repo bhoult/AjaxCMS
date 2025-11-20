@@ -331,15 +331,29 @@ function parseHelper(helperString) {
 	// separate parts and attributes
 	for (var i=0; i<pieces.length; i++) {
 		if (/=&gt;|=>/.test(pieces[i])){
-			// Split on => or =&gt; to separate param from attributes
+			// Split on => or =&gt; to separate attribute name from value
 			var splitPieces = pieces[i].split(/\s*(?:=&gt;|=>)\s*/);
-			// First part (before =>) goes to parts if not empty
-			if (splitPieces[0] && splitPieces[0].trim() !== '') {
-				parts.push(splitPieces[0]);
-			}
-			// Second part (after =>) is the attribute(s)
-			if (splitPieces[1]) {
-				attributes.push(splitPieces[1].trim());
+			var attrName = splitPieces[0] ? splitPieces[0].trim() : '';
+			var attrValue = splitPieces[1] ? splitPieces[1].trim() : '';
+
+			// Check if this looks like an attribute (has name before =>)
+			// vs a parameter with attributes (e.g., "growth-theme => style=...")
+			if (attrName && !attrValue.includes('=')) {
+				// This is attribute syntax: class=>value
+				// Format as class="value" and add to attributes
+				attributes.push(attrName + '="' + attrValue + '"');
+			} else if (attrName) {
+				// This is parameter with inline attributes: growth-theme => style="..."
+				// Parameter goes to parts, attributes stay as-is
+				parts.push(attrName);
+				if (attrValue) {
+					attributes.push(attrValue);
+				}
+			} else {
+				// Just => value (no name before)
+				if (attrValue) {
+					attributes.push(attrValue);
+				}
 			}
 		} else {
 			parts.push(pieces[i]);
