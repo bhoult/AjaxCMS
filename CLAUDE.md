@@ -63,6 +63,19 @@ Demo and documentation: http://ajaxcms.org
      - Blog content: `{{blog | directory | start | stop}}`
      - Inserts: `{{insert | page_name | allow_scripts}}`
 
+4. **Helper Protection System** (`js/ajaxcms.js:832-843, 988-990`):
+   - Prevents markdown and async operations from corrupting helper syntax
+   - Uses `§§§PROTECTED_HELPER_N§§§` placeholder system (section signs avoid markdown conflicts)
+   - Global array `globalProtectedHelpers` stores original helper strings
+   - Protection flow:
+     1. Before markdown: Replace `{{...}}` with `§§§PROTECTED_HELPER_N§§§`
+     2. Markdown processes safely (doesn't convert `=>` to `&gt;`)
+     3. After all async inserts: Restore helpers from `globalProtectedHelpers` array
+     4. Finally: `process_page()` processes restored helpers
+   - Temporary placeholders `@@@@@`/`#####` used during insert operations
+   - All replacements use global regex (`/g` flag) to handle multiple helpers per page
+   - Documentation helpers (5+ spaces) are also protected but remain as visible text
+
 ### Directory Structure
 
 - **`index.html`**: Main entry point, configuration, and HTML structure
@@ -134,6 +147,46 @@ Demo and documentation: http://ajaxcms.org
 - Animated backgrounds use `<canvas id="background">` with requestAnimationFrame
 - Theme is loaded on page initialization and cannot be changed dynamically
 
+**Featured Themes:**
+
+*Growth Theme* (`themes/growth/`):
+- Procedurally generated trees with natural branching patterns
+- Intelligent content collision detection - trees grow around text boundaries
+- Dynamic twig sprouting and autumn leaf fall with physics
+- Pixel-based collision detection using invisible canvas (O(1) performance)
+- Sky blue gradient fading to white over configurable distance
+- Mobile optimizations:
+  - Reduced tree count (1/3 on mobile devices)
+  - Disabled content collision detection for better performance
+  - Enhanced text glow (12 shadow layers) for readability
+  - Smart resize handler prevents regrowth on URL bar appearance/disappearance
+- MutationObserver detects page changes (higher threshold on mobile: 20 nodes vs 5 desktop)
+- Smooth fade-out and regrowth on page transitions
+
+*Fireworks Theme* (`themes/fireworks/`):
+- Particle-based fireworks with realistic physics (gravity, air resistance)
+- Multiple explosion patterns: burst, fountain, ring, spiral, heart
+- Vibrant color palettes randomly selected per firework
+- Launch effects with bright trails
+- Additive blending (`globalCompositeOperation = 'lighter'`) for glow effects
+- Performance optimizations:
+  - Particle pooling to reduce garbage collection
+  - Spatial culling removes off-screen particles
+  - Age-based culling for expired particles
+  - Configurable max particle limit
+
+*GL City Theme* (`themes/gl_city/`):
+- WebGL-accelerated 3D cityscape using Three.js
+- Procedurally generated buildings (40-400 units tall) with shadow mapping
+- Moon lighting with dynamic shadows across city
+- Animated starfield background
+- Camera modes: normal (ground-level) and overhead (bird's-eye with mouse controls)
+- Content-aware initialization:
+  - Delays theme start (800-1000ms) to allow AjaxCMS content to load
+  - Polls for content divs every 100ms before setting scroll spacer height
+  - Prevents race condition where content area doesn't fully load on first page view
+- Press 'O' to toggle overhead view, mouse drag to pan, wheel to zoom
+
 **Blog Functionality:**
 - Blog posts named with date prefix: `YYYY-MM-DD-Post_Title.html` or `.md`
 - `{{blog}}` helper generates list of blog entries with excerpts
@@ -152,6 +205,22 @@ Demo and documentation: http://ajaxcms.org
 - `imageMatch(searchterm)` finds first partial-match image
 - Both use regex partial matching for flexible lookups
 
+**ParseHelper Function** (`js/ajaxcms.js:332-362`):
+- Parses helper syntax into parts (parameters) and attributes (HTML attrs)
+- Supports two distinct `=>` syntaxes:
+  1. **Attribute syntax**: `class=>carousel-float-right` → becomes `class="carousel-float-right"`
+  2. **Inline attributes**: `growth-theme => style="width: 50%"` → param + attrs
+- Detection: If value after `=>` contains `=`, it's inline attributes; otherwise it's attribute syntax
+- Handles both raw `=>` and HTML entity `=&gt;` (from markdown conversion)
+- Example processing:
+  ```javascript
+  // {{carousel | images/* | class=>carousel-float-right}}
+  // Results in: parts=['carousel', 'images/*'], attributes=['class="carousel-float-right"']
+
+  // {{i | growth-theme => style="width: 50%"}}
+  // Results in: parts=['i', 'growth-theme'], attributes=['style="width: 50%"']
+  ```
+
 **Async Directory Loading:**
 - Recursive directory parsing with counters (`pages_count`, `images_count`)
 - Callbacks fire when counters reach zero (all async loads complete)
@@ -159,6 +228,35 @@ Demo and documentation: http://ajaxcms.org
 **Script Security:**
 - `removeScripts(text)` strips `<script>` tags from inserted content
 - Insert helper supports `allow_scripts` parameter (default: true)
+
+**Mobile Optimization Patterns:**
+
+*Responsive Theme Configuration:*
+- Detect mobile with `window.innerWidth <= 768` or `isMobile` helper functions
+- Reduce resource counts (trees, particles, buildings) by 1/2 to 1/3 on mobile
+- Disable expensive features (collision detection, complex physics)
+- Increase performance thresholds (e.g., mutation observer node counts)
+
+*Text Readability on Animated Backgrounds:*
+- Apply text-shadow with multiple layers for glow effect
+- Example: `0 0 3px white, 0 0 5px white, ...` (up to 12 layers on mobile)
+- Use transparent or semi-transparent content backgrounds to show theme gradient
+- Increase font weight on mobile for better visibility
+
+*Resize Handler Best Practices:*
+- Mobile URL bar appearance/disappearance triggers resize events
+- Prevent expensive reinitialization (e.g., tree regrowth) on these false positives
+- Solutions:
+  - Track previous dimensions, only reinit if significant change
+  - Use resize debouncing (e.g., `setTimeout` with 200-300ms delay)
+  - Check if width changed (true resize) vs height only (URL bar)
+
+*Page Transition Detection:*
+- Use MutationObserver to detect DOM content changes
+- Higher thresholds on mobile to prevent false positives from scroll events
+- Desktop: 5+ nodes changed = new page
+- Mobile: 20+ nodes changed = new page
+- Ignore attribute-only changes (e.g., class modifications)
 
 ## Common Development Tasks
 
@@ -169,12 +267,31 @@ When adding new pages:
 
 When creating new themes:
 - Create directory in `themes/` with `background.js` and `theme.css`
-- Follow existing theme structure (see `themes/starter/` or `themes/gears/`)
+- Follow existing theme structure (see `themes/starter/`, `themes/gears/`, or featured themes above)
 - Canvas animation should use global variables for configuration
 - Test theme with `?theme=yourtheme&page=blank.html`
+- **Best practices for complex themes:**
+  - Delay theme initialization (500-1000ms) to allow AjaxCMS content to load first
+  - For themes needing content dimensions, poll for content instead of fixed delays
+  - Implement proper cleanup in `stopBackground()` to prevent memory leaks
+  - Use MutationObserver for page change detection (see Growth theme)
+  - Add mobile-specific optimizations (reduced counts, disabled features)
+  - Consider WebGL/Three.js for 3D effects (see GL City theme)
+  - Use requestAnimationFrame for smooth 60 FPS animations
+  - Apply performance optimizations (pooling, culling, batching)
 
 When debugging page load issues:
 - Check browser console for `ajaxcms.js` debug output (shows page loading)
 - Verify directory structure matches expected patterns
 - Ensure file naming follows conventions (no spaces, proper extensions)
 - Test helper syntax with five spaces (prevents processing for documentation)
+
+When debugging helper issues:
+- Check if helpers are showing as literal text (protection system issue)
+- Verify `globalProtectedHelpers` array is declared and initialized
+- Ensure all placeholder replacements use global regex (`/g` flag)
+- Check browser console: `$('.content').html()` shows actual rendered HTML
+- Look for HTML entities (`&gt;` instead of `>`) indicating markdown corruption
+- Verify helper syntax: pipes (`|`) for params, `=>` for attributes
+- For blog posts: helpers must be protected before markdown processing
+- Image helpers: ensure image file names match helper parameters exactly
