@@ -121,6 +121,42 @@ Unlike traditional CMSs (WordPress, Drupal) or static generators (Jekyll, Hugo):
 - ✅ Dynamic content from static files
 - ✅ Shared resources (js/, themes/, images/) across sites
 
+## Content Management
+
+**AjaxCMS has no backend editor or admin interface.** Content is managed by directly editing files on the filesystem. This design keeps the system simple, version-controllable, and secure.
+
+### How to Edit Your Content
+
+**Git-Based Workflow (Recommended)**
+```bash
+# Make changes locally
+vim sites/mysite.com/pages/about.md
+
+# Commit and push
+git add .
+git commit -m "Update about page"
+git push
+
+# On server
+git pull
+```
+
+**Other Methods:**
+- **GitHub Web UI** - Edit files in browser, then `git pull` on server
+- **SSH/SFTP** - Edit files directly on server with vim/nano or upload via FileZilla/Cyberduck
+- **Remote IDE** - Use VSCode Remote SSH or JetBrains Gateway
+- **CI/CD** - Auto-deploy with GitHub Actions or git hooks
+- **rsync** - Sync local changes: `rsync -avz ./sites/mysite/ user@server:/path/to/sites/mysite/`
+
+### Why No Backend Editor?
+
+- **Version Control** - All content in Git for history and collaboration
+- **Security** - No admin login to hack, no database to inject
+- **Simplicity** - One less thing to learn, maintain, or break
+- **Flexibility** - Use your favorite editor/IDE with all your shortcuts
+- **Backup** - Git commits are automatic backups
+- **Speed** - No WYSIWYG editor overhead
+
 ## Directory Structure
 
 ```

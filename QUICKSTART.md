@@ -93,6 +93,68 @@ PORT=8080 npm start
 SITES_DIR=/path/to/sites npm start
 ```
 
+## Managing Your Content
+
+**AjaxCMS has no backend editor.** You edit content by directly modifying files. This keeps things simple, secure, and version-controllable.
+
+### Recommended Workflows
+
+**1. Git-Based (Best for Teams & Version Control)**
+```bash
+# Edit locally
+vim sites/mysite.com/pages/about.md
+
+# Commit and push
+git add -A
+git commit -m "Update about page"
+git push origin main
+
+# On server
+git pull origin main
+```
+
+**2. GitHub Web Interface (Quick Edits)**
+- Edit files directly in GitHub's web editor
+- On server: `git pull` to deploy changes
+- Great for non-technical team members
+
+**3. Direct Server Access (Immediate Changes)**
+```bash
+# SSH and edit
+ssh user@yourserver.com
+vim /path/to/ajaxcms/sites/mysite.com/pages/about.md
+# Changes appear immediately!
+```
+
+**4. SFTP/FTP (Visual File Management)**
+- Use FileZilla, Cyberduck, or similar
+- Upload/edit files visually
+- Changes appear immediately after upload
+
+**5. Remote IDE (Professional Workflow)**
+- VSCode Remote SSH
+- JetBrains Gateway
+- Edit server files like they're local
+
+**6. Automated Deployment (Advanced)**
+```bash
+# GitHub Actions example
+# Push to main → CI runs → Server pulls changes
+
+# Or use rsync
+rsync -avz --delete ./sites/mysite.com/ user@server:/path/to/sites/mysite.com/
+```
+
+### Content File Types
+
+All content is stored as files:
+- **Pages**: `.html` or `.md` files in `pages/`
+- **Images**: Any image format in `images/`
+- **Styles**: `.css` files anywhere in your site
+- **Config**: `index.html` contains site settings
+
+**No database. No build step. Just files.**
+
 ## Production Deployment
 
 **Prerequisites:**

@@ -62,6 +62,39 @@ AjaxCMS uses a Node.js server that provides JSON directory listings via API endp
 
 **Server Requirement** - Requires a web server that can provide directory listings (Node.js server included, or Apache).
 
+## Content Management
+
+**AjaxCMS has no backend editor or admin interface.** Content is managed by editing files directly on the filesystem. This intentional design choice keeps the system simple, secure, and version-controllable.
+
+### How to Edit Content
+
+**Git Workflow (Recommended)**
+1. Edit files locally in your preferred editor
+2. Commit changes to Git
+3. Push to GitHub (or other hosting)
+4. Pull changes on your server
+5. Changes appear immediately!
+
+**Other Methods:**
+- **GitHub Web UI** - Edit in browser, pull on server
+- **SSH/SFTP** - Direct server file editing (vim, nano, FileZilla, Cyberduck)
+- **Remote IDE** - VSCode Remote SSH, JetBrains Gateway
+- **CI/CD** - GitHub Actions or git hooks for auto-deployment
+- **rsync** - Sync local changes to server
+
+### Why No Backend Editor?
+
+This approach offers significant advantages:
+
+- **Version Control** - Full Git history of all content changes
+- **Security** - No admin login to compromise, no database vulnerabilities
+- **Simplicity** - Fewer moving parts, less to learn and maintain
+- **Flexibility** - Use any editor/IDE with your preferred workflow
+- **Collaboration** - Standard Git workflows (branches, pull requests, code review)
+- **Backup** - Git commits are automatic, distributed backups
+
+All content is just files—HTML, Markdown, images, CSS. No database. No build step. Just edit and deploy.
+
 ## Open Source
 
 AjaxCMS is free and open source under the GPL-3.0 license.

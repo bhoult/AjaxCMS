@@ -30,6 +30,54 @@ Demo and documentation: http://ajaxcms.org
 
 **Note:** The system requires directory listings for dynamic content discovery. The Node.js server provides JSON directory listings. Simple file servers may not work properly with the modified code (see note below).
 
+## Content Management
+
+**AjaxCMS has no backend editor or admin interface.** Content is managed by directly editing files on the filesystem. This design philosophy keeps the system simple, version-controllable, and flexible.
+
+### Recommended Editing Workflows
+
+**1. Git-Based Workflow (Recommended)**
+- Make changes locally in your preferred editor/IDE
+- Commit changes to GitHub (or other git hosting)
+- On server: `git pull` to update the live site
+- Or: Push from local → GitHub → Pull on server
+
+**2. GitHub Web UI**
+- Edit files directly in GitHub's web interface
+- On server: `git pull` to deploy changes
+- Good for quick edits and non-technical contributors
+
+**3. Direct Server Access**
+- SSH into the server and edit files with vim/nano/etc.
+- Or use SFTP/FTP client (FileZilla, Cyberduck, etc.) to upload files
+- Changes are live immediately (no pull needed)
+
+**4. Remote IDE Editing**
+- Use VSCode Remote SSH, JetBrains Gateway, or similar
+- Edit remote files as if they were local
+- Changes appear on site immediately after save
+
+**5. Automated Deployment**
+- Set up git post-receive hooks for automatic deployment
+- Use CI/CD (GitHub Actions, GitLab CI, etc.)
+- Automatically deploy when pushing to specific branch
+- Example: Push to `main` → GitHub Action → Server pulls changes
+
+**6. rsync Deployment**
+- Use `rsync` over SSH to sync local changes to server
+- Example: `rsync -avz --delete ./sites/mysite/ user@server:/path/to/sites/mysite/`
+- Good for bulk updates and maintaining exact mirrors
+
+### Content Structure
+
+All content is stored as static files:
+- **Pages**: HTML or Markdown files in `pages/` directories
+- **Images**: Any image format in `images/` directories
+- **Styles**: CSS files in site-specific directories
+- **Configuration**: Variables in `index.html` and site-specific files
+
+No database required. Version control friendly. Easy to backup and migrate.
+
 ## Architecture
 
 ### Core System Flow
