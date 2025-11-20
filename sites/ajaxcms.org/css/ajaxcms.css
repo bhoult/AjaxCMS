@@ -167,6 +167,11 @@ img.right {
 	padding:0px;
 }
 
+.carousel-half-width {
+	width: 50% !important;
+	max-width: 600px !important;
+}
+
 /* Image gallery styling for wildcard galleries */
 .image-gallery img {
 	width: 100%;

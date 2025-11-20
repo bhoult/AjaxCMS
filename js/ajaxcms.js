@@ -304,7 +304,8 @@ function imageMatchMultiple(s) {
 		console.warn('Available images:', images.length > 0 ? images.slice(0, 5).join(', ') + '...' : 'none');
 	}
 
-	return matches;
+	// Sort alphabetically for consistent ordering
+	return matches.sort();
 }
 
 /**
