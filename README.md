@@ -4,7 +4,9 @@
 
 **AjaxCMS** is a modern content management system that generates dynamic websites from static files. No database required, no complex setup - just pure JavaScript magic with animated themes and powerful content helpers.
 
-🌐 **[Live Demo](http://ajaxcms.org)** • 📖 **[Documentation](QUICKSTART.md)**
+**✨ Perfect for AI/LLM-Assisted Development** - Simple architecture, well-documented code, and clear patterns make it ideal for creating content and themes with AI assistants like Claude Code.
+
+🌐 **[Live Demo](http://ajaxcms.org)** • 📖 **[Documentation](QUICKSTART.md)** • 🤖 **[AI Development Guide](CLAUDE.md)**
 
 ## What is AjaxCMS?
 
