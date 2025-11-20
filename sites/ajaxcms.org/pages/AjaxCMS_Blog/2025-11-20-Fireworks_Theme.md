@@ -4,7 +4,7 @@ AjaxCMS showcases the **Fireworks** theme, featuring spectacular particle-based 
 
 {{i | fireworks-theme}}
 
-**[View Live Demo →](http://ajaxcms.org/fireworks.com/?page=pages/menus/01-Welcome.md)**
+**[View Live Demo →](http://ajaxcms.org/theme-demos/fireworks.com/?page=pages/menus/01-Welcome.md)**
 
 ### Visual Features
 
