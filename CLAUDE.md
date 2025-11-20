@@ -80,7 +80,7 @@ Demo and documentation: http://ajaxcms.org
 ### Directory Structure
 
 - **`index.html`**: Main entry point, configuration, and HTML structure
-- **`js/ajaxcms.js`**: Core CMS logic (~1000 lines) - page loading, helper processing, menu generation
+- **`js/ajaxcms.js`**: Core CMS logic (~2,300 lines) - page loading, helper processing, menu generation
   - Wrapped in IIFE (Immediately Invoked Function Expression) to prevent global pollution
   - Comprehensive JSDoc documentation for all functions
   - Optimized and refactored (eliminated ~140 lines of duplicate code)
@@ -314,14 +314,15 @@ Add `{{discussion}}` to any page to enable comments:
 
 ### Architecture
 
-**Backend (server.js:371-496)**:
-- **GET `/api/discussion?page=path`**: Fetches discussion data for a page
-- **POST `/api/discussion`**: Appends new comment/reply with sanitization
+**Backend (server.js)**:
+- **GET `/api/discussion?page=path`**: Fetches discussion data for a page (lines 445-495)
+- **POST `/api/discussion`**: Appends new comment/reply with sanitization (lines 497-581)
 - JSONL files created automatically (e.g., `pages/example.html` → `pages/example.discussion.jsonl`)
 - Uses line-delimited JSON (JSONL) format for efficient append-only writes
-- Automatic migration from old `.json` format to `.discussion.jsonl` on first GET request
 - IP address tracking (stored but not displayed to users)
-- XSS protection via HTML entity escaping
+- Comprehensive XSS protection via `escapeHtml()` function (escapes: `& < > " '`)
+- Rate limiting: 5 comments per IP per minute (configurable, lines 20-22)
+- File size limit: 10MB per discussion file (configurable, line 20)
 
 **Frontend (js/ajaxcms.js)**:
 - Discussion helper (lines 702-717): Generates HTML container with form
@@ -341,15 +342,25 @@ Benefits of JSONL:
 - **Fast appends**: New comments added via `fs.appendFile()` without reading entire file
 - **Atomic writes**: Safer for concurrent comment posting
 - **Scalability**: No need to parse thousands of comments to add one more
-- **Backward compatible**: Old JSON format automatically migrated on first GET request
+- **Simple format**: Each line is a self-contained JSON object
 
 ### Security
 
-- All HTML tags escaped (`<` → `&lt;`, `>` → `&gt;`)
-- Content limited to 5,000 characters
-- Author names limited to 50 characters
-- Append-only (no editing/deletion)
-- IP addresses recorded but not displayed
+- **XSS Prevention**: Comprehensive HTML entity escaping via `escapeHtml()` function
+  - Escapes: `&` → `&amp;`, `<` → `&lt;`, `>` → `&gt;`, `"` → `&quot;`, `'` → `&#x27;`
+  - Applied to both comment content and author names
+- **Rate Limiting**: Maximum 5 comments per IP address per minute
+  - Prevents spam and comment flooding
+  - Returns HTTP 429 with retry-after when exceeded
+- **File Size Limits**: 10MB maximum per discussion file
+  - Prevents disk exhaustion attacks
+  - Returns HTTP 413 when exceeded
+- **Content Length Limits**:
+  - Comment content: 5,000 characters maximum
+  - Author names: 50 characters maximum
+- **Path Traversal Protection**: Server validates all file paths stay within site directory
+- **Append-only**: No editing or deletion (prevents data tampering)
+- **IP Tracking**: IP addresses recorded but not displayed to users
 
 ### Styling
 

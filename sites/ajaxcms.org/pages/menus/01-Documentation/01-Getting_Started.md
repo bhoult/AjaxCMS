@@ -56,7 +56,7 @@ AjaxCMS runs on **Node.js** and works on any platform that supports Node.js (Lin
 
 The core AjaxCMS requires only two main files:
 - **`index.html`** - Main HTML structure and configuration
-- **`js/ajaxcms.js`** - Core CMS logic (~1,000 lines of well-documented JavaScript)
+- **`js/ajaxcms.js`** - Core CMS logic (~2,300 lines of well-documented JavaScript)
 
 All dependencies (jQuery, Bootstrap, marked, etc.) are managed through npm and served from `node_modules/`. Themes and examples are included to help you get started.
 

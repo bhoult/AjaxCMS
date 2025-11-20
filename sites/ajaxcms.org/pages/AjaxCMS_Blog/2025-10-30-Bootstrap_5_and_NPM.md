@@ -69,7 +69,7 @@ In `index.html`, libraries are referenced from `node_modules/`:
 <script src="node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 
 <!-- Marked (Markdown parser) -->
-<script src="node_modules/marked/marked.min.js"></script>
+<script src="node_modules/marked/lib/marked.umd.js"></script>
 ```
 
 The Node.js server (`server.js`) serves `node_modules/` files automatically, with proper MIME types and caching headers.

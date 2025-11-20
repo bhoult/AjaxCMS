@@ -14,7 +14,7 @@ AjaxCMS is an open-source, static-file-based CMS that runs entirely in JavaScrip
 
 4. **Enhanced Security** - No admin backend, server-side code, or database means fewer vulnerabilities. No CMS updates to manage or SQL injection risks.
 
-5. **Simple & Transparent** - The entire CMS is ~1,000 lines of well-documented JavaScript in `js/ajaxcms.js`. Easy to understand and customize with basic HTML/CSS/JavaScript knowledge.
+5. **Simple & Transparent** - The entire CMS is ~2,300 lines of well-documented JavaScript in `js/ajaxcms.js`. Easy to understand and customize with basic HTML/CSS/JavaScript knowledge.
 
 ## How It Works
 
