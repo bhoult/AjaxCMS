@@ -4,6 +4,8 @@ AjaxCMS introduces the **Growth** theme, featuring procedurally generated trees 
 
 {{i | growth-theme}}
 
+**[View Live Demo →](http://ajaxcms.org/growth.com/?page=pages/menus/01-Welcome.md)**
+
 ### Visual Features
 
 **Organic Tree Growth:**
