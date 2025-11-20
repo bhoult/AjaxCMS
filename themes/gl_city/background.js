@@ -2594,19 +2594,28 @@ function setupPageHeight() {
 	// Since content divs (#a, #b) are absolutely positioned, they don't expand the page
 	var spacer = document.createElement('div');
 	spacer.id = 'scroll-spacer';
+	spacer.style.pointerEvents = 'none';
+	document.body.appendChild(spacer);
 
-	// Wait for content to load, then size spacer to match
-	setTimeout(function() {
+	// Poll for content to actually load (AjaxCMS loads asynchronously)
+	var updateSpacerHeight = function() {
 		var contentHeight = Math.max(
 			$('#a').outerHeight(true) || 0,
 			$('#b').outerHeight(true) || 0
 		);
-		// Add small margin at bottom
-		spacer.style.height = (contentHeight + 100) + 'px';
-	}, 1000);
 
-	spacer.style.pointerEvents = 'none';
-	document.body.appendChild(spacer);
+		if (contentHeight > 0) {
+			// Content loaded, set height
+			spacer.style.height = (contentHeight + 100) + 'px';
+			console.log('Content loaded, spacer height set to', contentHeight + 100);
+		} else {
+			// Content not loaded yet, try again
+			setTimeout(updateSpacerHeight, 100);
+		}
+	};
+
+	// Start polling after a short delay
+	setTimeout(updateSpacerHeight, 100);
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -2646,18 +2655,18 @@ $(document).ready(function() {
 	var checkThree = function() {
 		if (typeof THREE !== 'undefined') {
 			console.log('THREE.js detected, deferring background start to allow content to load');
+			// Wait longer to ensure AjaxCMS has started loading content
 			// Use requestIdleCallback if available, otherwise setTimeout
-			// This ensures page content renders before we start the heavy 3D scene
 			if (window.requestIdleCallback) {
 				requestIdleCallback(function() {
 					startBackground();
-				}, { timeout: 500 });
+				}, { timeout: 1000 });
 			} else {
 				setTimeout(function() {
 					requestAnimationFrame(function() {
 						startBackground();
 					});
-				}, 300);
+				}, 800);
 			}
 		} else {
 			console.log('THREE.js not yet loaded, waiting...');
