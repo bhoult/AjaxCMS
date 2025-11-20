@@ -828,8 +828,15 @@ function loadInsert(fname,insert_location,allow_scripts,callback) {
 			return '___PROTECTED_CODE_BLOCK_' + index + '___';
 		});
 
-		// Protect 5-space helpers (legacy)
-		insert_contents = insert_contents.replace(/{{[^}]*\s\s\s\s\s[^}]*}}/g, function(match) {
+		// Protect all helpers from markdown processing
+		insert_contents = insert_contents.replace(/{{.*?}}/g, function(match) {
+			// Check if this is a 5+ space documentation helper
+			if (/\s\s\s\s\s/.test(match)) {
+				var index = globalProtectedHelpers.length;
+				globalProtectedHelpers.push(match);
+				return '___PROTECTED_HELPER_' + index + '___';
+			}
+			// Protect normal helpers from markdown (but they stay protected until final processing)
 			var index = globalProtectedHelpers.length;
 			globalProtectedHelpers.push(match);
 			return '___PROTECTED_HELPER_' + index + '___';
@@ -976,6 +983,11 @@ function processInserts(callback) {
 			// Run Callback if it exists
 			if (rcount == 0 && callback && typeof(callback) === "function") {
 				data = data.replace(/@@@@@/g,'{{').replace(/#####/g,'}}');
+
+				// Restore protected helpers that were protected from markdown processing
+				data = data.replace(/___PROTECTED_HELPER_(\d+)___/g, function(match, index) {
+					return globalProtectedHelpers[parseInt(index)];
+				});
 
 				// If there are more inserts in the new version then recurse.
 				var more_inserts = data.match(/{{\s*insert.*?}}/gi);
