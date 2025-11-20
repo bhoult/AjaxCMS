@@ -2,7 +2,7 @@
 
 AjaxCMS features an impressive 3D cityscape theme powered by **Three.js**, bringing WebGL-rendered graphics to the platform. The `gl_city` theme showcases procedurally generated skyscrapers with realistic lighting, shadows, and a dynamic starfield.
 
-{{i | gl-city-theme}}
+{{i | gl-city-theme => style="width: 50%; float: right; margin-left: 20px; margin-bottom: 10px;"}}
 
 **[View Live Demo →](http://ajaxcms.org/theme-demos/gl-city.com/?page=pages/menus/01-Welcome.md)**
 

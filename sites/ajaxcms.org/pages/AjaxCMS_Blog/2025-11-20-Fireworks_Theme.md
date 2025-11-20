@@ -2,7 +2,7 @@
 
 AjaxCMS showcases the **Fireworks** theme, featuring spectacular particle-based fireworks displays with realistic physics, multiple explosion patterns, and vibrant color palettes.
 
-{{i | fireworks-theme}}
+{{i | fireworks-theme => style="width: 50%; float: right; margin-left: 20px; margin-bottom: 10px;"}}
 
 **[View Live Demo →](http://ajaxcms.org/theme-demos/fireworks.com/?page=pages/menus/01-Welcome.md)**
 

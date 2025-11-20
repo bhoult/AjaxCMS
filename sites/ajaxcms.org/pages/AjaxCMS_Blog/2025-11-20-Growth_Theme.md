@@ -2,7 +2,7 @@
 
 AjaxCMS introduces the **Growth** theme, featuring procedurally generated trees that grow around your content with intelligent collision avoidance, autumn leaf effects, and smooth page transitions.
 
-{{i | growth-theme}}
+{{i | growth-theme => style="width: 50%; float: right; margin-left: 20px; margin-bottom: 10px;"}}
 
 **[View Live Demo →](http://ajaxcms.org/theme-demos/growth.com/?page=pages/menus/01-Welcome.md)**
 
