@@ -880,7 +880,7 @@ function loadInsert(fname,insert_location,allow_scripts,callback) {
 					if (!allow_scripts) {insert_contents = removeScripts(insert_contents);}
 
 					// Insert the contents of each file into data -- invalidate insertion patterns in content of replacement file until async is done.
-					data = data.replace(insert_location,insert_contents.replace(/{{/,'@@@@@').replace(/}}/,'#####'))
+					data = data.replace(insert_location,insert_contents.replace(/{{/g,'@@@@@').replace(/}}/g,'#####'))
 
 					// Run Callback if it exists
 					if (callback && typeof(callback) === "function") {callback();}
@@ -916,7 +916,7 @@ function loadInsert(fname,insert_location,allow_scripts,callback) {
 			if (!allow_scripts) {insert_contents = removeScripts(insert_contents);}
 
 			// Insert the contents of each file into data -- invalidate insertion patterns in content of replacement file until async is done.
-			data = data.replace(insert_location,insert_contents.replace(/{{/,'@@@@@').replace(/}}/,'#####'))
+			data = data.replace(insert_location,insert_contents.replace(/{{/g,'@@@@@').replace(/}}/g,'#####'))
 
 			// Run Callback if it exists
 			if (callback && typeof(callback) === "function") {callback();}
