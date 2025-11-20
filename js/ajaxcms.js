@@ -1011,13 +1011,15 @@ function processInserts(callback) {
  * @param {string} url - Page URL
  * @param {Function} callback - Callback with save property indicating whether to save to history
  */
-// Global array for code block protection (shared across processPageContent scope)
+// Global arrays for code block and helper protection (shared across processPageContent scope)
 var globalProtectedCodeBlocks = [];
+var globalProtectedHelpers = [];
 
 function processPageContent(contentData, url, callback) {
 	// Step 0.5: Protect markdown code blocks BEFORE any helper processing
 	// This prevents {{blog}}, {{bloglist}}, etc. in documentation from being processed
 	globalProtectedCodeBlocks = [];
+	globalProtectedHelpers = [];
 
 	data = contentData;
 
