@@ -85,6 +85,7 @@
         preRenderFrames: 10,         // Number of frames to pre-render before animation starts
 
         // === PAGE TRANSITION ===
+        fadeInSpeed: 0.02,           // Opacity increase per frame when fading in (0.01 = slow, 0.05 = fast)
         fadeOutSpeed: 0.02,          // Opacity decrease per frame when fading out (0.01 = slow, 0.05 = fast)
 
         // === DEBUG ===
@@ -185,11 +186,13 @@
 
     let frameCount = 0;
     let animationComplete = false;  // Track when growth animation finishes
+    let isFadingIn = true;           // Track when fading in after asset load
     let isFadingOut = false;         // Track when fading out for page transition
-    let canvasOpacity = 1.0;         // Current opacity of canvases
+    let canvasOpacity = 0;           // Current opacity of canvases (start at 0 for fade-in)
     let lastPageChange = 0;          // Timestamp of last page change to debounce
     let animationFrameId = null;     // Store requestAnimationFrame ID
     let initTime = 0;                // Timestamp when theme was initialized (for grace period)
+    let assetsLoaded = false;        // Track if all assets are preloaded
 
     // Pre-parsed colors for performance (avoid regex in animation loop)
     let parsedLeafColor = null;
@@ -1265,6 +1268,42 @@
     }
 
     /**
+     * Preload all assets (images) before starting animation
+     * Returns a Promise that resolves when all assets are loaded
+     */
+    function preloadAssets() {
+        const assets = [];
+
+        // Preload chapel image if enabled
+        if (config.chapelEnabled && config.chapelImage) {
+            assets.push(new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => {
+                    if (config.enableDebugLogging) console.log('Chapel image preloaded');
+                    resolve(img);
+                };
+                img.onerror = () => {
+                    console.warn('Failed to preload chapel image:', config.chapelImage);
+                    resolve(null);  // Resolve anyway to not block animation
+                };
+                img.src = config.chapelImage;
+            }));
+        }
+
+        // Add more assets here as needed
+        // assets.push(loadImage('path/to/image.png'));
+
+        if (assets.length === 0) {
+            return Promise.resolve();
+        }
+
+        return Promise.all(assets).then(() => {
+            assetsLoaded = true;
+            if (config.enableDebugLogging) console.log('All assets preloaded');
+        });
+    }
+
+    /**
      * Create/update the chapel as a fixed HTML element (behind trees, like the gradient background)
      */
     function setupChapel() {
@@ -1279,6 +1318,7 @@
             chapelElement.style.bottom = config.chapelOffsetY + 'px';
             chapelElement.style.zIndex = '-2';  // Behind trees (canvas is -1)
             chapelElement.style.pointerEvents = 'none';
+            chapelElement.style.opacity = '0';  // Start hidden for fade-in
             document.body.appendChild(chapelElement);
 
             // Wait for image to load to get natural dimensions for aspect ratio
@@ -1352,14 +1392,40 @@
         }
         lastFrameTime = now;
 
+        // Handle fade in after assets load
+        if (isFadingIn) {
+            canvasOpacity += config.fadeInSpeed;
+
+            if (canvasOpacity >= 1) {
+                canvasOpacity = 1;
+                isFadingIn = false;
+                if (config.enableDebugLogging) console.log('Fade in complete');
+            }
+
+            // Apply opacity to all elements
+            canvas.style.opacity = canvasOpacity.toString();
+            leafCanvas.style.opacity = canvasOpacity.toString();
+            const chapel = document.getElementById('chapel-image');
+            if (chapel) chapel.style.opacity = canvasOpacity.toString();
+            const gradient = document.getElementById('gradient-background');
+            if (gradient) gradient.style.opacity = canvasOpacity.toString();
+        }
+
         // Handle fade out for page transitions
         if (isFadingOut) {
             canvasOpacity -= config.fadeOutSpeed;
 
+            // Apply opacity to all elements
+            const opacityStr = Math.max(0, canvasOpacity).toString();
+            canvas.style.opacity = opacityStr;
+            leafCanvas.style.opacity = opacityStr;
+            const chapelFade = document.getElementById('chapel-image');
+            if (chapelFade) chapelFade.style.opacity = opacityStr;
+            const gradientFade = document.getElementById('gradient-background');
+            if (gradientFade) gradientFade.style.opacity = opacityStr;
+
             if (canvasOpacity <= 0) {
                 canvasOpacity = 0;
-                canvas.style.opacity = '0';
-                leafCanvas.style.opacity = '0';
 
                 // Clear both canvases and reinitialize
                 if (config.enableDebugLogging) console.log('Fade out complete. Reinitializing...');
@@ -1367,17 +1433,12 @@
                 leafCtx.clearRect(0, 0, width, height);
                 initializeTrees();
 
-                // Reset opacity and fade state
-                canvasOpacity = 1.0;
-                canvas.style.opacity = '1';
-                leafCanvas.style.opacity = '1';
+                // Start fade in
                 isFadingOut = false;
-                return;
-            } else {
-                canvas.style.opacity = canvasOpacity.toString();
-                leafCanvas.style.opacity = canvasOpacity.toString();
+                isFadingIn = true;
                 return;
             }
+            return;
         }
 
         updateGrowth();
@@ -1450,6 +1511,9 @@
         }
 
         // Set background gradient (or solid color if gradientHeight is 0)
+        // Start with white background, gradient will fade in
+        document.body.style.backgroundColor = 'white';
+
         if (config.backgroundGradientHeight > 0) {
             // Create HTML element to hold gradient background
             let gradientDiv = document.getElementById('gradient-background');
@@ -1463,16 +1527,13 @@
                 gradientDiv.style.height = '100vh';
                 gradientDiv.style.zIndex = '-2';
                 gradientDiv.style.pointerEvents = 'none';
+                gradientDiv.style.opacity = '0';  // Start hidden for fade-in
                 document.body.insertBefore(gradientDiv, document.body.firstChild);
                 if (config.enableDebugLogging) console.log('Created gradient background div');
             }
             gradientDiv.style.background = `linear-gradient(to bottom, ${config.backgroundColor} 0%, white 100%)`;
             gradientDiv.style.height = `${config.backgroundGradientHeight}px`;
-            document.body.style.backgroundColor = 'white'; // Solid white for rest of page
             if (config.enableDebugLogging) console.log('Applied gradient background');
-        } else {
-            document.body.style.background = '';
-            document.body.style.backgroundColor = config.backgroundColor;
         }
 
         // Set up chapel image (fixed element like gradient)
@@ -1495,9 +1556,11 @@
         parsedBranchColor = parseColor(config.color);
         if (config.enableDebugLogging) console.log('Colors pre-parsed for performance');
 
-        // Set canvas size
+        // Set canvas size and start hidden for fade-in
         width = canvas.width = leafCanvas.width = window.innerWidth;
         height = canvas.height = leafCanvas.height = window.innerHeight;
+        canvas.style.opacity = '0';
+        leafCanvas.style.opacity = '0';
         if (config.enableDebugLogging) console.log('Canvas size:', width, 'x', height);
 
         // Detect content boundaries BEFORE creating trees (only if collision detection is enabled)
@@ -1584,9 +1647,14 @@
             }
         }
 
-        // Start animation
-        if (config.enableDebugLogging) console.log('Starting animation loop...');
-        animationFrameId = requestAnimationFrame(animate);
+        // Preload assets then start animation with fade-in
+        if (config.enableDebugLogging) console.log('Preloading assets...');
+        preloadAssets().then(() => {
+            if (config.enableDebugLogging) console.log('Starting animation loop...');
+            isFadingIn = true;
+            canvasOpacity = 0;
+            animationFrameId = requestAnimationFrame(animate);
+        });
     }
 
     // Retry initialization if it fails
