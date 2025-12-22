@@ -54,9 +54,18 @@ echo -e "${GREEN}✓ Dependencies up to date${NC}"
 echo ""
 
 # Restart pm2 service
+# Check both user and root pm2 (start-ssl.sh runs as root)
 echo "Restarting service..."
 if pm2 list 2>/dev/null | grep -q "$APP_NAME"; then
     pm2 restart $APP_NAME
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}Error: pm2 restart failed${NC}"
+        exit 1
+    fi
+    echo -e "${GREEN}✓ Service restarted${NC}"
+elif sudo pm2 list 2>/dev/null | grep -q "$APP_NAME"; then
+    echo "Found service running under root, using sudo..."
+    sudo pm2 restart $APP_NAME
     if [ $? -ne 0 ]; then
         echo -e "${RED}Error: pm2 restart failed${NC}"
         exit 1
