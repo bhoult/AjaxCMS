@@ -1,0 +1,228 @@
+/* Growth Theme - Minimal design with sky blue background */
+
+body {
+    /* Gradient provided by #gradient-background div in HTML */
+    background-color: white;
+    color: #1a1a1a;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* White outline and glow around all text for better readability */
+body, h1, h2, h3, h4, h5, h6, p, a, li, td, th, blockquote, code, pre {
+    font-weight: 500;
+    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.9),
+                 -1px -1px 2px rgba(255, 255, 255, 0.9),
+                 1px -1px 2px rgba(255, 255, 255, 0.9),
+                 -1px 1px 2px rgba(255, 255, 255, 0.9),
+                 2px 2px 3px rgba(255, 255, 255, 0.7),
+                 -2px -2px 3px rgba(255, 255, 255, 0.7),
+                 2px -2px 3px rgba(255, 255, 255, 0.7),
+                 -2px 2px 3px rgba(255, 255, 255, 0.7),
+                 0 0 8px rgba(255, 255, 255, 0.9),
+                 0 0 12px rgba(255, 255, 255, 0.7),
+                 0 0 16px rgba(255, 255, 255, 0.5);
+}
+
+/* Stronger glow and outline on mobile for better readability */
+@media (max-width: 768px) {
+    body, h1, h2, h3, h4, h5, h6, p, a, li, td, th, blockquote, code, pre {
+        text-shadow: 1px 1px 3px rgba(255, 255, 255, 1),
+                     -1px -1px 3px rgba(255, 255, 255, 1),
+                     1px -1px 3px rgba(255, 255, 255, 1),
+                     -1px 1px 3px rgba(255, 255, 255, 1),
+                     2px 2px 4px rgba(255, 255, 255, 0.9),
+                     -2px -2px 4px rgba(255, 255, 255, 0.9),
+                     2px -2px 4px rgba(255, 255, 255, 0.9),
+                     -2px 2px 4px rgba(255, 255, 255, 0.9),
+                     0 0 12px rgba(255, 255, 255, 1),
+                     0 0 18px rgba(255, 255, 255, 0.9),
+                     0 0 24px rgba(255, 255, 255, 0.7),
+                     0 0 32px rgba(255, 255, 255, 0.5);
+    }
+
+    /* Reduce h1 font size on mobile to prevent overflow */
+    h1 {
+        font-size: 4em !important;
+    }
+}
+
+/* Remove all borders from content areas */
+#a, #b {
+    border: none !important;
+    box-shadow: none !important;
+    background-color: transparent;
+    padding: 40px;
+    border-radius: 0;
+}
+
+/* Borderless, minimal menu */
+#menu {
+    background-color: transparent;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0;
+}
+
+#menu ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#menu li {
+    margin: 8px 0;
+}
+
+#menu a {
+    color: #333333;
+    text-decoration: none;
+    padding: 8px 16px;
+    display: inline-block;
+    transition: all 0.3s ease;
+    border: none;
+    background-color: transparent;
+    font-weight: 400;
+}
+
+#menu a:hover {
+    color: #000000;
+    background-color: rgba(0, 0, 0, 0.05);
+    transform: translateX(4px);
+}
+
+#menu a.active {
+    color: #000000;
+    font-weight: 600;
+    border-left: 3px solid #1a1a1a;
+    padding-left: 13px;
+}
+
+/* Content styling */
+h1, h2, h3, h4, h5, h6 {
+    color: #1a1a1a;
+    font-weight: 300;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+}
+
+h1 {
+    font-size: 2.5em;
+    font-weight: 200;
+    letter-spacing: -0.02em;
+}
+
+h2 {
+    font-size: 2em;
+}
+
+h3 {
+    font-size: 1.5em;
+}
+
+p {
+    line-height: 1.7;
+    color: #333333;
+    margin-bottom: 1em;
+}
+
+a {
+    color: #1a1a1a;
+    text-decoration: underline;
+    text-decoration-color: rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
+}
+
+a:hover {
+    color: #000000;
+    text-decoration-color: rgba(0, 0, 0, 0.8);
+}
+
+/* Code blocks */
+code {
+    background-color: #f5f5f5;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: "Courier New", Courier, monospace;
+    color: #1a1a1a;
+}
+
+pre {
+    background-color: #f5f5f5;
+    padding: 16px;
+    border-radius: 4px;
+    overflow-x: auto;
+    border-left: 3px solid #cccccc;
+}
+
+/* Blockquotes */
+blockquote {
+    border-left: 3px solid #cccccc;
+    padding-left: 20px;
+    margin-left: 0;
+    color: #666666;
+    font-style: italic;
+}
+
+/* Images */
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 20px 0;
+}
+
+/* Lists */
+ul, ol {
+    line-height: 1.7;
+    color: #333333;
+}
+
+/* Tables */
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 20px 0;
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+th {
+    background-color: #f5f5f5;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+tr:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Canvas background */
+#background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100% !important;  /* Override inline style set by ajaxcms.js */
+    z-index: -1;
+}
+
+/* Ensure content is above canvas */
+.container-fluid {
+    position: relative;
+    z-index: 1;
+}
+
+.container {
+    padding-bottom: 8px !important;
+}
+
+/* Splash page styling */
+#splash {
+    background-color: transparent;
+    border: none;
+    box-shadow: none;
+}

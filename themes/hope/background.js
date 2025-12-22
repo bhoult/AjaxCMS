@@ -1,5 +1,5 @@
 /**
- * AjaxCMS Theme - Growth
+ * AjaxCMS Theme - Hope
  *
  * Animated canvas background theme for AjaxCMS providing visual effects and coordinated color schemes.
  *
@@ -20,7 +20,7 @@
  */
 
 /**
- * Growth Theme - Trees that grow from bottom, avoiding content areas
+ * Hope Theme - Trees that grow from bottom, with a chapel among them
  */
 
 (function() {
@@ -59,6 +59,7 @@
     let leaves = [];
     let unsettledLeafCount = 0;  // Track unsettled leaves to avoid iterating all leaves
 
+
     // Tree generation tracking
     let totalTreesCreated = 0;       // Total number of trees created so far
     let targetTreeCount = 0;         // Random target between minTrees and maxTrees
@@ -88,7 +89,7 @@
 
         // === DEBUG ===
         enableDebugLogging: false,   // Enable console logging for debugging (set to false for production)
-        showFpsCounter: true,        // Show FPS counter overlay (set to false for production)
+        showFpsCounter: false,        // Show FPS counter overlay (set to false for production)
 
         // === MOBILE ===
         enableContentCollision: !isMobile(),  // Disable content collision detection on mobile for performance
@@ -171,7 +172,15 @@
         maxFallSpeed: 2.5,           // Maximum downward velocity (terminal velocity)
         fallDriftSpeed: 1.0,         // Maximum horizontal drift speed
         fallRotationSpeed: 0.05,     // Rotation speed while falling
-        maxLeafPileHeight: 50       // Maximum height from bottom where leaves can pile (prevents infinite piling)
+        maxLeafPileHeight: 50,       // Maximum height from bottom where leaves can pile (prevents infinite piling)
+
+        // === CHAPEL ===
+        chapelEnabled: true,         // Show the chapel image
+        chapelImage: 'themes/hope/hope_chapel.png',  // Path to chapel image
+        chapelWidthPercent: 50,      // Max width of chapel as percentage of screen width
+        chapelHeightPercent: 80,     // Max height of chapel as percentage of screen height
+        chapelOffsetX: 0.85,          // Horizontal position (0 = left edge, 0.5 = center, 1 = right edge)
+        chapelOffsetY: -30             // Vertical offset in pixels (positive = up, negative = down)
     };
 
     let frameCount = 0;
@@ -180,6 +189,7 @@
     let canvasOpacity = 1.0;         // Current opacity of canvases
     let lastPageChange = 0;          // Timestamp of last page change to debounce
     let animationFrameId = null;     // Store requestAnimationFrame ID
+    let initTime = 0;                // Timestamp when theme was initialized (for grace period)
 
     // Pre-parsed colors for performance (avoid regex in animation loop)
     let parsedLeafColor = null;
@@ -361,6 +371,20 @@
             }
         });
 
+        // Add chapel to boundaries (fixed positioned elements have offsetParent === null)
+        if (config.chapelEnabled) {
+            const chapel = document.getElementById('chapel-image');
+            if (chapel && chapel.offsetWidth > 0 && chapel.offsetHeight > 0) {
+                const rect = chapel.getBoundingClientRect();
+                contentRects.push({
+                    left: rect.left,
+                    right: rect.right,
+                    top: rect.top,
+                    bottom: rect.bottom
+                });
+            }
+        }
+
         if (contentRects.length !== oldCount) {
             if (config.enableDebugLogging) console.log('Content boundaries updated:', oldCount, '->', contentRects.length, 'rectangles');
         }
@@ -397,6 +421,7 @@
 
     /**
      * Get distance to nearest content in the direction of travel
+     * Returns 0 if point is inside a content rectangle
      * Uses nearest edge distance like bending, with directional filtering
      */
     function getDistanceInDirection(x, y, vx, vy) {
@@ -415,6 +440,11 @@
         const alignmentThreshold = Math.cos(halfConeAngle * Math.PI / 180);
 
         for (let rect of contentRects) {
+            // Check if point is inside the bounding box
+            if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+                return 0;  // Inside content - maximum avoidance
+            }
+
             // Calculate distance to nearest edge of rectangle (same as bending)
             const closestX = Math.max(rect.left, Math.min(x, rect.right));
             const closestY = Math.max(rect.top, Math.min(y, rect.bottom));
@@ -843,21 +873,43 @@
                     const approachingFromBottom = tip.y > nearestRect.bottom;
                     const approachingFromTop = tip.y < nearestRect.top;
 
-                    // Apply avoidance forces away from content (scaled by bendingFactor)
-                    if (approachingFromLeft || approachingFromRight) {
-                        // Approaching horizontally - push away horizontally
-                        const directionX = approachingFromLeft ? -1 : 1;
-                        tip.vx += directionX * config.bendStrength * bendingFactor;
-                    } else {
-                        // Inside horizontal bounds - use distance to determine direction
-                        const directionX = dx < 0 ? -1 : 1;
-                        tip.vx += directionX * config.bendStrength * bendingFactor;
-                    }
+                    // Check if tip is inside the bounding box
+                    const insideRect = tip.x >= nearestRect.left && tip.x <= nearestRect.right &&
+                                       tip.y >= nearestRect.top && tip.y <= nearestRect.bottom;
 
-                    if (approachingFromBottom || approachingFromTop) {
-                        // Approaching vertically - push away vertically
-                        const directionY = approachingFromBottom ? 1 : -1;
-                        tip.vy += directionY * config.bendStrength * bendingFactor;
+                    if (insideRect) {
+                        // Inside content - push toward nearest edge (away from center)
+                        const centerY = (nearestRect.top + nearestRect.bottom) / 2;
+                        const dy = centerY - tip.y;
+
+                        // Push away from center in both directions
+                        const directionX = dx < 0 ? 1 : -1;  // Away from center
+                        const directionY = dy < 0 ? 1 : -1;  // Away from center
+                        tip.vx += directionX * config.bendStrength * bendingFactor * 2;  // Stronger push when inside
+                        tip.vy += directionY * config.bendStrength * bendingFactor * 2;
+                    } else {
+                        // Apply avoidance forces away from content (scaled by bendingFactor)
+                        if (approachingFromLeft || approachingFromRight) {
+                            // Approaching horizontally - push away horizontally
+                            const directionX = approachingFromLeft ? -1 : 1;
+                            tip.vx += directionX * config.bendStrength * bendingFactor;
+                        } else {
+                            // Inside horizontal bounds - use distance to determine direction
+                            const directionX = dx < 0 ? -1 : 1;
+                            tip.vx += directionX * config.bendStrength * bendingFactor;
+                        }
+
+                        if (approachingFromBottom || approachingFromTop) {
+                            // Approaching vertically - push away vertically
+                            const directionY = approachingFromBottom ? 1 : -1;
+                            tip.vy += directionY * config.bendStrength * bendingFactor;
+                        } else {
+                            // Inside vertical bounds - push away from center
+                            const centerY = (nearestRect.top + nearestRect.bottom) / 2;
+                            const dy = centerY - tip.y;
+                            const directionY = dy < 0 ? -1 : 1;
+                            tip.vy += directionY * config.bendStrength * bendingFactor;
+                        }
                     }
                 }
             }
@@ -1213,6 +1265,70 @@
     }
 
     /**
+     * Create/update the chapel as a fixed HTML element (behind trees, like the gradient background)
+     */
+    function setupChapel() {
+        if (!config.chapelEnabled) return;
+
+        let chapelElement = document.getElementById('chapel-image');
+        if (!chapelElement) {
+            chapelElement = document.createElement('img');
+            chapelElement.id = 'chapel-image';
+            chapelElement.src = config.chapelImage;
+            chapelElement.style.position = 'fixed';
+            chapelElement.style.bottom = config.chapelOffsetY + 'px';
+            chapelElement.style.zIndex = '-2';  // Behind trees (canvas is -1)
+            chapelElement.style.pointerEvents = 'none';
+            document.body.appendChild(chapelElement);
+
+            // Wait for image to load to get natural dimensions for aspect ratio
+            chapelElement.onload = function() {
+                updateChapelSize(chapelElement);
+            };
+        } else {
+            updateChapelSize(chapelElement);
+        }
+    }
+
+    /**
+     * Update chapel size based on width and height constraints
+     */
+    function updateChapelSize(chapelElement) {
+        // Get natural aspect ratio of the image
+        const naturalWidth = chapelElement.naturalWidth || 1;
+        const naturalHeight = chapelElement.naturalHeight || 1;
+        const aspectRatio = naturalWidth / naturalHeight;
+
+        // Calculate max dimensions based on percentage constraints
+        const maxWidthPx = window.innerWidth * (config.chapelWidthPercent / 100);
+        const maxHeightPx = window.innerHeight * (config.chapelHeightPercent / 100);
+
+        // Calculate what dimensions would be if constrained by each
+        const widthIfHeightConstrained = maxHeightPx * aspectRatio;
+        const heightIfWidthConstrained = maxWidthPx / aspectRatio;
+
+        // Use the smaller constraint to ensure both limits are respected
+        let finalWidth, finalHeight;
+        if (widthIfHeightConstrained <= maxWidthPx) {
+            // Height is the limiting factor
+            finalHeight = maxHeightPx;
+            finalWidth = widthIfHeightConstrained;
+        } else {
+            // Width is the limiting factor
+            finalWidth = maxWidthPx;
+            finalHeight = heightIfWidthConstrained;
+        }
+
+        chapelElement.style.width = finalWidth + 'px';
+        chapelElement.style.height = finalHeight + 'px';
+        chapelElement.style.bottom = config.chapelOffsetY + 'px';  // Apply vertical offset
+
+        // Position horizontally (centered on offsetX position)
+        const leftPos = (window.innerWidth * config.chapelOffsetX) - (finalWidth / 2);
+        chapelElement.style.left = leftPos + 'px';
+    }
+
+    /**
      * Animation loop - uses requestAnimationFrame for smooth, efficient rendering
      */
     function animate(timestamp) {
@@ -1301,6 +1417,9 @@
         width = canvas.width = leafCanvas.width = newWidth;
         height = canvas.height = leafCanvas.height = newHeight;
 
+        // Reposition chapel on resize
+        setupChapel();
+
         // Only reinitialize trees if already initialized (not during first setup)
         if (initialized) {
             ctx.clearRect(0, 0, width, height);
@@ -1322,7 +1441,7 @@
             return;
         }
 
-        if (config.enableDebugLogging) console.log('Growth theme initializing...');
+        if (config.enableDebugLogging) console.log('Hope theme initializing...');
 
         // Ensure document.body exists
         if (!document.body) {
@@ -1356,6 +1475,9 @@
             document.body.style.backgroundColor = config.backgroundColor;
         }
 
+        // Set up chapel image (fixed element like gradient)
+        setupChapel();
+
         if (!canvas) {
             console.error('Canvas element not found!');
             return;
@@ -1365,6 +1487,7 @@
             console.error('Canvas context not found!');
             return;
         }
+
 
         // Parse colors once for performance (avoid regex in animation loop)
         parsedLeafColor = parseColor(config.leafColor);
@@ -1399,6 +1522,7 @@
 
         // Mark as initialized after setup is complete
         initialized = true;
+        initTime = Date.now();  // Record init time for grace period
 
         // Handle window resize
         window.addEventListener('resize', resize);
@@ -1433,7 +1557,9 @@
                 significantChange = totalNodesChanged >= threshold;
 
                 // Trigger page fade out (debounced to 500ms, only on significant changes)
-                if (significantChange && now - lastPageChange > 500) {
+                // Skip during grace period after initialization (2 seconds) to avoid false triggers on page load
+                const gracePeriod = 2000;
+                if (significantChange && now - lastPageChange > 500 && now - initTime > gracePeriod) {
                     lastPageChange = now;
                     startFadeOut();
                 }
