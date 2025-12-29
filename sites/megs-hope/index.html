@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+		<meta charset="UTF-8">
+		<title>Meg's Hope Room</title>
+		
+		<!-- Configuration -->
+		<script>
+			var default_background = "starter";
+			var ajaxcms_google_analytics = 'UA-84079705-1';
+			var ajaxcms_splash_time = 0;
+		</script>
+		
+		<!-- Jquery -->
+		<script src="node_modules/jquery/dist/jquery.min.js"></script>
+		<script src="node_modules/jquery-ui-dist/jquery-ui.min.js"></script>
+		<link href="node_modules/jquery-ui-dist/jquery-ui.min.css" rel="stylesheet">  
+		
+		<!-- Bootstrap -->
+		<link href="node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+		<script src="node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+		
+		<!-- Markdown parser -->
+		<script src="node_modules/marked/lib/marked.umd.js"></script>
+		
+		<!-- Polyfills -->
+		
+		<!-- Background Animation -->
+		<script src="js/victor.js"></script>
+		<script src="js/canvasstuff.js"></script>
+		<script src="js/jquery-mobile-swipe.js"></script>
+		<script src="node_modules/segment-js/dist/segment.min.js"></script>
+		
+		<!-- CMS Javascript -->
+		<script src="js/ajaxcms.js"></script>
+		
+		<!-- fonts.google.com - Hope theme fonts -->
+		<link href="https://fonts.googleapis.com/css2?family=Fredericka+the+Great&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+		
+		<!-- Load theme -->
+		<script>
+			theme = default_background;
+			// Load theme CSS
+			$('<link>').appendTo('head').attr({type : 'text/css', rel : 'stylesheet'}).attr('href', 'themes/'+ default_background+'/theme.css?v=' + Date.now());
+			// Load theme background.js and signal when ready
+			$.getScript('themes/'+ default_background+'/background.js')
+				.done(function() {
+					// Theme script loaded, signal ready after a brief delay for initialization
+					setTimeout(function() {
+						if (window.themeReady) {
+							window.themeReady();
+						}
+					}, 100);
+				})
+				.fail(function(jqxhr, settings, exception) {
+					console.error('Error loading theme:', exception);
+					// Still signal ready so the site doesn't hang
+					if (window.themeReady) {
+						window.themeReady();
+					}
+				});
+		</script>
+		
+		<style>
+			body {
+				overflow-x: hidden;
+				padding-bottom: 100px;
+			}
+			
+			#background {
+			  position:fixed;
+			  z-index:-1;
+			  width:100%;
+			  height:100%;
+			  background: linear-gradient(180deg, #e8dfd0 0%, #d4c9b5 100%);
+			}
+			#background-div {
+			  position:fixed;
+			  z-index:0;
+			  width:100%;
+			  height:100%;
+			  overflow:hidden;
+			}
+			
+		nav.navbar {
+			margin-bottom:0px;
+			z-index:1;
+			border-radius:0px 0px 10px 10px;
+			background-color: #f8f8f8;
+			border: 1px solid #e7e7e7;
+		}
+
+		/* Make navbar links white text */
+		.navbar-nav .nav-link {
+			color: #ffffff !important;
+			padding: 15px 1rem;
+			line-height: 20px;
+			display: flex;
+			align-items: center;
+			height: 50px;
+		}
+
+		.navbar-nav .nav-link:hover,
+		.navbar-nav .nav-link:focus {
+			color: #ffffff !important;
+			background-color: rgba(0, 0, 0, 0.1);
+		}
+
+		.navbar-nav .nav-item.active .nav-link {
+			color: #ffffff !important;
+			font-weight: bold;
+		}
+
+		/* Dropdown toggle styling */
+		.navbar-nav .dropdown-toggle {
+			color: #ffffff !important;
+		}
+
+		/* Bootstrap 5 navbar spacing fixes */
+		.navbar-nav .nav-item {
+			margin: 0;
+		}
+
+		.navbar-nav .dropdown-menu {
+			position: absolute;
+		}
+
+		/* Prevent menu items from shifting when dropdown opens */
+		.navbar-nav .dropdown {
+			position: relative;
+		}
+		/* Carousel indicator styling - consistent for all states */
+		.carousel-indicators button {
+			width: 30px;
+			height: 3px;
+			background-color: rgba(255, 255, 255, 0.5);
+			border: none;
+			margin: 0 3px;
+		}
+
+		.carousel-indicators button.active {
+			background-color: rgba(255, 255, 255, 1);
+			width: 30px;
+			height: 3px;
+		}
+
+
+			
+			.container {
+				padding:0px;
+				padding-bottom:100px;
+				border-radius:4px 4px 0px 0px;
+				color:black;
+			}
+			
+			#a, #b {
+				position:absolute;
+				top: 0px;
+				width:100%;
+				z-index:0;
+				background-color: #f9f6f0;
+				border-radius:0px 0px 12px 12px;
+				color: #4a4a4a;
+				margin-bottom:50px;
+				padding-bottom:100px;
+				font-family: 'Quicksand', sans-serif;
+			}
+			
+			#a, #b {
+				width:98%!important;
+				max-width:371px;
+				left: 50% !important;
+				transform: translateX(-50%);
+			}
+
+			@media (min-width: 768px) {
+				#a, #b {
+					max-width:494px;
+				}
+			}
+			@media (min-width: 992px) {
+				#a, #b {
+					max-width:659px;
+				}
+			}
+			@media (min-width: 1200px) {
+				#a, #b {
+					max-width:782px;
+				}
+			}
+			@media (min-width: 1400px) {
+				#a, #b {
+					max-width:906px;
+				}
+			}
+			
+			#main>div {
+				padding: 0px 10px 20px 10px;
+			}
+			
+			#main img {
+				margin:10px;
+			}
+			#main .carousel img {
+				margin:0px;
+			}
+			img.thumb {
+				width:20px;
+			}
+			img.icon {
+				width:70px;
+			}
+			img.small {
+				width:300px;
+			}
+			img.medium {
+				width:600px;
+			}
+			img.large {
+				width:900px;
+			}
+			img.left {
+				float:left;
+			}
+			img.right {
+				float:right;
+			}
+			
+			.carousel {
+				padding:0px;
+			}
+			
+			ul.filelist li {
+				list-style-type:none;
+			}
+			ul.filelist li a.folder:hover {
+				text-decoration:none;
+			}
+			
+			footer {
+				display: none;
+			}
+			footer a {color: #d35400;}
+			footer a:hover {color: #e67e22;}
+			.blog .blog_entry {
+				border:1px solid black;
+				border-radius:10px;
+				margin:10px;
+				padding:5px;
+				background-color:rgba(255,255,255,0.8);
+				position:relative;
+				cursor: pointer; 
+			}
+			.blog .blog_entry h1 {
+				margin-top:0px;
+				font-size:150%;
+			}
+			.blog .blog_entry time {
+				position:absolute;
+				top:5px;
+				right:5px;
+			}
+			
+			
+			@media (min-width: 544px) {  }
+			@media (min-width: 768px) { footer {font-size:14px;} }
+			@media (min-width: 992px) {  }
+			@media (min-width: 1200px) {  }
+			
+
+		/* Image gallery styling for wildcard galleries */
+		.image-gallery img {
+			width: 100%;
+			height: auto;
+			border-radius: 4px;
+			cursor: pointer;
+			transition: transform 0.2s;
+		}
+
+		.image-gallery img:hover {
+			transform: scale(1.05);
+		}
+
+		/* Lightbox for expanded images */
+		.image-lightbox {
+			display: none;
+			position: fixed;
+			z-index: 9999;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background-color: rgba(0, 0, 0, 0);
+			cursor: pointer;
+			transition: background-color 0.3s ease;
+		}
+
+		.image-lightbox.active {
+			background-color: rgba(0, 0, 0, 0.9);
+		}
+
+		.image-lightbox img {
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%) scale(0.8);
+			width: 100%;
+			height: auto;
+			max-height: 100vh;
+			object-fit: contain;
+			opacity: 0;
+			transition: all 0.3s ease;
+		}
+
+		.image-lightbox.active img {
+			transform: translate(-50%, -50%) scale(1);
+			opacity: 1;
+		}
+
+		/* Header video styles */
+		.header-video-container {
+			position: relative;
+			width: 98%;
+			max-width: 371px;
+			margin: 0 auto;
+			border-radius: 12px 12px 0 0;
+			overflow: hidden;
+			aspect-ratio: 16/9;
+			background: #f9f6f0;
+		}
+		@media (min-width: 768px) {
+			.header-video-container { max-width: 494px; }
+		}
+		@media (min-width: 992px) {
+			.header-video-container { max-width: 659px; }
+		}
+		@media (min-width: 1200px) {
+			.header-video-container { max-width: 782px; }
+		}
+		@media (min-width: 1400px) {
+			.header-video-container { max-width: 906px; }
+		}
+		.header-video-container video {
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+		}
+
+		/* Meg's Hope Room custom styles */
+		#main h2 {
+			font-family: 'Fredericka the Great', cursive;
+			color: #5c5c5c;
+			font-size: clamp(1.6em, 6vw, 2.8em);
+			margin: 0 0 15px 0;
+			text-align: center;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 15px;
+		}
+		#main h2::before,
+		#main h2::after {
+			content: '';
+			flex: 1;
+			max-width: 80px;
+			height: 20px;
+			background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 20"><path d="M0,15 Q10,5 20,15 T40,15 T60,15 T80,15 T100,15" stroke="%237d9c5e" fill="none" stroke-width="2"/></svg>') repeat-x center;
+			background-size: 50px 20px;
+		}
+		#main h3 {
+			font-family: 'Fredericka the Great', cursive;
+			color: #5c5c5c;
+			font-size: 1.8em;
+			margin: 15px 0 10px 0;
+			text-align: center;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 15px;
+		}
+		#main h3::before,
+		#main h3::after {
+			content: '';
+			flex: 1;
+			max-width: 60px;
+			height: 20px;
+			background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 20"><path d="M0,15 Q10,5 20,15 T40,15 T60,15 T80,15 T100,15" stroke="%237d9c5e" fill="none" stroke-width="2"/></svg>') repeat-x center;
+			background-size: 50px 20px;
+		}
+		#main p {
+			line-height: 1.7;
+			font-size: 1.15em;
+		}
+		#main a {
+			color: #d35400;
+			text-decoration: none;
+			font-size: clamp(0.75em, 2.5vw, 1.4em);
+		}
+		#main a:hover {
+			text-decoration: underline;
+		}
+		#main hr {
+			border: none;
+			height: 20px;
+			background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 20"><path d="M0,15 Q10,5 20,15 T40,15 T60,15 T80,15 T100,15" stroke="%237d9c5e" fill="none" stroke-width="2"/></svg>') repeat-x center;
+			background-size: 100px 20px;
+			margin: 25px 0;
+		}
+		.section-divider {
+			text-align: center;
+			margin: 20px 0;
+		}
+
+		/* Bird image - scales with page width */
+		.megs-bird {
+			height: clamp(60px, 15vw, 120px);
+			position: absolute;
+			right: 10px;
+			top: 0px;
+			margin: 0 !important;
+		}
+
+		/* Follow Me section */
+		.follow-me-section {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			flex-wrap: wrap;
+			gap: 15px;
+			padding: 20px 15px;
+			text-align: center;
+			width: 100%;
+		}
+		.follow-me-section a {
+			font-size: 1em !important;
+		}
+		.follow-me-section .social-icons {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 5px;
+		}
+		@media (max-width: 500px) {
+			.follow-me-section {
+				flex-direction: column;
+				gap: 12px;
+				text-align: center;
+			}
+			.follow-me-section .social-icons {
+				justify-content: center;
+				width: 100%;
+			}
+		}
+		</style>
+	</head>
+	
+	<body>
+		<canvas id="background"></canvas>
+		<div id="background-div"></div>
+		<div class="container" style="display:none;">
+			<!-- Hidden menu for AjaxCMS system -->
+			<ul id='menu' class="navbar-nav" style="display:none;"></ul>
+
+			<!-- Header Video (replaces banner) -->
+			<div class="header-video-container">
+				<video id="header-video" autoplay muted playsinline></video>
+			</div>
+
+			<main id="main" style="position:relative; width:100%;">
+				<!-- Content gets inserted here, a and b are for making page style transitions. -->
+				<div id='a' style=""></div>
+				<div id='b' style="display:none;"></div>
+			</main>
+			
+			<footer>
+				<div>
+					&#9400; 2024 Meg's Hope Room. Email: <a href="mailto:MegsHopeRoom@gmail.com">MegsHopeRoom@gmail.com</a>
+				</div>
+			</footer>
+		</div>
+		
+		<!-- Google Analytics -->
+		<script>
+		  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+		
+		  ga('create', ajaxcms_google_analytics, 'auto');
+		  //ga('send', 'pageview');
+		</script>
+
+		<!-- Header Video Randomizer -->
+		<script>
+		(function() {
+			var headerVideos = [];
+			var shuffledVideos = [];
+			var currentIndex = 0;
+			var videoA = null;
+			var videoB = null;
+			var activeVideo = 'A';
+			var errorCount = 0;
+			var maxErrors = 5;
+
+			// Shuffle array using Fisher-Yates algorithm
+			function shuffleArray(array) {
+				var shuffled = array.slice();
+				for (var i = shuffled.length - 1; i > 0; i--) {
+					var j = Math.floor(Math.random() * (i + 1));
+					var temp = shuffled[i];
+					shuffled[i] = shuffled[j];
+					shuffled[j] = temp;
+				}
+				return shuffled;
+			}
+
+			function getNextFilename() {
+				if (currentIndex >= shuffledVideos.length) {
+					shuffledVideos = shuffleArray(headerVideos);
+					currentIndex = 0;
+				}
+				return shuffledVideos[currentIndex++];
+			}
+
+			// Play next video with crossfade
+			function playNextVideo() {
+				if (headerVideos.length === 0) return;
+				if (errorCount >= maxErrors) {
+					console.log('Too many video errors, stopping');
+					return;
+				}
+
+				var currentVideo = (activeVideo === 'A') ? videoA : videoB;
+				var nextVideo = (activeVideo === 'A') ? videoB : videoA;
+
+				var filename = getNextFilename();
+				var videoUrl = 'images/' + filename;
+
+				// Ensure next video is completely hidden and reset
+				nextVideo.style.visibility = 'hidden';
+				nextVideo.style.opacity = '0';
+
+				var swapped = false;
+				function doSwap() {
+					if (swapped) return;
+					swapped = true;
+					errorCount = 0;
+
+					// Show next video
+					nextVideo.style.opacity = '1';
+					nextVideo.style.visibility = 'visible';
+
+					// Hide current video
+					currentVideo.style.visibility = 'hidden';
+					currentVideo.style.opacity = '0';
+					currentVideo.pause();
+
+					activeVideo = (activeVideo === 'A') ? 'B' : 'A';
+				}
+
+				function onReady() {
+					nextVideo.removeEventListener('canplaythrough', onReady);
+					// Seek past first frame, then swap
+					nextVideo.currentTime = 0.1;
+					nextVideo.onseeked = function() {
+						nextVideo.onseeked = null;
+						doSwap();
+						nextVideo.play();
+					};
+				}
+
+				function onError() {
+					nextVideo.removeEventListener('error', onError);
+					console.log('Video load error');
+					errorCount++;
+					setTimeout(playNextVideo, 100);
+				}
+
+				nextVideo.addEventListener('canplaythrough', onReady);
+				nextVideo.addEventListener('error', onError);
+				nextVideo.src = videoUrl;
+				nextVideo.load();
+			}
+
+			// Initialize when DOM is ready
+			$(document).ready(function() {
+				var container = document.querySelector('.header-video-container');
+				if (!container) return;
+
+				// Create two video elements for seamless preload
+				videoA = document.getElementById('header-video');
+				videoA.style.position = 'absolute';
+				videoA.style.top = '0';
+				videoA.style.left = '0';
+				videoA.style.width = '100%';
+				videoA.style.visibility = 'visible';
+				videoA.style.opacity = '1';
+
+				videoB = document.createElement('video');
+				videoB.muted = true;
+				videoB.playsInline = true;
+				videoB.preload = 'auto';
+				videoB.style.position = 'absolute';
+				videoB.style.top = '0';
+				videoB.style.left = '0';
+				videoB.style.width = '100%';
+				videoB.style.visibility = 'hidden';
+				videoB.style.opacity = '0';
+				container.appendChild(videoB);
+
+				// Skip last frame - switch before video ends
+				function checkTimeAndSwitch(video) {
+					if (video.duration - video.currentTime < 0.1) {
+						video.pause();
+						playNextVideo();
+					}
+				}
+				videoA.addEventListener('timeupdate', function() { checkTimeAndSwitch(videoA); });
+				videoB.addEventListener('timeupdate', function() { checkTimeAndSwitch(videoB); });
+
+				// Load video list from images directory
+				$.get('./api/list?dir=images')
+					.done(function(data) {
+						if (data.files) {
+							headerVideos = data.files
+								.filter(function(f) { return f.name.endsWith('.mp4'); })
+								.map(function(f) { return f.name; });
+
+							if (headerVideos.length > 0) {
+								shuffledVideos = shuffleArray(headerVideos);
+								playNextVideo();
+							}
+						}
+					});
+			});
+		})();
+		</script>
+	</body>
+
+</html>

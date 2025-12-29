@@ -186,7 +186,8 @@ function sendFileWithCache(filePath, req, res, next) {
     res.sendFile(filePath, (sendErr) => {
       if (sendErr) {
         logRequest(req.siteName, req, sendErr.status || 500, 0);
-        if (next) next();
+        // Only call next if headers haven't been sent yet
+        if (next && !res.headersSent) next();
       } else {
         logRequest(req.siteName, req, 200, stats.size);
       }

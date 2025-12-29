@@ -168,7 +168,30 @@
 			
 			#a, #b {
 				width:98%!important;
-				margin: 0 auto;
+				max-width: 540px;
+				left: 50% !important;
+				transform: translateX(-50%);
+			}
+
+			@media (min-width: 768px) {
+				#a, #b {
+					max-width: 720px;
+				}
+			}
+			@media (min-width: 992px) {
+				#a, #b {
+					max-width: 960px;
+				}
+			}
+			@media (min-width: 1200px) {
+				#a, #b {
+					max-width: 1140px;
+				}
+			}
+			@media (min-width: 1400px) {
+				#a, #b {
+					max-width: 1320px;
+				}
 			}
 			
 			#main>div {
