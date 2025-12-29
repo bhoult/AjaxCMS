@@ -502,6 +502,8 @@
 			var activeVideo = 'A';
 			var errorCount = 0;
 			var maxErrors = 5;
+			var preloadedVideos = {};
+			var preloadStarted = false;
 
 			// Shuffle array using Fisher-Yates algorithm
 			function shuffleArray(array) {
@@ -513,6 +515,26 @@
 					shuffled[j] = temp;
 				}
 				return shuffled;
+			}
+
+			// Preload all videos in background after first video starts
+			function preloadAllVideos() {
+				if (preloadStarted) return;
+				preloadStarted = true;
+
+				headerVideos.forEach(function(filename, index) {
+					// Stagger preloads to avoid overwhelming the connection
+					setTimeout(function() {
+						if (preloadedVideos[filename]) return;
+						var video = document.createElement('video');
+						video.preload = 'auto';
+						video.muted = true;
+						video.style.display = 'none';
+						video.src = 'images/' + filename;
+						video.load();
+						preloadedVideos[filename] = video;
+					}, index * 500); // 500ms between each preload start
+				});
 			}
 
 			function getNextFilename() {
@@ -557,6 +579,9 @@
 					currentVideo.pause();
 
 					activeVideo = (activeVideo === 'A') ? 'B' : 'A';
+
+					// Start preloading all videos after first video plays
+					preloadAllVideos();
 				}
 
 				function onReady() {
