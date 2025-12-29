@@ -168,12 +168,17 @@
 			}
 			
 			#a, #b {
-				width:98%!important;
-				max-width:371px;
+				width:96%!important;
+				max-width:340px;
 				left: 50% !important;
 				transform: translateX(-50%);
 			}
 
+			@media (min-width: 400px) {
+				#a, #b {
+					max-width:371px;
+				}
+			}
 			@media (min-width: 768px) {
 				#a, #b {
 					max-width:494px;
@@ -321,13 +326,16 @@
 		/* Header video styles */
 		.header-video-container {
 			position: relative;
-			width: 98%;
-			max-width: 371px;
+			width: 96%;
+			max-width: 340px;
 			margin: 0 auto;
 			border-radius: 12px 12px 0 0;
 			overflow: hidden;
 			aspect-ratio: 16/9;
 			background: #f9f6f0;
+		}
+		@media (min-width: 400px) {
+			.header-video-container { max-width: 371px; }
 		}
 		@media (min-width: 768px) {
 			.header-video-container { max-width: 494px; }
@@ -351,7 +359,7 @@
 		#main h2 {
 			font-family: 'Fredericka the Great', cursive;
 			color: #5c5c5c;
-			font-size: clamp(1.6em, 6vw, 2.8em);
+			font-size: clamp(1.4em, 5.5vw, 2.8em);
 			margin: 0 0 15px 0;
 			text-align: center;
 			display: flex;
@@ -389,13 +397,13 @@
 			background-size: 50px 20px;
 		}
 		#main p {
-			line-height: 1.7;
-			font-size: 1.15em;
+			line-height: 1.6;
+			font-size: clamp(0.9em, 2.8vw, 1.15em);
 		}
 		#main a {
 			color: #d35400;
 			text-decoration: none;
-			font-size: clamp(0.75em, 2.5vw, 1.4em);
+			font-size: clamp(0.7em, 2.2vw, 1.4em);
 		}
 		#main a:hover {
 			text-decoration: underline;
