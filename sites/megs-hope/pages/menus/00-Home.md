@@ -42,6 +42,6 @@ Meg's Hope Room is a place to find hope in Jesus through prayer, encouragement, 
 
 ### Subscribe to My Newsletter
 
-{{form | newsletter | Name | Email}}
+{{form | newsletter_9423 | Name | Email}}
 
 </div>

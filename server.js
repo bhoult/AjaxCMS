@@ -365,6 +365,12 @@ app.get('*/api/list', async (req, res) => {
       return res.status(403).json({ error: 'Access denied' });
     }
 
+    // Block listing of files directory (contains form submissions)
+    const normalizedDir = dirParam.replace(/^\.?\/?/, '');
+    if (normalizedDir === 'files' || normalizedDir.startsWith('files/')) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
     // Load from both site-specific and global directories
     let sitePathExists = false;
     let globalPathExists = false;
@@ -498,6 +504,12 @@ app.get('*/api/list-recursive', async (req, res) => {
 
     // Security check
     if (!fullPath.startsWith(path.resolve(req.sitePath))) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    // Block listing of files directory (contains form submissions)
+    const normalizedDir = dirParam.replace(/^\.?\/?/, '');
+    if (normalizedDir === 'files' || normalizedDir.startsWith('files/')) {
       return res.status(403).json({ error: 'Access denied' });
     }
 
@@ -819,9 +831,23 @@ app.post('*/api/form-submit', async (req, res) => {
       return '"' + value + '"';
     });
 
-    // Add timestamp field
+    // Add IP address field
+    const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
+    fields.unshift('IP');
+    values.unshift('"' + clientIp + '"');
+
+    // Add timestamp field (human readable format)
     fields.unshift('Timestamp');
-    values.unshift('"' + new Date().toISOString() + '"');
+    const now = new Date();
+    const timestamp = now.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+    values.unshift('"' + timestamp + '"');
 
     // Check if file exists to determine if we need headers
     let fileExists = false;

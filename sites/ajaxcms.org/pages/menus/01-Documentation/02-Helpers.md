@@ -293,6 +293,55 @@ Displays a simple list of blog post titles with links. Similar to `{{blog}}` but
 **Use case:** Create a compact blog archive or sidebar widget
 
 
+### Form
+
+**Syntax:** `{{form | filename | field1 | field2 | field3 | ...}}`
+
+Creates a simple form that saves submissions to a CSV file. Useful for contact forms, newsletter signups, surveys, and other data collection.
+
+**Parameters:**
+- `filename` (required) - Name for the CSV file (without extension). Only alphanumeric characters, dashes, and underscores allowed
+- `field1, field2, ...` (required) - Field names to display as form labels. At least one field is required
+
+**Examples:**
+```
+{{form | contact | Name | Email | Message}}
+{{form | newsletter | Name | Email}}
+{{form | survey | Name | Favorite Color | Comments}}
+```
+
+**With CSS classes:**
+```
+{{form | contact | Name | Email | class=>my-custom-form}}
+```
+
+**How it works:**
+- Form submissions are saved to `files/filename.csv` in your site directory
+- Each submission includes a timestamp and the submitter's IP address
+- CSV file is created automatically on first submission
+- Subsequent submissions are appended as new rows
+- Success/error messages are displayed to the user after submission
+
+**Viewing submissions:**
+
+Visit the CSV file URL directly to see submissions as a formatted HTML table:
+```
+http://yoursite.com/files/contact.csv
+```
+
+Features:
+- Styled HTML table with all submissions
+- Submission count
+- "Download CSV" button for raw file download
+- Add `?download=1` to URL for direct CSV download
+
+**Security:**
+- All displayed values are HTML-escaped to prevent XSS attacks
+- CSV injection protection: values starting with `=`, `+`, `-`, `@` are prefixed with single quote
+- The `files/` directory is hidden from directory listings - files are only accessible by direct URL
+- Filenames are sanitized to prevent path traversal attacks
+
+
 ## Helper Reference Quick Guide
 
 | Helper | Purpose | Example |
@@ -304,6 +353,7 @@ Displays a simple list of blog post titles with links. Similar to `{{blog}}` but
 | `{{filelist}}` | Directory tree | `{{filelist \| ./pages/docs}}` |
 | `{{blog}}` | Blog with excerpts | `{{blog \| ./pages/blog \| 0 \| 5}}` |
 | `{{bloglist}}` | Blog titles only | `{{bloglist \| ./pages/blog}}` |
+| `{{form}}` | Form to CSV | `{{form \| contact \| Name \| Email}}` |
 
 ## Next Steps
 

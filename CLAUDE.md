@@ -425,3 +425,68 @@ Common issues:
 - **Comments disappear on reload**: Check that `loading_page` variable is set correctly (should match page path without `./` prefix)
 - **JSON file not created**: Verify page path is correct and server has write permissions
 - **Comments not loading**: Check browser console for API errors, verify page path formatting
+
+## Form System
+
+The `{{form}}` helper creates simple forms that save submissions to CSV files.
+
+### Usage
+
+```
+{{form | filename | Field1 | Field2 | Field3}}
+```
+
+**Example:**
+```html
+<h3>Subscribe to My Newsletter</h3>
+{{form | newsletter | Name | Email}}
+```
+
+This creates a form with Name and Email fields. Submissions are saved to `files/newsletter.csv`.
+
+### Architecture
+
+**Backend (server.js)**:
+- **POST `/api/form-submit`**: Receives form data and appends to CSV file
+- **GET `/files/*.csv`**: Displays CSV as HTML table with download link
+- CSV files stored in site's `files/` directory (auto-created if needed)
+- Filename sanitization: only alphanumeric, dashes, underscores allowed
+
+**Frontend (js/ajaxcms.js)**:
+- Form helper (lines 747-774): Generates HTML form with labeled inputs
+- `submitForm()`: Posts form data via AJAX, shows success/error messages
+
+**Data Storage** (CSV format):
+Each submission is appended as a new row with automatic headers:
+```csv
+Timestamp,IP,Name,Email
+"Jan 2, 2026, 11:20 AM","192.168.1.1","John Doe","john@example.com"
+```
+
+### Security
+
+- **XSS Prevention**: All values HTML-escaped when displayed via `escapeHtml()`
+- **CSV Injection Protection**: Values starting with `=`, `+`, `-`, `@`, tab, or CR are prefixed with single quote to prevent formula execution in spreadsheets
+- **Filename Sanitization**: Only alphanumeric characters, dashes, and underscores allowed
+- **Path Traversal Protection**: Server validates file paths stay within site directory
+- **Directory Listing Blocked**: The `files/` directory is excluded from `/api/list` and `/api/list-recursive` endpoints - files are only accessible by direct URL
+
+### Viewing Submissions
+
+Visit the CSV file URL directly to see submissions as a formatted HTML table:
+```
+http://yoursite.com/files/newsletter.csv
+```
+
+Features:
+- Styled HTML table with all submissions
+- Submission count
+- "Download CSV" button for raw file
+- Add `?download=1` to URL for direct CSV download
+
+### Troubleshooting
+
+Common issues:
+- **Form not submitting**: Check browser console for API errors
+- **CSV file not created**: Verify server has write permissions to site directory
+- **Submissions not appearing**: Ensure filename contains only allowed characters (alphanumeric, dash, underscore)
