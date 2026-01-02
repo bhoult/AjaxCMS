@@ -771,6 +771,222 @@ app.post('*/api/discussion', async (req, res) => {
   }
 });
 
+// API endpoint to submit form data to CSV
+app.post('*/api/form-submit', async (req, res) => {
+  try {
+    if (!req.sitePath) {
+      return res.status(400).json({ error: 'No site specified' });
+    }
+
+    const { filename, data } = req.body;
+
+    // Validate required fields
+    if (!filename || !data || typeof data !== 'object') {
+      return res.status(400).json({ error: 'Filename and data are required' });
+    }
+
+    // Sanitize filename (only allow alphanumeric, dashes, underscores)
+    const sanitizedFilename = filename.replace(/[^a-zA-Z0-9_-]/g, '');
+    if (!sanitizedFilename) {
+      return res.status(400).json({ error: 'Invalid filename' });
+    }
+
+    // Create files directory path
+    const filesDir = path.join(req.sitePath, 'files');
+    const csvPath = path.join(filesDir, sanitizedFilename + '.csv');
+
+    // Security check
+    if (!csvPath.startsWith(path.resolve(req.sitePath))) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    // Ensure files directory exists
+    await fs.mkdir(filesDir, { recursive: true });
+
+    // Get field names and values
+    const fields = Object.keys(data);
+    const values = fields.map(field => {
+      let value = String(data[field] || '');
+
+      // Prevent CSV injection (formula injection) - prefix dangerous chars with single quote
+      // Characters =, +, -, @, tab, CR can trigger formula execution in Excel/Sheets
+      if (/^[=+\-@\t\r]/.test(value)) {
+        value = "'" + value;
+      }
+
+      // Escape double quotes and wrap in quotes for CSV
+      value = value.replace(/"/g, '""');
+      return '"' + value + '"';
+    });
+
+    // Add timestamp field
+    fields.unshift('Timestamp');
+    values.unshift('"' + new Date().toISOString() + '"');
+
+    // Check if file exists to determine if we need headers
+    let fileExists = false;
+    try {
+      await fs.access(csvPath);
+      fileExists = true;
+    } catch (err) {
+      // File doesn't exist, we'll create it with headers
+    }
+
+    // Build CSV content
+    let csvContent = '';
+    if (!fileExists) {
+      // Add header row
+      csvContent = fields.join(',') + '\n';
+    }
+    csvContent += values.join(',') + '\n';
+
+    // Append to file
+    await fs.appendFile(csvPath, csvContent, 'utf-8');
+
+    res.json({ success: true });
+
+  } catch (err) {
+    console.error('Error submitting form:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Serve CSV files as HTML tables with download link
+app.get('*/files/*.csv', async (req, res) => {
+  try {
+    if (!req.sitePath) {
+      return res.status(400).send('No site specified');
+    }
+
+    // Extract the file path from the URL
+    const urlPath = req.path.replace(req.sitePrefix || '', '');
+    const csvPath = path.join(req.sitePath, urlPath);
+
+    // Security check
+    if (!csvPath.startsWith(path.resolve(req.sitePath))) {
+      return res.status(403).send('Access denied');
+    }
+
+    // Check if file exists
+    try {
+      await fs.access(csvPath);
+    } catch (err) {
+      return res.status(404).send('File not found');
+    }
+
+    // If download param is set, serve raw CSV
+    if (req.query.download) {
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename="${path.basename(csvPath)}"`);
+      const content = await fs.readFile(csvPath, 'utf-8');
+      return res.send(content);
+    }
+
+    // Read and parse CSV
+    const content = await fs.readFile(csvPath, 'utf-8');
+    const lines = content.trim().split('\n');
+
+    if (lines.length === 0) {
+      return res.send('<html><body><p>Empty file</p></body></html>');
+    }
+
+    // Parse CSV (handle quoted values with commas)
+    function parseCSVLine(line) {
+      const result = [];
+      let current = '';
+      let inQuotes = false;
+
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (char === '"') {
+          if (inQuotes && line[i + 1] === '"') {
+            current += '"';
+            i++;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (char === ',' && !inQuotes) {
+          result.push(current);
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+      result.push(current);
+      return result;
+    }
+
+    const rows = lines.map(parseCSVLine);
+    const headers = rows[0];
+    const dataRows = rows.slice(1);
+    const filename = path.basename(csvPath);
+
+    // Build HTML
+    let html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${escapeHtml(filename)}</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 20px; background: #f5f5f5; }
+    .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    h1 { margin: 0 0 10px 0; color: #333; }
+    .meta { color: #666; margin-bottom: 20px; }
+    .download-link { display: inline-block; background: #007bff; color: white; padding: 8px 16px; border-radius: 4px; text-decoration: none; margin-bottom: 20px; }
+    .download-link:hover { background: #0056b3; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #ddd; }
+    th { background: #f8f9fa; font-weight: 600; position: sticky; top: 0; }
+    tr:hover { background: #f8f9fa; }
+    .empty { color: #999; font-style: italic; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>${escapeHtml(filename)}</h1>
+    <p class="meta">${dataRows.length} submission${dataRows.length !== 1 ? 's' : ''}</p>
+    <a href="?download=1" class="download-link">Download CSV</a>
+    <table>
+      <thead>
+        <tr>`;
+
+    for (const header of headers) {
+      html += `<th>${escapeHtml(header)}</th>`;
+    }
+
+    html += `</tr>
+      </thead>
+      <tbody>`;
+
+    if (dataRows.length === 0) {
+      html += `<tr><td colspan="${headers.length}" class="empty">No submissions yet</td></tr>`;
+    } else {
+      for (const row of dataRows) {
+        html += '<tr>';
+        for (let i = 0; i < headers.length; i++) {
+          const value = row[i] || '';
+          html += `<td>${escapeHtml(value)}</td>`;
+        }
+        html += '</tr>';
+      }
+    }
+
+    html += `</tbody>
+    </table>
+  </div>
+</body>
+</html>`;
+
+    res.setHeader('Content-Type', 'text/html');
+    res.send(html);
+
+  } catch (err) {
+    console.error('Error serving CSV:', err);
+    res.status(500).send('Internal server error');
+  }
+});
+
 // SEO: Generate XML sitemap for a site
 app.get('*/sitemap.xml', async (req, res) => {
   try {

@@ -744,6 +744,35 @@ function process_page(sdata) {
 					"</div>";
 		}
 
+		// {{form | filename | field1 | field2 | field3 ...}}
+		// Creates a simple form that saves submissions to a CSV file
+		if (parts[0] == 'form') {
+			var formId = 'form_' + Math.floor(Math.random() * 9999999999);
+			var filename = parts[1] || 'submissions';
+			var fields = parts.slice(2);
+
+			if (fields.length === 0) {
+				return '<p class="form-error">Error: form helper requires at least one field</p>';
+			}
+
+			var html = '<form ' + attributes_string + ' id="' + formId + '" class="ajaxcms-form" data-filename="' + filename + '" onsubmit="submitForm(\'' + formId + '\'); return false;">';
+
+			for (var i = 0; i < fields.length; i++) {
+				var fieldName = fields[i].trim();
+				var fieldId = formId + '_' + fieldName.replace(/\s+/g, '_').toLowerCase();
+				html += '<div class="form-group">';
+				html += '<label for="' + fieldId + '">' + fieldName + '</label>';
+				html += '<input type="text" id="' + fieldId + '" name="' + fieldName + '" class="form-control" required>';
+				html += '</div>';
+			}
+
+			html += '<button type="submit" class="btn btn-primary form-submit">Submit</button>';
+			html += '<div class="form-message" style="display: none;"></div>';
+			html += '</form>';
+
+			return html;
+		}
+
 		// If all else fails return the original tag.
 		return "{{"+pieces.join("|")+"}}"
 	});
@@ -2274,6 +2303,75 @@ function submitReply(parentId) {
 	});
 }
 
+/**
+ * Submit a form and save data to CSV
+ * @param {string} formId - The ID of the form element
+ */
+function submitForm(formId) {
+	var form = document.getElementById(formId);
+	if (!form) {
+		console.error('Form not found:', formId);
+		return;
+	}
+
+	var filename = form.getAttribute('data-filename');
+	var submitButton = form.querySelector('.form-submit');
+	var messageDiv = form.querySelector('.form-message');
+
+	// Collect form data
+	var formData = {};
+	var inputs = form.querySelectorAll('input[name]');
+	inputs.forEach(function(input) {
+		formData[input.name] = input.value.trim();
+	});
+
+	// Disable submit button during request
+	submitButton.disabled = true;
+	submitButton.textContent = 'Submitting...';
+	messageDiv.style.display = 'none';
+
+	// Post to API
+	$.ajax({
+		url: './api/form-submit',
+		method: 'POST',
+		contentType: 'application/json',
+		data: JSON.stringify({
+			filename: filename,
+			data: formData
+		}),
+		success: function(response) {
+			// Clear form
+			inputs.forEach(function(input) {
+				input.value = '';
+			});
+
+			// Show success message
+			messageDiv.textContent = 'Form submitted successfully!';
+			messageDiv.className = 'form-message form-success';
+			messageDiv.style.display = 'block';
+
+			// Re-enable button
+			submitButton.disabled = false;
+			submitButton.textContent = 'Submit';
+		},
+		error: function(xhr, status, error) {
+			var errorMessage = 'Failed to submit form. Please try again.';
+
+			if (xhr.responseJSON && xhr.responseJSON.error) {
+				errorMessage = xhr.responseJSON.error;
+			}
+
+			messageDiv.textContent = errorMessage;
+			messageDiv.className = 'form-message form-error';
+			messageDiv.style.display = 'block';
+
+			submitButton.disabled = false;
+			submitButton.textContent = 'Submit';
+			console.error('Failed to submit form:', error);
+		}
+	});
+}
+
 // Expose functions to global scope so onclick handlers in generated HTML can call them
 window.loadPage = loadPage;
 window.toggleBlogEntry = toggleBlogEntry;
@@ -2288,5 +2386,6 @@ window.showReplyForm = showReplyForm;
 window.hideReplyForm = hideReplyForm;
 window.submitReply = submitReply;
 window.toggleComment = toggleComment;
+window.submitForm = submitForm;
 
 })();
