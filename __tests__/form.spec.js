@@ -35,19 +35,87 @@ describe('Form System', () => {
     }
   });
 
+  // Helper to get CSRF token and encrypted form name
+  async function getFormToken(formName) {
+    const response = await request(app)
+      .get(`/${testSitePath}/api/csrf-token?form=${formName}`);
+    return response.body;
+  }
+
+  describe('CSRF Token Endpoint', () => {
+    it('should require form name parameter', async () => {
+      if (!testSitePath) return;
+
+      const response = await request(app)
+        .get(`/${testSitePath}/api/csrf-token`);
+
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty('error');
+    });
+
+    it('should return token and encrypted form', async () => {
+      if (!testSitePath) return;
+
+      const response = await request(app)
+        .get(`/${testSitePath}/api/csrf-token?form=test_form`);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('token');
+      expect(response.body).toHaveProperty('form');
+      expect(response.body.token).toBeTruthy();
+      expect(response.body.form).toBeTruthy();
+    });
+
+    it('should reject invalid form name characters', async () => {
+      if (!testSitePath) return;
+
+      const response = await request(app)
+        .get(`/${testSitePath}/api/csrf-token?form=../../../etc/passwd`);
+
+      expect(response.status).toBe(400);
+      expect(response.body).toHaveProperty('error');
+    });
+
+    it('should generate different tokens each time', async () => {
+      if (!testSitePath) return;
+
+      const response1 = await request(app)
+        .get(`/${testSitePath}/api/csrf-token?form=test_form`);
+      const response2 = await request(app)
+        .get(`/${testSitePath}/api/csrf-token?form=test_form`);
+
+      expect(response1.body.token).not.toBe(response2.body.token);
+    });
+
+    it('should generate different encrypted forms each time (different IV)', async () => {
+      if (!testSitePath) return;
+
+      const response1 = await request(app)
+        .get(`/${testSitePath}/api/csrf-token?form=test_form`);
+      const response2 = await request(app)
+        .get(`/${testSitePath}/api/csrf-token?form=test_form`);
+
+      expect(response1.body.form).not.toBe(response2.body.form);
+    });
+  });
+
   describe('POST /api/form-submit', () => {
-    it('should create CSV file with form data', async () => {
+    it('should create CSV file with valid token and encrypted form', async () => {
       if (!testSitePath) return;
 
       const testFilename = 'test_form_' + Date.now();
+      const { token, form } = await getFormToken(testFilename);
+
       const response = await request(app)
         .post(`/${testSitePath}/api/form-submit`)
         .send({
-          filename: testFilename,
+          encryptedForm: form,
           data: {
             Name: 'John Doe',
             Email: 'john@example.com'
-          }
+          },
+          _csrf: token,
+          _hp_check: ''
         });
 
       expect(response.status).toBe(200);
@@ -64,51 +132,145 @@ describe('Form System', () => {
       expect(csvContent).toContain('john@example.com');
     });
 
-    it('should require filename and data', async () => {
+    it('should reject submission without CSRF token', async () => {
       if (!testSitePath) return;
 
-      const response = await request(app)
-        .post(`/${testSitePath}/api/form-submit`)
-        .send({});
-
-      expect(response.status).toBe(400);
-      expect(response.body).toHaveProperty('error');
-    });
-
-    it('should sanitize filename', async () => {
-      if (!testSitePath) return;
+      const testFilename = 'test_form_nocsrf_' + Date.now();
+      const { form } = await getFormToken(testFilename);
 
       const response = await request(app)
         .post(`/${testSitePath}/api/form-submit`)
         .send({
-          filename: '../../../etc/passwd',
-          data: { Name: 'Test' }
+          encryptedForm: form,
+          data: { Name: 'Test' },
+          _hp_check: ''
         });
 
-      // Should either sanitize to valid name or reject
-      expect([200, 400]).toContain(response.status);
+      expect(response.status).toBe(403);
+      expect(response.body.error).toContain('token');
+    });
 
-      // Verify no file created outside files directory
-      try {
-        await fs.access('/etc/passwd.csv');
-        fail('Should not create file outside site directory');
-      } catch (err) {
-        // Expected - file should not exist
-      }
+    it('should reject submission with invalid CSRF token', async () => {
+      if (!testSitePath) return;
+
+      const testFilename = 'test_form_badcsrf_' + Date.now();
+      const { form } = await getFormToken(testFilename);
+
+      const response = await request(app)
+        .post(`/${testSitePath}/api/form-submit`)
+        .send({
+          encryptedForm: form,
+          data: { Name: 'Test' },
+          _csrf: 'invalid-token-12345',
+          _hp_check: ''
+        });
+
+      expect(response.status).toBe(403);
+    });
+
+    it('should reject reused CSRF token (one-time use)', async () => {
+      if (!testSitePath) return;
+
+      const testFilename = 'test_form_reuse_' + Date.now();
+      const { token, form } = await getFormToken(testFilename);
+
+      // First submission should succeed
+      const response1 = await request(app)
+        .post(`/${testSitePath}/api/form-submit`)
+        .send({
+          encryptedForm: form,
+          data: { Name: 'First' },
+          _csrf: token,
+          _hp_check: ''
+        });
+      expect(response1.status).toBe(200);
+
+      // Second submission with same token should fail
+      const response2 = await request(app)
+        .post(`/${testSitePath}/api/form-submit`)
+        .send({
+          encryptedForm: form,
+          data: { Name: 'Second' },
+          _csrf: token,
+          _hp_check: ''
+        });
+      expect(response2.status).toBe(403);
+    });
+
+    it('should reject submission without encrypted form', async () => {
+      if (!testSitePath) return;
+
+      const { token } = await getFormToken('test_form');
+
+      const response = await request(app)
+        .post(`/${testSitePath}/api/form-submit`)
+        .send({
+          data: { Name: 'Test' },
+          _csrf: token,
+          _hp_check: ''
+        });
+
+      expect(response.status).toBe(400);
+    });
+
+    it('should reject submission with invalid encrypted form', async () => {
+      if (!testSitePath) return;
+
+      const { token } = await getFormToken('test_form');
+
+      const response = await request(app)
+        .post(`/${testSitePath}/api/form-submit`)
+        .send({
+          encryptedForm: 'invalid-encrypted-data',
+          data: { Name: 'Test' },
+          _csrf: token,
+          _hp_check: ''
+        });
+
+      expect(response.status).toBe(403);
+      expect(response.body.error).toContain('Invalid form identifier');
+    });
+
+    it('should silently accept honeypot submissions (return success but not save)', async () => {
+      if (!testSitePath) return;
+
+      const testFilename = 'test_form_honeypot_' + Date.now();
+      const { token, form } = await getFormToken(testFilename);
+
+      const response = await request(app)
+        .post(`/${testSitePath}/api/form-submit`)
+        .send({
+          encryptedForm: form,
+          data: { Name: 'Bot' },
+          _csrf: token,
+          _hp_check: 'I am a bot filling hidden fields'  // Old field name still works
+        });
+
+      // Returns success to not alert bots
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('success', true);
+
+      // But file should NOT be created
+      const csvPath = path.join(testFilesDir, testFilename + '.csv');
+      await expect(fs.access(csvPath)).rejects.toThrow();
     });
 
     it('should protect against CSV injection', async () => {
       if (!testSitePath) return;
 
       const testFilename = 'test_form_injection_' + Date.now();
+      const { token, form } = await getFormToken(testFilename);
+
       const response = await request(app)
         .post(`/${testSitePath}/api/form-submit`)
         .send({
-          filename: testFilename,
+          encryptedForm: form,
           data: {
             Name: '=HYPERLINK("http://evil.com")',
             Email: '+cmd|calc'
-          }
+          },
+          _csrf: token,
+          _hp_check: ''
         });
 
       expect(response.status).toBe(200);
@@ -126,19 +288,25 @@ describe('Form System', () => {
       const testFilename = 'test_form_append_' + Date.now();
 
       // First submission
+      const { token: token1, form: form1 } = await getFormToken(testFilename);
       await request(app)
         .post(`/${testSitePath}/api/form-submit`)
         .send({
-          filename: testFilename,
-          data: { Name: 'First' }
+          encryptedForm: form1,
+          data: { Name: 'First' },
+          _csrf: token1,
+          _hp_check: ''
         });
 
-      // Second submission
+      // Second submission (need new token)
+      const { token: token2, form: form2 } = await getFormToken(testFilename);
       await request(app)
         .post(`/${testSitePath}/api/form-submit`)
         .send({
-          filename: testFilename,
-          data: { Name: 'Second' }
+          encryptedForm: form2,
+          data: { Name: 'Second' },
+          _csrf: token2,
+          _hp_check: ''
         });
 
       const csvPath = path.join(testFilesDir, testFilename + '.csv');
@@ -155,11 +323,15 @@ describe('Form System', () => {
       if (!testSitePath) return;
 
       const testFilename = 'test_form_meta_' + Date.now();
+      const { token, form } = await getFormToken(testFilename);
+
       await request(app)
         .post(`/${testSitePath}/api/form-submit`)
         .send({
-          filename: testFilename,
-          data: { Name: 'Test' }
+          encryptedForm: form,
+          data: { Name: 'Test' },
+          _csrf: token,
+          _hp_check: ''
         });
 
       const csvPath = path.join(testFilesDir, testFilename + '.csv');
@@ -169,6 +341,35 @@ describe('Form System', () => {
       const headerLine = csvContent.split('\n')[0];
       expect(headerLine).toContain('Timestamp');
       expect(headerLine).toContain('IP');
+    });
+
+    it('should handle textarea content (multi-line text)', async () => {
+      if (!testSitePath) return;
+
+      const testFilename = 'test_form_textarea_' + Date.now();
+      const { token, form } = await getFormToken(testFilename);
+
+      const multiLineMessage = 'Line 1\nLine 2\nLine 3';
+
+      const response = await request(app)
+        .post(`/${testSitePath}/api/form-submit`)
+        .send({
+          encryptedForm: form,
+          data: {
+            Name: 'Test User',
+            Message: multiLineMessage
+          },
+          _csrf: token,
+          _hp_check: ''
+        });
+
+      expect(response.status).toBe(200);
+
+      // Verify CSV file contains the multi-line content (properly escaped)
+      const csvPath = path.join(testFilesDir, testFilename + '.csv');
+      const csvContent = await fs.readFile(csvPath, 'utf-8');
+      expect(csvContent).toContain('Message');
+      expect(csvContent).toContain('Line 1');
     });
   });
 
@@ -180,11 +381,15 @@ describe('Form System', () => {
 
       // Create a test CSV file
       testCsvFilename = 'test_form_view_' + Date.now();
+      const { token, form } = await getFormToken(testCsvFilename);
+
       await request(app)
         .post(`/${testSitePath}/api/form-submit`)
         .send({
-          filename: testCsvFilename,
-          data: { Name: 'Test User', Email: 'test@example.com' }
+          encryptedForm: form,
+          data: { Name: 'Test User', Email: 'test@example.com' },
+          _csrf: token,
+          _hp_check: ''
         });
     });
 
@@ -226,11 +431,15 @@ describe('Form System', () => {
       if (!testSitePath) return;
 
       const testFilename = 'test_form_xss_' + Date.now();
+      const { token, form } = await getFormToken(testFilename);
+
       await request(app)
         .post(`/${testSitePath}/api/form-submit`)
         .send({
-          filename: testFilename,
-          data: { Name: '<script>alert("xss")</script>' }
+          encryptedForm: form,
+          data: { Name: '<script>alert("xss")</script>' },
+          _csrf: token,
+          _hp_check: ''
         });
 
       const response = await request(app)
@@ -277,6 +486,33 @@ describe('Form System', () => {
         .get(`/${testSitePath}/api/list?dir=./files`);
 
       expect(response.status).toBe(403);
+    });
+  });
+
+  // Rate limiting tests run last to avoid affecting other tests
+  describe('Rate Limiting', () => {
+    it('should enforce rate limit on form submissions', async () => {
+      if (!testSitePath) return;
+
+      // Submit 11 times (limit is 10 per minute)
+      const results = [];
+      for (let i = 0; i < 11; i++) {
+        const testFilename = 'test_form_ratelimit_' + Date.now() + '_' + i;
+        const { token, form } = await getFormToken(testFilename);
+
+        const response = await request(app)
+          .post(`/${testSitePath}/api/form-submit`)
+          .send({
+            encryptedForm: form,
+            data: { Name: 'Test ' + i },
+            _csrf: token,
+            _hp_check: ''
+          });
+        results.push(response.status);
+      }
+
+      // At least one should be rate limited (429)
+      expect(results).toContain(429);
     });
   });
 });

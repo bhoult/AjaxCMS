@@ -38,6 +38,9 @@
 		<!-- fonts.google.com -->
 		<link href="https://fonts.googleapis.com/css?family=Montserrat:700&display=swap" rel="stylesheet">
 
+		<!-- Font Awesome for social icons -->
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
 		<!-- Load theme -->
 		<script>
 			theme = default_background;
@@ -310,6 +313,79 @@
 			.form-error {
 				background-color: #f8d7da;
 				color: #721c24;
+			}
+
+			/* Social media buttons - professional outline style */
+			.social-buttons {
+				display: flex;
+				flex-direction: column;
+				gap: 10px;
+			}
+			.social-btn {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+				padding: 10px 16px;
+				border-radius: 6px;
+				text-decoration: none;
+				font-weight: 500;
+				font-size: 0.95rem;
+				background-color: white;
+				color: #1a3a6e;
+				border: 2px solid #1a3a6e;
+				transition: background-color 0.2s, color 0.2s;
+			}
+			.social-btn:hover {
+				background-color: #1a3a6e;
+				color: white;
+				text-decoration: none;
+			}
+			.social-btn i {
+				font-size: 1.1em;
+				width: 20px;
+				text-align: center;
+			}
+
+			/* Stay Connected responsive layout */
+			.stay-connected-row {
+				display: flex;
+				gap: 30px;
+				align-items: stretch;
+				max-width: 750px;
+				margin: 0 auto;
+			}
+			.stay-connected-social,
+			.stay-connected-form {
+				flex: 1;
+				background: rgba(255,255,255,0.7);
+				border: 1px solid #ddd;
+				border-radius: 8px;
+				padding: 20px;
+			}
+			.stay-connected-social p,
+			.stay-connected-form p {
+				margin-top: 0;
+				font-weight: 600;
+				color: #1a3a6e;
+			}
+			.stay-connected-form .ajaxcms-form {
+				margin: 0;
+			}
+			@media (max-width: 768px) {
+				.stay-connected-row {
+					flex-direction: column;
+					gap: 25px;
+				}
+				.social-buttons {
+					flex-direction: row;
+					flex-wrap: wrap;
+					justify-content: center;
+				}
+				.social-btn {
+					flex: 1;
+					min-width: 120px;
+					max-width: 150px;
+				}
 			}
 		</style>
 	</head>

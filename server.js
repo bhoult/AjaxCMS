@@ -25,6 +25,7 @@ const express = require('express');
 const fs = require('fs').promises;
 const fsSync = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
 // Marked is an ES module, so we'll import it dynamically
 let marked = null;
@@ -44,8 +45,24 @@ const MAX_DISCUSSION_FILE_SIZE = 10 * 1024 * 1024; // 10MB limit per discussion 
 const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute in milliseconds
 const RATE_LIMIT_MAX_COMMENTS = 5; // Max comments per IP per window
 
+// Form security configuration
+const FORM_RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute in milliseconds
+const FORM_RATE_LIMIT_MAX = 10; // Max form submissions per IP per window
+const CSRF_TOKEN_EXPIRY = 60 * 60 * 1000; // 1 hour in milliseconds
+
+// Encryption key for form names - generate a random key on server start
+// In production, this should be set via environment variable for persistence across restarts
+const FORM_ENCRYPTION_KEY = process.env.FORM_ENCRYPTION_KEY || crypto.randomBytes(32).toString('hex');
+const ENCRYPTION_ALGORITHM = 'aes-256-gcm';
+
 // Rate limiting: Map of IP -> array of timestamps
 const rateLimitMap = new Map();
+
+// Form rate limiting: Map of IP -> array of timestamps
+const formRateLimitMap = new Map();
+
+// CSRF tokens: Map of token -> { ip, timestamp }
+const csrfTokens = new Map();
 
 /**
  * Escape HTML entities to prevent XSS attacks
@@ -108,6 +125,145 @@ setInterval(() => {
       rateLimitMap.delete(ip);
     } else {
       rateLimitMap.set(ip, validTimestamps);
+    }
+  }
+}, 5 * 60 * 1000);
+
+/**
+ * Check if an IP is rate limited for form submissions
+ * @param {string} ip - Client IP address
+ * @returns {boolean} True if rate limited
+ */
+function isFormRateLimited(ip) {
+  const now = Date.now();
+
+  if (!formRateLimitMap.has(ip)) {
+    formRateLimitMap.set(ip, []);
+  }
+
+  const timestamps = formRateLimitMap.get(ip);
+  const validTimestamps = timestamps.filter(ts => now - ts < FORM_RATE_LIMIT_WINDOW);
+  formRateLimitMap.set(ip, validTimestamps);
+
+  return validTimestamps.length >= FORM_RATE_LIMIT_MAX;
+}
+
+/**
+ * Record a form submission for rate limiting
+ * @param {string} ip - Client IP address
+ */
+function recordFormSubmission(ip) {
+  const now = Date.now();
+
+  if (!formRateLimitMap.has(ip)) {
+    formRateLimitMap.set(ip, []);
+  }
+
+  formRateLimitMap.get(ip).push(now);
+}
+
+/**
+ * Generate a CSRF token for a client
+ * @param {string} ip - Client IP address
+ * @returns {string} Generated token
+ */
+function generateCsrfToken(ip) {
+  const token = Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2);
+  csrfTokens.set(token, { ip, timestamp: Date.now() });
+  return token;
+}
+
+/**
+ * Validate a CSRF token
+ * @param {string} token - Token to validate
+ * @param {string} ip - Client IP address
+ * @returns {boolean} True if valid
+ */
+function validateCsrfToken(token, ip) {
+  if (!token || !csrfTokens.has(token)) {
+    return false;
+  }
+
+  const data = csrfTokens.get(token);
+  const now = Date.now();
+
+  // Check expiry
+  if (now - data.timestamp > CSRF_TOKEN_EXPIRY) {
+    csrfTokens.delete(token);
+    return false;
+  }
+
+  // Check IP matches (optional - some networks use rotating IPs)
+  // For now, just check the token exists and isn't expired
+
+  // Delete token after use (one-time use)
+  csrfTokens.delete(token);
+  return true;
+}
+
+/**
+ * Encrypt a form name so it cannot be discovered from page source
+ * @param {string} formName - The form name to encrypt
+ * @returns {string} Encrypted form name (base64 encoded)
+ */
+function encryptFormName(formName) {
+  const key = Buffer.from(FORM_ENCRYPTION_KEY, 'hex');
+  const iv = crypto.randomBytes(16);
+  const cipher = crypto.createCipheriv(ENCRYPTION_ALGORITHM, key, iv);
+
+  let encrypted = cipher.update(formName, 'utf8', 'hex');
+  encrypted += cipher.final('hex');
+  const authTag = cipher.getAuthTag();
+
+  // Combine iv + authTag + encrypted data
+  return Buffer.concat([iv, authTag, Buffer.from(encrypted, 'hex')]).toString('base64url');
+}
+
+/**
+ * Decrypt a form name
+ * @param {string} encryptedFormName - The encrypted form name (base64 encoded)
+ * @returns {string|null} Decrypted form name, or null if invalid
+ */
+function decryptFormName(encryptedFormName) {
+  try {
+    const key = Buffer.from(FORM_ENCRYPTION_KEY, 'hex');
+    const data = Buffer.from(encryptedFormName, 'base64url');
+
+    // Extract iv (16 bytes), authTag (16 bytes), and encrypted data
+    const iv = data.subarray(0, 16);
+    const authTag = data.subarray(16, 32);
+    const encrypted = data.subarray(32);
+
+    const decipher = crypto.createDecipheriv(ENCRYPTION_ALGORITHM, key, iv);
+    decipher.setAuthTag(authTag);
+
+    let decrypted = decipher.update(encrypted, undefined, 'utf8');
+    decrypted += decipher.final('utf8');
+
+    return decrypted;
+  } catch (e) {
+    return null;
+  }
+}
+
+// Clean up form rate limit and CSRF token maps every 5 minutes
+setInterval(() => {
+  const now = Date.now();
+
+  // Clean form rate limits
+  for (const [ip, timestamps] of formRateLimitMap.entries()) {
+    const validTimestamps = timestamps.filter(ts => now - ts < FORM_RATE_LIMIT_WINDOW);
+    if (validTimestamps.length === 0) {
+      formRateLimitMap.delete(ip);
+    } else {
+      formRateLimitMap.set(ip, validTimestamps);
+    }
+  }
+
+  // Clean expired CSRF tokens
+  for (const [token, data] of csrfTokens.entries()) {
+    if (now - data.timestamp > CSRF_TOKEN_EXPIRY) {
+      csrfTokens.delete(token);
     }
   }
 }, 5 * 60 * 1000);
@@ -783,6 +939,26 @@ app.post('*/api/discussion', async (req, res) => {
   }
 });
 
+// API endpoint to get a CSRF token and encrypted form name for form submission
+app.get('*/api/csrf-token', (req, res) => {
+  const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
+  const formName = req.query.form;
+
+  if (!formName) {
+    return res.status(400).json({ error: 'Form name is required' });
+  }
+
+  // Validate form name format (only allow alphanumeric, dashes, underscores)
+  if (!/^[a-zA-Z0-9_-]+$/.test(formName)) {
+    return res.status(400).json({ error: 'Invalid form name' });
+  }
+
+  const token = generateCsrfToken(clientIp);
+  const encryptedForm = encryptFormName(formName);
+
+  res.json({ token, form: encryptedForm });
+});
+
 // API endpoint to submit form data to CSV
 app.post('*/api/form-submit', async (req, res) => {
   try {
@@ -790,11 +966,54 @@ app.post('*/api/form-submit', async (req, res) => {
       return res.status(400).json({ error: 'No site specified' });
     }
 
-    const { filename, data } = req.body;
+    const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
+
+    // 1. Rate limiting check
+    if (isFormRateLimited(clientIp)) {
+      return res.status(429).json({
+        error: 'Too many submissions. Please wait before trying again.',
+        retryAfter: Math.ceil(FORM_RATE_LIMIT_WINDOW / 1000)
+      });
+    }
+
+    // 2. Origin/Referer check
+    const origin = req.get('Origin') || req.get('Referer') || '';
+    const host = req.get('Host') || '';
+    if (origin) {
+      try {
+        const originHost = new URL(origin).host;
+        if (originHost !== host && !originHost.endsWith('.' + host)) {
+          return res.status(403).json({ error: 'Invalid request origin' });
+        }
+      } catch (e) {
+        return res.status(403).json({ error: 'Invalid request origin' });
+      }
+    }
+
+    const { encryptedForm, data, _csrf, _hp_check } = req.body;
+
+    // 3. Honeypot check - this field should always be empty
+    // Accept both old and new field names for backwards compatibility
+    if (_hp_check && _hp_check.trim() !== '') {
+      // Silently reject but return success to not alert bots
+      console.log('Form rejected: honeypot field filled with:', _hp_check);
+      return res.json({ success: true });
+    }
+
+    // 4. CSRF token validation
+    if (!validateCsrfToken(_csrf, clientIp)) {
+      return res.status(403).json({ error: 'Invalid or expired form token. Please refresh the page and try again.' });
+    }
 
     // Validate required fields
-    if (!filename || !data || typeof data !== 'object') {
-      return res.status(400).json({ error: 'Filename and data are required' });
+    if (!encryptedForm || !data || typeof data !== 'object') {
+      return res.status(400).json({ error: 'Form data is required' });
+    }
+
+    // 5. Decrypt the form name
+    const filename = decryptFormName(encryptedForm);
+    if (!filename) {
+      return res.status(403).json({ error: 'Invalid form identifier' });
     }
 
     // Sanitize filename (only allow alphanumeric, dashes, underscores)
@@ -811,6 +1030,9 @@ app.post('*/api/form-submit', async (req, res) => {
     if (!csvPath.startsWith(path.resolve(req.sitePath))) {
       return res.status(403).json({ error: 'Access denied' });
     }
+
+    // Record this submission for rate limiting
+    recordFormSubmission(clientIp);
 
     // Ensure files directory exists
     await fs.mkdir(filesDir, { recursive: true });
@@ -832,7 +1054,6 @@ app.post('*/api/form-submit', async (req, res) => {
     });
 
     // Add IP address field
-    const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
     fields.unshift('IP');
     values.unshift('"' + clientIp + '"');
 

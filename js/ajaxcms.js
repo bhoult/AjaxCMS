@@ -767,13 +767,32 @@ function process_page(sdata) {
 			var html = '<form ' + attributes_string + ' id="' + formId + '" class="ajaxcms-form" data-filename="' + filename + '" onsubmit="submitForm(\'' + formId + '\'); return false;">';
 
 			for (var i = 0; i < fields.length; i++) {
-				var fieldName = fields[i].trim();
+				var fieldSpec = fields[i].trim();
+				var isTextarea = fieldSpec.endsWith(':textarea');
+				var fieldName = isTextarea ? fieldSpec.slice(0, -9) : fieldSpec;
 				var fieldId = formId + '_' + fieldName.replace(/\s+/g, '_').toLowerCase();
 				html += '<div class="form-group">';
 				html += '<label for="' + fieldId + '">' + fieldName + '</label>';
-				html += '<input type="text" id="' + fieldId + '" name="' + fieldName + '" class="form-control" required>';
+				if (isTextarea) {
+					html += '<textarea id="' + fieldId + '" name="' + fieldName + '" class="form-control" rows="4" required></textarea>';
+				} else {
+					html += '<input type="text" id="' + fieldId + '" name="' + fieldName + '" class="form-control" required>';
+				}
 				html += '</div>';
 			}
+
+			// Honeypot field - hidden from users but bots will fill it out
+			// Use obscure naming to avoid browser autofill
+			html += '<div style="position: absolute; left: -9999px; opacity: 0; height: 0; overflow: hidden;" aria-hidden="true">';
+			html += '<label for="' + formId + '_website">Website</label>';
+			html += '<input type="text" id="' + formId + '_website" name="_website_url_do_not_fill" tabindex="-1" autocomplete="new-password">';
+			html += '</div>';
+
+			// CSRF token field - will be populated on form init
+			html += '<input type="hidden" name="_csrf" class="csrf-token" value="">';
+
+			// Encrypted form name field - will be populated on form init
+			html += '<input type="hidden" name="_encryptedForm" class="encrypted-form" value="">';
 
 			html += '<button type="submit" class="btn btn-primary form-submit">Submit</button>';
 			html += '<div class="form-message" style="display: none;"></div>';
@@ -1223,6 +1242,9 @@ function processPageContent(contentData, url, callback) {
 			discussionContainers.forEach(function(container) {
 				loadDiscussions(container.id);
 			});
+
+			// Step 11: Initialize forms with CSRF tokens
+			initializeForms();
 		}, TRANSITION_DURATION + 50);
 
 		// Call completion callback if provided
@@ -2313,6 +2335,36 @@ function submitReply(parentId) {
 }
 
 /**
+ * Initialize forms with CSRF tokens after page load
+ * Called after page content is rendered
+ */
+function initializeForms() {
+	var forms = document.querySelectorAll('.ajaxcms-form');
+	forms.forEach(function(form) {
+		var csrfInput = form.querySelector('.csrf-token');
+		var encryptedFormInput = form.querySelector('.encrypted-form');
+		var formName = form.getAttribute('data-filename');
+
+		if (csrfInput && formName && !csrfInput.value) {
+			// Fetch a CSRF token and encrypted form name
+			$.ajax({
+				url: './api/csrf-token?form=' + encodeURIComponent(formName),
+				method: 'GET',
+				success: function(response) {
+					csrfInput.value = response.token;
+					if (encryptedFormInput) {
+						encryptedFormInput.value = response.form;
+					}
+				},
+				error: function(xhr, status, error) {
+					console.error('Failed to get CSRF token:', error);
+				}
+			});
+		}
+	});
+}
+
+/**
  * Submit a form and save data to CSV
  * @param {string} formId - The ID of the form element
  */
@@ -2323,15 +2375,29 @@ function submitForm(formId) {
 		return;
 	}
 
-	var filename = form.getAttribute('data-filename');
+	var formName = form.getAttribute('data-filename');
 	var submitButton = form.querySelector('.form-submit');
 	var messageDiv = form.querySelector('.form-message');
 
-	// Collect form data
+	// Get CSRF token
+	var csrfToken = form.querySelector('.csrf-token');
+	var csrf = csrfToken ? csrfToken.value : '';
+
+	// Get encrypted form name
+	var encryptedFormInput = form.querySelector('.encrypted-form');
+	var encryptedForm = encryptedFormInput ? encryptedFormInput.value : '';
+
+	// Get honeypot field
+	var honeypot = form.querySelector('input[name="_website_url_do_not_fill"]');
+	var hpValue = honeypot ? honeypot.value : '';
+
+	// Collect form data (exclude hidden security fields)
 	var formData = {};
-	var inputs = form.querySelectorAll('input[name]');
+	var inputs = form.querySelectorAll('input[name], textarea[name]');
 	inputs.forEach(function(input) {
-		formData[input.name] = input.value.trim();
+		if (input.name !== '_csrf' && input.name !== '_website_url_do_not_fill' && input.name !== '_encryptedForm') {
+			formData[input.name] = input.value.trim();
+		}
 	});
 
 	// Disable submit button during request
@@ -2345,13 +2411,17 @@ function submitForm(formId) {
 		method: 'POST',
 		contentType: 'application/json',
 		data: JSON.stringify({
-			filename: filename,
-			data: formData
+			encryptedForm: encryptedForm,
+			data: formData,
+			_csrf: csrf,
+			_hp_check: hpValue
 		}),
 		success: function(response) {
-			// Clear form
-			inputs.forEach(function(input) {
-				input.value = '';
+			// Clear form (except hidden fields) - includes both inputs and textareas
+			form.querySelectorAll('input[name], textarea[name]').forEach(function(field) {
+				if (field.name !== '_csrf' && field.name !== '_website_url_do_not_fill' && field.name !== '_encryptedForm') {
+					field.value = '';
+				}
 			});
 
 			// Show success message
@@ -2362,6 +2432,20 @@ function submitForm(formId) {
 			// Re-enable button
 			submitButton.disabled = false;
 			submitButton.textContent = 'Submit';
+
+			// Get a new CSRF token and encrypted form for the next submission
+			if (csrfToken && formName) {
+				$.ajax({
+					url: './api/csrf-token?form=' + encodeURIComponent(formName),
+					method: 'GET',
+					success: function(response) {
+						csrfToken.value = response.token;
+						if (encryptedFormInput) {
+							encryptedFormInput.value = response.form;
+						}
+					}
+				});
+			}
 		},
 		error: function(xhr, status, error) {
 			var errorMessage = 'Failed to submit form. Please try again.';
@@ -2377,6 +2461,20 @@ function submitForm(formId) {
 			submitButton.disabled = false;
 			submitButton.textContent = 'Submit';
 			console.error('Failed to submit form:', error);
+
+			// If token expired, get a new one
+			if (xhr.status === 403 && csrfToken && formName) {
+				$.ajax({
+					url: './api/csrf-token?form=' + encodeURIComponent(formName),
+					method: 'GET',
+					success: function(response) {
+						csrfToken.value = response.token;
+						if (encryptedFormInput) {
+							encryptedFormInput.value = response.form;
+						}
+					}
+				});
+			}
 		}
 	});
 }
@@ -2396,5 +2494,6 @@ window.hideReplyForm = hideReplyForm;
 window.submitReply = submitReply;
 window.toggleComment = toggleComment;
 window.submitForm = submitForm;
+window.initializeForms = initializeForms;
 
 })();

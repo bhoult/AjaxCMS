@@ -14,7 +14,52 @@ Arkansas has been identified as the most food-insecure state in the entire natio
 
 I would like to serve in a state-level leadership position where I can help identify and acknowledge these vital programs, introduce legislation to streamline and strengthen organizations in our community, and protect the jobs of people who work in these needed areas.
 
-<div style="clear: both; text-align: center; margin-top: 30px;">
+<div style="clear: both;"></div>
+
+---
+
+### Support the Campaign
+
+Your contribution helps us fight for public education, food security, and healthcare access for all Arkansans.
+
+<div style="text-align: center; margin: 25px 0;">
+<a href="https://secure.actblue.com/donate/lewter" class="btn btn-primary btn-lg" style="margin: 8px; min-width: 200px;">Donate via ActBlue</a>
+<a href="https://goodchange.app/donate/lewter" class="btn btn-success btn-lg" style="margin: 8px; min-width: 200px;">Donate via Goodchange</a>
+</div>
+
+<p style="font-size: 0.85em; color: #333; text-align: center;">
+<strong>Mail a check:</strong> Jennifer Lewter Campaign, P.O. Box 1234, Russellville, AR 72811<br>
+<em>Per FEC regulations, please include your name, address, employer, and occupation with your contribution.</em>
+</p>
+
+---
+
+### Stay Connected
+
+<div class="stay-connected-row">
+<div class="stay-connected-social">
+<p style="margin-bottom: 15px;">Follow us on social media:</p>
+<div class="social-buttons">
+<a href="https://facebook.com/lewterforarkansas" class="social-btn" target="_blank" rel="noopener">
+<i class="fab fa-facebook-f"></i> Facebook
+</a>
+<a href="https://x.com/lewterforAR" class="social-btn" target="_blank" rel="noopener">
+<i class="fab fa-x-twitter"></i> X / Twitter
+</a>
+<a href="https://instagram.com/lewterforarkansas" class="social-btn" target="_blank" rel="noopener">
+<i class="fab fa-instagram"></i> Instagram
+</a>
+</div>
+</div>
+<div class="stay-connected-form">
+<p style="margin-bottom: 15px;">Sign up for campaign updates and news from the River Valley:</p>
+{{form | newsletter_7293 | Name | Email}}
+</div>
+</div>
+
+---
+
+<div style="text-align: center; margin-top: 30px;">
 
 {{i | Bumper sticker 5.jpg | Jennifer Lewter for Arkansas | class=>img-fluid | style=>max-width: 90%; width: 500px;}}
 

@@ -111,6 +111,7 @@ No database required. Version control friendly. Easy to backup and migrate.
      - Blog content: `{{blog | directory | start | stop}}`
      - Inserts: `{{insert | page_name | allow_scripts}}`
      - Discussions: `{{discussion}}` - Adds threaded comment system with JSON storage
+     - Forms: `{{form | formname | Field1 | Field2:textarea}}` - Creates secure contact forms
 
 4. **Helper Protection System** (`js/ajaxcms.js:832-843, 988-990`):
    - Prevents markdown and async operations from corrupting helper syntax
@@ -428,54 +429,81 @@ Common issues:
 
 ## Form System
 
-The `{{form}}` helper creates simple forms that save submissions to CSV files.
+The `{{form}}` helper creates secure forms that save submissions to CSV files.
 
 ### Usage
 
 ```
-{{form | filename | Field1 | Field2 | Field3}}
+{{form | filename | Field1 | Field2 | Field3:textarea}}
 ```
 
-**Example:**
+**Field Types:**
+- Regular fields: `Name`, `Email`, `Phone` - creates single-line text inputs
+- Textarea fields: `Message:textarea` - creates multi-line text area (4 rows)
+
+**Examples:**
 ```html
-<h3>Subscribe to My Newsletter</h3>
-{{form | newsletter | Name | Email}}
+<!-- Simple newsletter signup -->
+{{form | newsletter_7293 | Name | Email}}
+
+<!-- Contact form with message -->
+{{form | contact_4182 | Name | Email | Subject | Message:textarea}}
 ```
 
-This creates a form with Name and Email fields. Submissions are saved to `files/newsletter.csv`.
+**Best Practice:** Add random numbers to form names (e.g., `newsletter_7293`) to make endpoints harder to guess.
 
 ### Architecture
 
 **Backend (server.js)**:
-- **POST `/api/form-submit`**: Receives form data and appends to CSV file
+- **GET `/api/csrf-token?form=name`**: Returns CSRF token and encrypted form identifier
+- **POST `/api/form-submit`**: Validates security tokens, appends data to CSV file
 - **GET `/files/*.csv`**: Displays CSV as HTML table with download link
 - CSV files stored in site's `files/` directory (auto-created if needed)
-- Filename sanitization: only alphanumeric, dashes, underscores allowed
+- Form name encryption using AES-256-GCM (form names never sent in plain text)
 
 **Frontend (js/ajaxcms.js)**:
-- Form helper (lines 747-774): Generates HTML form with labeled inputs
-- `submitForm()`: Posts form data via AJAX, shows success/error messages
+- Form helper: Generates HTML form with security fields (CSRF token, honeypot, encrypted form ID)
+- `initializeForms()`: Fetches CSRF tokens for all forms after page load
+- `submitForm()`: Posts form data via AJAX with security validation
 
 **Data Storage** (CSV format):
 Each submission is appended as a new row with automatic headers:
 ```csv
-Timestamp,IP,Name,Email
-"Jan 2, 2026, 11:20 AM","192.168.1.1","John Doe","john@example.com"
+Timestamp,IP,Name,Email,Message
+"Jan 2, 2026, 11:20 AM","192.168.1.1","John Doe","john@example.com","Hello there"
 ```
 
 ### Security
 
-- **XSS Prevention**: All values HTML-escaped when displayed via `escapeHtml()`
-- **CSV Injection Protection**: Values starting with `=`, `+`, `-`, `@`, tab, or CR are prefixed with single quote to prevent formula execution in spreadsheets
+The form system includes comprehensive protection against spam and abuse:
+
+- **CSRF Tokens**: One-time tokens prevent cross-site request forgery
+  - Tokens fetched from server when page loads
+  - Each token can only be used once
+  - Tokens expire after 1 hour
+- **Rate Limiting**: Maximum 10 form submissions per IP per minute
+  - Prevents spam flooding
+  - Returns HTTP 429 when exceeded
+- **Origin Check**: Validates requests come from the same domain
+  - Blocks cross-origin form submissions
+- **Honeypot Field**: Hidden field that catches automated bots
+  - Invisible to users, but bots fill it out
+  - Submissions with filled honeypot silently rejected
+- **Encrypted Form Names**: Form identifiers encrypted with AES-256-GCM
+  - Form names never appear in network requests
+  - Prevents discovery of form endpoints
+  - Set `FORM_ENCRYPTION_KEY` env var for persistence across restarts
+- **XSS Prevention**: All values HTML-escaped when displayed
+- **CSV Injection Protection**: Values starting with `=`, `+`, `-`, `@`, tab, or CR are prefixed with single quote
 - **Filename Sanitization**: Only alphanumeric characters, dashes, and underscores allowed
 - **Path Traversal Protection**: Server validates file paths stay within site directory
-- **Directory Listing Blocked**: The `files/` directory is excluded from `/api/list` and `/api/list-recursive` endpoints - files are only accessible by direct URL
+- **Directory Listing Blocked**: The `files/` directory is excluded from `/api/list` endpoints
 
 ### Viewing Submissions
 
 Visit the CSV file URL directly to see submissions as a formatted HTML table:
 ```
-http://yoursite.com/files/newsletter.csv
+http://yoursite.com/files/newsletter_7293.csv
 ```
 
 Features:
@@ -487,6 +515,8 @@ Features:
 ### Troubleshooting
 
 Common issues:
-- **Form not submitting**: Check browser console for API errors
+- **Form shows success but no data saved**: Check server logs for "honeypot field filled" - browser autofill may be filling the hidden honeypot field
+- **"Invalid or expired form token" error**: Page was open too long (tokens expire after 1 hour) - refresh the page
+- **Form not submitting**: Check browser console for errors; ensure `initializeForms()` ran after page load
 - **CSV file not created**: Verify server has write permissions to site directory
-- **Submissions not appearing**: Ensure filename contains only allowed characters (alphanumeric, dash, underscore)
+- **Rate limit errors**: Wait 1 minute before trying again
