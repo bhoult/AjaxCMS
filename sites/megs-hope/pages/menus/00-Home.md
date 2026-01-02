@@ -23,7 +23,7 @@ Meg's Hope Room is a place to find hope in Jesus through prayer, encouragement, 
 <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 20px; padding: 0 15px;">
 
 <div style="flex: 1; min-width: 200px; text-align: center;">
-<p>Hi, everyone! I'm so happy you're here! I'm an elementary music teacher from a small town in Arkansas who loves Jesus and loves encouraging people. A few years ago, God started speaking to me about the importance of hope, hoping in Him AND hoping for situations to improve. Come with me on this journey to find hope in Jesus in every situation!</p>
+<p>Hi, everyone! I'm so happy you're here! I'm an elementary music teacher from a small town in Arkansas who loves Jesus and loves encouraging people. A few years ago, God started speaking to me about the importance of hope-- hoping in Him AND hoping for situations to improve. Come with me on this journey to find hope in Jesus in every situation!</p>
 </div>
 
 <div style="flex: 0 0 180px;">
