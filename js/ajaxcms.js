@@ -264,9 +264,16 @@ function imageMatch(s) {
 		return '';
 	}
 
-	var re = new RegExp(s,"gi");
+	// Escape special regex characters to allow filenames with spaces, periods, etc.
+	var escaped = s.replace(/[.+?^${}()|[\]\\]/g, '\\$&');
+	var re = new RegExp(escaped,"gi");
+
 	for (var i=0; i<images.length; i++) {
-		if (re.test(images[i])){return images[i]}
+		// Reset lastIndex before each test (global flag can cause issues)
+		re.lastIndex = 0;
+		if (re.test(images[i])){
+			return images[i];
+		}
 	}
 
 	console.warn('Image not found:', s);
@@ -317,7 +324,9 @@ function imageMatchMultiple(s) {
 function pageMatch(s) {
 	var best_match = "";
 	var return_url = "";
-	var re = new RegExp(s,"gi");
+	// Escape special regex characters to allow page names with special characters
+	var escaped = s.replace(/[.+?^${}()|[\]\\]/g, '\\$&');
+	var re = new RegExp(escaped,"gi");
 
 	for (var i=0; i<just_pages.length; i++) {
 		// Test if search term matches this page path
@@ -494,14 +503,14 @@ function process_page(sdata) {
 					// Extract filename for alt text
 					var imgAlt = matchedImages[ii].split('/').pop().replace(/\.[^/.]+$/, '');
 					gallery += "<div class=\""+colClass+" mb-3\">" +
-								"<img src=\""+ matchedImages[ii] +"\" alt=\""+ imgAlt  +"\" class=\"img-fluid\" onclick=\"openLightbox('"+ matchedImages[ii] +"')\">" +
+								"<img src=\""+ encodeURI(matchedImages[ii]) +"\" alt=\""+ imgAlt  +"\" class=\"img-fluid\" onclick=\"openLightbox('"+ encodeURI(matchedImages[ii]) +"')\">" +
 								"</div>";
 				}
 				gallery += "</div>";
 
 				return gallery;
 			}
-			return "<img "+attributes_string+" src=\"" + imageMatch(parts[1]) + "\" alt=\"" + parts[1] + "\">";
+			return "<img "+attributes_string+" src=\"" + encodeURI(imageMatch(parts[1])) + "\" alt=\"" + parts[1] + "\">";
 		}
 		if (parts[0]=='i' && parts.length == 3) {
 			// Check for wildcard pattern
@@ -538,14 +547,14 @@ function process_page(sdata) {
 						imgAlt = matchedImages[ii].split('/').pop().replace(/\.[^/.]+$/, '');
 					}
 					gallery += "<div class=\""+colClass+" mb-3\">" +
-								"<img src=\""+ matchedImages[ii] +"\" alt=\""+ imgAlt  +"\" class=\"img-fluid\" onclick=\"openLightbox('"+ matchedImages[ii] +"')\">" +
+								"<img src=\""+ encodeURI(matchedImages[ii]) +"\" alt=\""+ imgAlt  +"\" class=\"img-fluid\" onclick=\"openLightbox('"+ encodeURI(matchedImages[ii]) +"')\">" +
 								"</div>";
 				}
 				gallery += "</div>";
 
 				return gallery;
 			}
-			return "<img "+attributes_string+" src=\"" + imageMatch(parts[1]) + "\" alt=\"" + parts[2] + "\">";
+			return "<img "+attributes_string+" src=\"" + encodeURI(imageMatch(parts[1])) + "\" alt=\"" + parts[2] + "\">";
 		}
 		if (parts[0]=='i' && parts.length == 4) {
 			// Check for wildcard pattern
@@ -571,14 +580,14 @@ function process_page(sdata) {
 				var gallery = "<div class=\"row image-gallery\" "+attributes_string+">";
 				for (var ii=0; ii < matchedImages.length; ii++) {
 					gallery += "<div class=\""+colClass+" mb-3\">" +
-								"<img src=\""+ matchedImages[ii] +"\" alt=\""+ parts[2]  +"\" class=\"img-fluid\" onclick=\"openLightbox('"+ matchedImages[ii] +"')\">" +
+								"<img src=\""+ encodeURI(matchedImages[ii]) +"\" alt=\""+ parts[2]  +"\" class=\"img-fluid\" onclick=\"openLightbox('"+ encodeURI(matchedImages[ii]) +"')\">" +
 								"</div>";
 				}
 				gallery += "</div>";
 
 				return gallery;
 			}
-			return "<img "+attributes_string+" src=\"" + imageMatch(parts[1]) + "\" alt=\"" + parts[2] + "\">";
+			return "<img "+attributes_string+" src=\"" + encodeURI(imageMatch(parts[1])) + "\" alt=\"" + parts[2] + "\">";
 		}
 
 		// Carousel {{ carousel:speed | image1:alt1:caption1 | image2:alt2:caption2 | image3:alt3:caption3 }}
@@ -626,7 +635,7 @@ function process_page(sdata) {
 				carousel_indicators += "<button type=\"button\" data-bs-target=\"#carousel_"+idn+"\" data-bs-slide-to=\""+ii+"\" class=\""+ (ii==0 ? 'active' : '') +"\" aria-current=\""+(ii==0 ? 'true' : 'false')+"\" aria-label=\"Slide "+(ii+1)+"\"></button>";
 
 				slides += 	"<div class=\"carousel-item "+ (ii==0 ? 'active' : '') +"\">" +
-							"<img src=\""+ expanded_images[ii].image +"\" alt=\""+ expanded_images[ii].alt  +"\" class=\"d-block w-100\">" +
+							"<img src=\""+ encodeURI(expanded_images[ii].image) +"\" alt=\""+ expanded_images[ii].alt  +"\" class=\"d-block w-100\">" +
 							"<div class=\"carousel-caption\">"+expanded_images[ii].caption+"</div></div>";
 			}
 

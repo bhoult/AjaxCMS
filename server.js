@@ -1305,6 +1305,13 @@ app.use((req, res, next) => {
     relativePath = req.path;
   }
 
+  // Decode URL-encoded path to handle filenames with spaces, special chars, etc.
+  try {
+    relativePath = decodeURIComponent(relativePath);
+  } catch (e) {
+    // Invalid URL encoding, use as-is
+  }
+
   const filePath = path.join(req.sitePath, relativePath);
 
   // Security check
