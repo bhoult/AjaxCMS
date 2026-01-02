@@ -43,9 +43,33 @@ const ufos = [];
 const ufoParticles = []; // Particles from UFO explosions (draw on foreground)
 const ufoParts = []; // Physical UFO parts that fly apart
 const gravity = 0.05;
-const fireworkChance = 0.04;
+const baseFireworkChance = 0.04;
+const fireworkSpeed = 0.6; // Speed multiplier for fireworks (1.0 = normal, 0.6 = 40% slower)
+
+// Performance settings based on device capability
+const isMobile = window.innerWidth <= 768;
+const isLowPower = isMobile || navigator.hardwareConcurrency <= 2;
+const MAX_PARTICLES = isLowPower ? 400 : 1000;
+const MAX_STARS = isLowPower ? 100 : 200;
+const ENABLE_GLOW = !isLowPower;
+const ENABLE_SECONDARY_EXPLOSIONS = !isLowPower;
+const PARTICLE_SCALE = isLowPower ? 0.5 : 1.0; // Reduce particle counts on low-power devices
+
+// Scale firework spawn rate based on screen width
+function getFireworkChance() {
+    // Full rate at 1200px+, scales down linearly to 40% at 400px
+    const minWidth = 400;
+    const maxWidth = 1200;
+    const minScale = 0.4;
+    const scale = Math.min(1, Math.max(minScale, (width - minWidth) / (maxWidth - minWidth) * (1 - minScale) + minScale));
+    return baseFireworkChance * scale;
+}
 let lastUfoSpawn = 0;
-let nextUfoSpawnTime = (18 + Math.random() * 18) * 60; // Random 18-36 seconds in frames (at 60fps) - 70% more frequent
+let nextUfoSpawnTime = 18 + Math.random() * 18; // Random 18-36 seconds (time-based)
+
+// Delta time tracking for consistent animation speed across devices
+let lastFrameTime = 0;
+let elapsedTime = 0; // Total elapsed time in seconds
 
 // Firework colors - vibrant combinations
 const colorSchemes = [
@@ -60,7 +84,7 @@ const colorSchemes = [
 
 // Create stars
 function createStars() {
-    const starCount = 200;
+    const starCount = MAX_STARS;
     for (let i = 0; i < starCount; i++) {
         stars.push({
             x: Math.random() * width,
@@ -87,14 +111,14 @@ class Firework {
         this.hasParticleExplosions = Math.random() < 0.33; // 1 in 3 fireworks will have particle explosions
     }
 
-    update() {
+    update(deltaTime) {
         if (!this.exploded) {
             this.trail.push({ x: this.x, y: this.y });
             if (this.trail.length > 10) this.trail.shift();
 
-            this.vy += gravity;
-            this.x += this.vx;
-            this.y += this.vy;
+            this.vy += gravity * deltaTime;
+            this.x += this.vx * deltaTime;
+            this.y += this.vy * deltaTime;
 
             // Explode when reaching target height or starting to fall
             if (this.y <= this.targetY || this.vy >= 0) {
@@ -130,11 +154,15 @@ class Firework {
     }
 
     explode() {
-        let particleCount = Math.random() * 100 + 150;
+        // Scale down particle count if approaching limit, but always show at least 20 particles
+        const particleRoom = Math.max(0, MAX_PARTICLES - particles.length);
+        const limitScale = Math.max(0.1, Math.min(1, particleRoom / 200));
+
+        let particleCount = Math.max(20, Math.floor((Math.random() * 100 + 150) * PARTICLE_SCALE * limitScale));
 
         if (this.type < 0.15) {
             // Willow - Drooping effect
-            particleCount = 200;
+            particleCount = Math.floor(200 * PARTICLE_SCALE * limitScale);
             for (let i = 0; i < particleCount; i++) {
                 const angle = (Math.PI * 2 * i) / particleCount;
                 const speed = Math.random() * 4 + 2;
@@ -144,7 +172,7 @@ class Firework {
             }
         } else if (this.type < 0.3) {
             // Palm - Rising particles
-            particleCount = 150;
+            particleCount = Math.floor(150 * PARTICLE_SCALE * limitScale);
             for (let i = 0; i < particleCount; i++) {
                 const angle = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI / 3;
                 const speed = Math.random() * 6 + 4;
@@ -154,7 +182,7 @@ class Firework {
             }
         } else if (this.type < 0.45) {
             // Chrysanthemum - Dense circular burst
-            particleCount = 300;
+            particleCount = Math.floor(300 * PARTICLE_SCALE * limitScale);
             for (let i = 0; i < particleCount; i++) {
                 const angle = (Math.PI * 2 * i) / particleCount;
                 const speed = Math.random() * 3 + 5;
@@ -205,11 +233,11 @@ class Firework {
             const cantonWidth = flagWidth * 0.4;
             const cantonHeight = stripeHeight * 7; // Canton covers 7 stripes
 
-            // 13 stripes (7 red, 6 white) - 4x more particles
+            // 13 stripes (7 red, 6 white)
             for (let stripe = 0; stripe < 13; stripe++) {
                 const isRedStripe = stripe % 2 === 0;
                 const stripeColor = isRedStripe ? [[178, 34, 52]] : [[255, 255, 255]];
-                const particlesPerStripe = 140; // 4x increase (35 * 4)
+                const particlesPerStripe = Math.max(10, Math.floor(140 * PARTICLE_SCALE * limitScale));
 
                 for (let i = 0; i < particlesPerStripe; i++) {
                     const xOffset = (Math.random() - 0.5) * flagWidth;
@@ -230,8 +258,8 @@ class Firework {
                 }
             }
 
-            // Blue canton (union) background - 4x more particles
-            const cantonBlueParticles = 320; // 4x increase (80 * 4)
+            // Blue canton (union) background
+            const cantonBlueParticles = Math.max(20, Math.floor(320 * PARTICLE_SCALE * limitScale));
             for (let i = 0; i < cantonBlueParticles; i++) {
                 const xOffset = -flagWidth / 2 + Math.random() * cantonWidth;
                 const yOffset = -flagHeight / 2 + Math.random() * cantonHeight;
@@ -254,7 +282,7 @@ class Firework {
 
                 for (let col = 0; col < starsInRow; col++) {
                     // Multiple particles per star for visibility
-                    const particlesPerStar = 8;
+                    const particlesPerStar = Math.max(2, Math.floor(8 * PARTICLE_SCALE * limitScale));
                     for (let p = 0; p < particlesPerStar; p++) {
                         const xOffset = -flagWidth / 2 + xStart + (col * cantonWidth / 6) + (Math.random() - 0.5) * 8;
                         const yOffset = -flagHeight / 2 + (row * cantonHeight / 9) + (Math.random() - 0.5) * 8;
@@ -271,7 +299,7 @@ class Firework {
         }
 
         // Add secondary explosions for some fireworks (33% chance - one in three)
-        if (Math.random() < 0.33) {
+        if (ENABLE_SECONDARY_EXPLOSIONS && Math.random() < 0.33) {
             const delay = Math.random() * 400 + 300;
             setTimeout(() => {
                 const secondaryCount = Math.floor(Math.random() * 40) + 30;
@@ -316,7 +344,7 @@ class Firework {
         }
 
         // Add tertiary explosions for extra spectacular fireworks (20% chance)
-        if (Math.random() < 0.2) {
+        if (ENABLE_SECONDARY_EXPLOSIONS && Math.random() < 0.2) {
             const delay = Math.random() * 600 + 700;
             setTimeout(() => {
                 const tertiaryCount = 20;
@@ -351,7 +379,8 @@ class Particle {
         this.dead = false; // Add dead flag to avoid splice
 
         // Particles will explode only if their parent firework allows it (and they're not secondary/tertiary)
-        this.willExplode = !isSecondary && !isTertiary && fireworkHasExplosions && Math.random() < 0.33;
+        // Disabled on low-power devices for performance
+        this.willExplode = ENABLE_SECONDARY_EXPLOSIONS && !isSecondary && !isTertiary && fireworkHasExplosions && Math.random() < 0.33;
         this.explodeThreshold = Math.random() * 0.3 + 0.3; // Explode when alpha is between 0.3-0.6
 
         // Streamer effect - some particles last longer
@@ -369,18 +398,20 @@ class Particle {
         this.strobeTime = 0;
     }
 
-    update() {
+    update(deltaTime) {
         // Willow particles have stronger gravity
-        this.vy += gravity * (this.isWillow ? 0.5 : 0.3);
-        this.x += this.vx;
-        this.y += this.vy;
-        this.vx *= 0.98; // Air resistance
-        this.vy *= 0.98;
-        this.alpha -= this.decay;
+        this.vy += gravity * (this.isWillow ? 0.5 : 0.3) * deltaTime;
+        this.x += this.vx * deltaTime;
+        this.y += this.vy * deltaTime;
+        // Air resistance - use pow for frame-rate independent damping
+        const dampingFactor = Math.pow(0.98, deltaTime);
+        this.vx *= dampingFactor;
+        this.vy *= dampingFactor;
+        this.alpha -= this.decay * deltaTime;
 
         // Update strobe timing
         if (this.isStrobe) {
-            this.strobeTime += this.strobeFrequency;
+            this.strobeTime += this.strobeFrequency * deltaTime;
         }
 
         // Check if particle should explode
@@ -438,9 +469,11 @@ class Particle {
             }
         }
 
-        drawCtx.shadowBlur = glow;
         const colorStr = 'rgba(' + particleColor[0] + ',' + particleColor[1] + ',' + particleColor[2] + ',' + this.alpha + ')';
-        drawCtx.shadowColor = colorStr;
+        if (ENABLE_GLOW) {
+            drawCtx.shadowBlur = glow;
+            drawCtx.shadowColor = colorStr;
+        }
         drawCtx.fillStyle = colorStr;
         drawCtx.beginPath();
         drawCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
@@ -486,10 +519,10 @@ class UFO {
         ];
     }
 
-    update(frame) {
-        this.x += this.speed * this.direction;
-        this.wobble = frame * 0.05;
-        this.lightPhase = frame * 0.1;
+    update(deltaTime, elapsedTime) {
+        this.x += this.speed * this.direction * deltaTime;
+        this.wobble = elapsedTime * 3; // Convert to radians over time
+        this.lightPhase = elapsedTime * 6;
     }
 
     isAlive() {
@@ -581,7 +614,7 @@ class UFO {
         }
     }
 
-    draw(frame) {
+    draw(elapsedTime) {
         if (!fgCtx) return; // Skip if no foreground canvas
 
         const wobbleY = Math.sin(this.wobble) * 3;
@@ -684,15 +717,15 @@ class UFOPart {
         this.alpha = 1;
     }
 
-    update() {
-        this.x += this.vx;
-        this.y += this.vy;
-        this.vy += gravity; // Apply gravity
-        this.rotation += this.rotationSpeed;
+    update(deltaTime) {
+        this.x += this.vx * deltaTime;
+        this.y += this.vy * deltaTime;
+        this.vy += gravity * deltaTime; // Apply gravity
+        this.rotation += this.rotationSpeed * deltaTime;
 
         // Fade out as it falls
         if (this.y > height * 0.7) {
-            this.alpha -= 0.02;
+            this.alpha -= 0.02 * deltaTime;
         }
     }
 
@@ -751,12 +784,23 @@ class UFOPart {
     }
 }
 
-let time = 0;
-function animate() {
-    time += 1;
+function animate(currentTime) {
+    // Calculate delta time (normalized to 60fps, so 1.0 = one frame at 60fps)
+    if (lastFrameTime === 0) {
+        lastFrameTime = currentTime;
+    }
+    const rawDeltaTime = currentTime - lastFrameTime;
+    lastFrameTime = currentTime;
 
-    // Fade previous frame for trail effect
-    ctx.fillStyle = 'rgba(10, 10, 30, 0.1)';
+    // Normalize to 60fps (16.67ms per frame) and clamp to prevent huge jumps
+    const deltaTime = Math.min(rawDeltaTime / 16.667, 3);
+
+    // Update elapsed time in seconds
+    elapsedTime += rawDeltaTime / 1000;
+
+    // Fade previous frame for trail effect - adjust opacity for deltaTime
+    const fadeOpacity = 1 - Math.pow(0.9, deltaTime);
+    ctx.fillStyle = 'rgba(10, 10, 30, ' + fadeOpacity + ')';
     ctx.fillRect(0, 0, width, height);
 
     // Clear foreground canvas for UFOs
@@ -768,7 +812,8 @@ function animate() {
     const starsLen = stars.length;
     for (let i = 0; i < starsLen; i++) {
         const star = stars[i];
-        const twinkle = Math.sin(time * star.twinkleSpeed + star.twinkleOffset) * 0.5 + 0.5;
+        // Use elapsed time (in seconds) for consistent twinkling speed
+        const twinkle = Math.sin(elapsedTime * star.twinkleSpeed * 60 + star.twinkleOffset) * 0.5 + 0.5;
         const brightness = star.brightness * twinkle;
         ctx.fillStyle = 'rgba(255,255,255,' + brightness + ')';
         ctx.beginPath();
@@ -776,23 +821,23 @@ function animate() {
         ctx.fill();
     }
 
-    // Spawn UFO randomly every 18-36 seconds
-    if (time - lastUfoSpawn >= nextUfoSpawnTime) {
+    // Spawn UFO randomly every 18-36 seconds (time-based)
+    if (elapsedTime - lastUfoSpawn >= nextUfoSpawnTime) {
         ufos.push(new UFO());
-        lastUfoSpawn = time;
+        lastUfoSpawn = elapsedTime;
         // Set next random spawn time (18-36 seconds)
-        nextUfoSpawnTime = (18 + Math.random() * 18) * 60; // 1080-2160 frames at 60fps
+        nextUfoSpawnTime = 18 + Math.random() * 18;
     }
 
     // Update and draw UFOs
     let j = 0;
     while (j < ufos.length) {
-        ufos[j].update(time);
+        ufos[j].update(deltaTime, elapsedTime);
         if (!ufos[j].isAlive()) {
             ufos[j] = ufos[ufos.length - 1];
             ufos.pop();
         } else {
-            ufos[j].draw(time);
+            ufos[j].draw(elapsedTime);
             j++;
         }
     }
@@ -801,7 +846,7 @@ function animate() {
     let k = 0;
     while (k < ufoParticles.length) {
         const particle = ufoParticles[k];
-        particle.update();
+        particle.update(deltaTime);
         if (particle.isDead()) {
             particle.dead = true;
             ufoParticles[k] = ufoParticles[ufoParticles.length - 1];
@@ -816,7 +861,7 @@ function animate() {
     let m = 0;
     while (m < ufoParts.length) {
         const part = ufoParts[m];
-        part.update();
+        part.update(deltaTime);
         if (part.isDead()) {
             ufoParts[m] = ufoParts[ufoParts.length - 1];
             ufoParts.pop();
@@ -826,17 +871,21 @@ function animate() {
         }
     }
 
-    // Randomly launch new fireworks
-    if (Math.random() < fireworkChance) {
+    // Randomly launch new fireworks (probability adjusted for deltaTime and screen width)
+    // Skip if we're at particle limit to let existing particles clear
+    if (particles.length < MAX_PARTICLES && Math.random() < getFireworkChance() * deltaTime) {
         const x = Math.random() * width;
         const targetY = Math.random() * height * 0.4 + 50; // Top 40% of screen
         fireworks.push(new Firework(x, targetY));
     }
 
+    // Apply firework speed multiplier
+    const fireworkDelta = deltaTime * fireworkSpeed;
+
     // Update and draw fireworks - use swap-and-pop for removal
     let i = 0;
     while (i < fireworks.length) {
-        fireworks[i].update();
+        fireworks[i].update(fireworkDelta);
         fireworks[i].draw();
         if (fireworks[i].exploded) {
             // Swap with last element and pop (much faster than splice)
@@ -851,7 +900,7 @@ function animate() {
     i = 0;
     while (i < particles.length) {
         const particle = particles[i];
-        particle.update();
+        particle.update(fireworkDelta);
         if (particle.isDead()) {
             particle.dead = true;
             // Swap with last element and pop
@@ -943,5 +992,5 @@ if (foregroundCanvas) {
     });
 }
 
-// Start animation
-animate();
+// Start animation with requestAnimationFrame to get initial timestamp
+requestAnimationFrame(animate);

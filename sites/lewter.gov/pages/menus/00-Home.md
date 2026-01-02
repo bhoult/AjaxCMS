@@ -16,6 +16,6 @@ I would like to serve in a state-level leadership position where I can help iden
 
 <div style="clear: both; text-align: center; margin-top: 30px;">
 
-{{i | Bumper sticker 5.jpg | Jennifer Lewter for Arkansas | class=>img-fluid | style=>max-width: 500px;}}
+{{i | Bumper sticker 5.jpg | Jennifer Lewter for Arkansas | class=>img-fluid | style=>max-width: 90%; width: 500px;}}
 
 </div>
