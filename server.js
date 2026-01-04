@@ -772,6 +772,65 @@ app.get('*/api/list-recursive', async (req, res) => {
       await walkDirectory(globalPath);
     }
 
+    // Check if HTML format requested
+    if (req.query.format === 'html') {
+      const sitePrefix = req.originalUrl.split('/api/')[0];
+      const baseDir = dirParam.replace(/^\.?\/?/, '');
+
+      // Filter to image files only
+      const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp'];
+      const imageFiles = files.filter(f => {
+        const ext = path.extname(f.name || f.path).toLowerCase();
+        return imageExtensions.includes(ext);
+      });
+
+      let html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Images - ${baseDir}</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 20px; background: #f5f5f5; }
+    h1 { color: #333; }
+    .gallery { display: flex; flex-wrap: wrap; gap: 15px; }
+    .image-item { background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center; }
+    .image-item img { width: 100px; height: 100px; object-fit: cover; border-radius: 4px; }
+    .image-item a { display: block; text-decoration: none; color: #333; }
+    .image-item .filename { margin-top: 8px; font-size: 12px; word-break: break-all; max-width: 100px; }
+    .image-item:hover { box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+    .image-item .download { display: inline-block; margin-top: 6px; padding: 4px 10px; font-size: 11px; background: #1a3a6e; color: white; border-radius: 4px; text-decoration: none; }
+    .image-item .download:hover { background: #2a4a7e; }
+  </style>
+</head>
+<body>
+  <h1>Images: ${baseDir}</h1>
+  <p>${imageFiles.length} image(s) found</p>
+  <div class="gallery">`;
+
+      for (const file of imageFiles) {
+        const filePath = file.path || file.name;
+        const fileName = file.name || path.basename(file.path);
+        const imageUrl = `${sitePrefix}/${baseDir}/${filePath}`;
+        html += `
+    <div class="image-item">
+      <a href="${imageUrl}" target="_blank">
+        <img src="${imageUrl}" alt="${fileName}" loading="lazy">
+        <div class="filename">${fileName}</div>
+      </a>
+      <a href="${imageUrl}" download="${fileName}" class="download">Download</a>
+    </div>`;
+      }
+
+      html += `
+  </div>
+</body>
+</html>`;
+
+      res.setHeader('Content-Type', 'text/html');
+      return res.send(html);
+    }
+
     res.json({
       path: dirParam,
       files: files
