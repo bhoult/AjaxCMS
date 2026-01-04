@@ -777,11 +777,12 @@ app.get('*/api/list-recursive', async (req, res) => {
       const sitePrefix = req.originalUrl.split('/api/')[0];
       const baseDir = dirParam.replace(/^\.?\/?/, '');
 
-      // Filter to image files only
+      // Filter to image and video files
       const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp'];
-      const imageFiles = files.filter(f => {
+      const videoExtensions = ['.mp4', '.webm', '.mov', '.avi', '.mkv', '.m4v'];
+      const mediaFiles = files.filter(f => {
         const ext = path.extname(f.name || f.path).toLowerCase();
-        return imageExtensions.includes(ext);
+        return imageExtensions.includes(ext) || videoExtensions.includes(ext);
       });
 
       let html = `<!DOCTYPE html>
@@ -789,7 +790,7 @@ app.get('*/api/list-recursive', async (req, res) => {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Images - ${baseDir}</title>
+  <title>Media - ${baseDir}</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 20px; background: #f5f5f5; }
     h1 { color: #333; }
@@ -801,24 +802,32 @@ app.get('*/api/list-recursive', async (req, res) => {
     .image-item:hover { box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
     .image-item .download { display: inline-block; margin-top: 6px; padding: 4px 10px; font-size: 11px; background: #1a3a6e; color: white; border-radius: 4px; text-decoration: none; }
     .image-item .download:hover { background: #2a4a7e; }
+    .image-item video { width: 100px; height: 100px; object-fit: cover; border-radius: 4px; }
   </style>
 </head>
 <body>
-  <h1>Images: ${baseDir}</h1>
-  <p>${imageFiles.length} image(s) found</p>
+  <h1>Media: ${baseDir}</h1>
+  <p>${mediaFiles.length} file(s) found</p>
   <div class="gallery">`;
 
-      for (const file of imageFiles) {
+      for (const file of mediaFiles) {
         const filePath = file.path || file.name;
         const fileName = file.name || path.basename(file.path);
-        const imageUrl = `${sitePrefix}/${baseDir}/${filePath}`;
+        const fileUrl = `${sitePrefix}/${baseDir}/${filePath}`;
+        const ext = path.extname(fileName).toLowerCase();
+        const isVideo = videoExtensions.includes(ext);
+
+        const mediaElement = isVideo
+          ? `<video src="${fileUrl}" muted></video>`
+          : `<img src="${fileUrl}" alt="${fileName}" loading="lazy">`;
+
         html += `
     <div class="image-item">
-      <a href="${imageUrl}" target="_blank">
-        <img src="${imageUrl}" alt="${fileName}" loading="lazy">
+      <a href="${fileUrl}" target="_blank">
+        ${mediaElement}
         <div class="filename">${fileName}</div>
       </a>
-      <a href="${imageUrl}" download="${fileName}" class="download">Download</a>
+      <a href="${fileUrl}" download="${fileName}" class="download">Download</a>
     </div>`;
       }
 
