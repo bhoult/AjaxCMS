@@ -1,4 +1,4 @@
-## Why I Am Running
+## Why I Am Running For Arkansas House of Representatives
 
 <div style="float: left; margin: 0 20px 10px 0; text-align: center;">
 {{i | Jennifer_Head shot 2025.jpg | Jennifer Lewter | class=>img-fluid rounded-circle | style=>max-width: 180px;}}
@@ -28,8 +28,8 @@ Your contribution helps us fight for public education, food security, and health
 </div>
 
 <p style="font-size: 0.85em; color: #333; text-align: center;">
-<strong>Mail a check:</strong> Jennifer Lewter Campaign, P.O. Box 1234, Russellville, AR 72811<br>
-<em>Per FEC regulations, please include your name, address, employer, and occupation with your contribution.</em>
+<strong>Mail a check to:</strong> Jennifer Lewter for Arkansas, P.O. Box 552, Russellville, AR 72811<br>
+<em>Checks should be made out to "Jennifer Lewter for Arkansas," the official campaign name, and you must include the name of your employer. It is the law.</em>
 </p>
 
 ---
@@ -40,13 +40,10 @@ Your contribution helps us fight for public education, food security, and health
 <div class="stay-connected-social">
 <p style="margin-bottom: 15px;">Follow us on social media:</p>
 <div class="social-buttons">
-<a href="https://facebook.com/lewterforarkansas" class="social-btn" target="_blank" rel="noopener">
+<a href="https://facebook.com/LewterforArkansas" class="social-btn" target="_blank" rel="noopener">
 <i class="fab fa-facebook-f"></i> Facebook
 </a>
-<a href="https://x.com/lewterforAR" class="social-btn" target="_blank" rel="noopener">
-<i class="fab fa-x-twitter"></i> X / Twitter
-</a>
-<a href="https://instagram.com/lewterforarkansas" class="social-btn" target="_blank" rel="noopener">
+<a href="https://instagram.com/LewterforArkansas" class="social-btn" target="_blank" rel="noopener">
 <i class="fab fa-instagram"></i> Instagram
 </a>
 </div>
