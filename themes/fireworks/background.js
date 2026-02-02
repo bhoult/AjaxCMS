@@ -54,6 +54,7 @@ const MAX_STARS = isLowPower ? 100 : 200;
 const ENABLE_GLOW = !isLowPower;
 const ENABLE_SECONDARY_EXPLOSIONS = !isLowPower;
 const PARTICLE_SCALE = isLowPower ? 0.5 : 1.0; // Reduce particle counts on low-power devices
+const ENABLE_UFO = false; // Set to true to enable UFO easter egg
 
 // Scale firework spawn rate based on screen width
 function getFireworkChance() {
@@ -822,7 +823,7 @@ function animate(currentTime) {
     }
 
     // Spawn UFO randomly every 18-36 seconds (time-based)
-    if (elapsedTime - lastUfoSpawn >= nextUfoSpawnTime) {
+    if (ENABLE_UFO && elapsedTime - lastUfoSpawn >= nextUfoSpawnTime) {
         ufos.push(new UFO());
         lastUfoSpawn = elapsedTime;
         // Set next random spawn time (18-36 seconds)
