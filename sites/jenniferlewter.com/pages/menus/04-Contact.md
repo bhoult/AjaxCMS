@@ -12,14 +12,14 @@ I want to hear from you! Whether you have questions, concerns, or ideas for maki
 
 ### Other Ways to Reach Me
 
-**Email:** jennifer@lewter.gov
+**Email:** jennifer@jenniferlewter.com
 
 **Mailing Address:**
-Jennifer Lewter Campaign
-P.O. Box 1234
+Jennifer Lewter for Arkansas
+P.O. Box 552
 Russellville, AR 72811
 
-**Phone:** (479) 555-0123
+**Phone:** (479) 567-6263
 
 ---
 
@@ -27,9 +27,8 @@ Russellville, AR 72811
 
 Stay connected and follow the latest news from the campaign:
 
-- Facebook: /JenniferLewterAR
-- Twitter: @JenniferLewter
-- Instagram: @JenniferLewterAR
+- Facebook: [@LewterforArkansas](https://facebook.com/LewterforArkansas)
+- Instagram: [@LewterforArkansas](https://instagram.com/LewterforArkansas)
 
 ---
 

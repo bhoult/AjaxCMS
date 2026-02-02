@@ -4,7 +4,7 @@
 {{i | Jennifer_Head shot 2025.jpg | Jennifer Lewter | class=>img-fluid rounded-circle | style=>max-width: 200px;}}
 </div>
 
-Jennifer Lewter is a dedicated public servant who has called Russellville home for twenty years. She is running for state office to represent the citizens of Russellville and the River Valley region.
+Jennifer Lewter is a dedicated public servant who has called Russellville home for twenty years. She is running for Arkansas House of Representatives to represent the citizens of Russellville and the River Valley region.
 
 ### Background
 
@@ -26,7 +26,7 @@ Jennifer has deep roots in the Arkansas community. With years of experience work
 
 ### Family
 
-Jennifer is proud to call Russellville home. She is committed to building a stronger community for the next generation of Arkansans.
+Jennifer is committed to building a stronger community for the next generation of Arkansans.
 
 ### Vision
 
