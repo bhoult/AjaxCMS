@@ -10,9 +10,9 @@
    Dark olive:  #3a4230 (page background)
 */
 
-/* Logo wave: single vertical S-curve, white on left, olive on right */
+/* Logo wave: single vertical S-curve, cream on left, soft sage on right */
 :root {
-    --logo-wave: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='100' viewBox='0 0 200 100' preserveAspectRatio='none'%3E%3Cpath d='M100 0 C130 25, 70 75, 100 100 L200 100 L200 0 Z' fill='%234a5440' opacity='0.6'/%3E%3C/svg%3E");
+    --logo-wave: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='100' viewBox='0 0 200 100' preserveAspectRatio='none'%3E%3Cpath d='M100 0 C130 25, 70 75, 100 100 L200 100 L200 0 Z' fill='%23b0bda0'/%3E%3C/svg%3E");
 }
 
 body {
@@ -49,13 +49,13 @@ body, h1, h2, h3, h4, h5, h6, p, a, li, td, th, blockquote, code, pre, span, lab
    ============================================ */
 
 #sidebar {
-    background-color: rgba(250, 248, 242, 0.92);
+    background-color: rgba(245, 243, 237, 0.94);
     background-image: var(--logo-wave);
     background-size: 100% 100%;
     background-repeat: no-repeat;
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
-    border: 1px solid rgba(156, 170, 142, 0.2);
+    border: 1px solid rgba(176, 189, 160, 0.25);
     border-radius: 8px 0 0 8px;
     padding: 0;
     display: flex;
@@ -81,7 +81,7 @@ body, h1, h2, h3, h4, h5, h6, p, a, li, td, th, blockquote, code, pre, span, lab
 #sidebar .brand-name {
     font-family: 'Playfair Display', Georgia, serif;
     font-weight: 700;
-    font-size: 1.6em;
+    font-size: 2.6em;
     color: #c97b73;
     display: block;
     line-height: 1.1;
@@ -96,7 +96,7 @@ body, h1, h2, h3, h4, h5, h6, p, a, li, td, th, blockquote, code, pre, span, lab
     font-family: 'Lato', sans-serif;
     font-weight: 300;
     font-size: 0.75em;
-    color: #6b7a5e;
+    color: #8a8a82;
     letter-spacing: 0.08em;
     display: block;
     line-height: 1;

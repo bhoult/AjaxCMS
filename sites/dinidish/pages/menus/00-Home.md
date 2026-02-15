@@ -1,7 +1,5 @@
 <div class="lang-id">
 
-# Dini Dish
-
 ### Good meals, happy tummy
 
 **Masakan sehat & rumahan setiap hari.**
@@ -31,8 +29,6 @@ Semua dibuat **fresh setiap hari**, higienis, halal, dan menggunakan bahan berku
 
 </div>
 <div class="lang-en">
-
-# Dini Dish
 
 ### Good meals, happy tummy
 
