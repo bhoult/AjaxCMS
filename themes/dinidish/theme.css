@@ -1,0 +1,392 @@
+/* Dinidish Theme - Home Service Catering */
+/* Dark olive background with sage green & coral branding */
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Lato:wght@300;400;500;700&display=swap');
+
+/* Brand colors:
+   Sage green:  #9caa8e (logo bg)
+   Coral pink:  #c97b73 (brand name, accents)
+   Light sage:  #d4ddc9 (logo bg light)
+   Dark olive:  #3a4230 (page background)
+*/
+
+/* Logo wave: single vertical S-curve, white on left, olive on right */
+:root {
+    --logo-wave: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='100' viewBox='0 0 200 100' preserveAspectRatio='none'%3E%3Cpath d='M100 0 C130 25, 70 75, 100 100 L200 100 L200 0 Z' fill='%234a5440' opacity='0.6'/%3E%3C/svg%3E");
+}
+
+body {
+    background-color: #3a4230;
+    color: #faf5ee;
+    font-family: 'Lato', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Text readability on photo background */
+body, h1, h2, h3, h4, h5, h6, p, a, li, td, th, blockquote, code, pre, span, label {
+    text-shadow:
+        0 0 6px rgba(30, 25, 15, 0.9),
+        0 0 12px rgba(30, 25, 15, 0.7),
+        0 0 20px rgba(30, 25, 15, 0.5),
+        1px 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+@media (max-width: 768px) {
+    body, h1, h2, h3, h4, h5, h6, p, a, li, td, th, blockquote, code, pre, span, label {
+        text-shadow:
+            0 0 8px rgba(30, 25, 15, 1),
+            0 0 14px rgba(30, 25, 15, 0.9),
+            0 0 22px rgba(30, 25, 15, 0.7),
+            0 0 30px rgba(30, 25, 15, 0.5),
+            1px 1px 4px rgba(0, 0, 0, 0.9);
+    }
+    h1 {
+        font-size: 2.2em !important;
+    }
+}
+
+/* ============================================
+   LEFT SIDEBAR
+   ============================================ */
+
+#sidebar {
+    background-color: rgba(250, 248, 242, 0.92);
+    background-image: var(--logo-wave);
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border: 1px solid rgba(156, 170, 142, 0.2);
+    border-radius: 8px 0 0 8px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Make sidebar stretch to match content height */
+.row.g-0 {
+    align-items: stretch;
+}
+
+/* Logo / brand in sidebar — full width */
+#sidebar .navbar-brand {
+    display: block;
+    text-decoration: none;
+    text-align: center;
+    padding: 20px 16px;
+    margin: 0;
+    border-bottom: 1px solid rgba(156, 170, 142, 0.2);
+    text-shadow: none !important;
+}
+
+#sidebar .brand-name {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 700;
+    font-size: 1.6em;
+    color: #c97b73;
+    display: block;
+    line-height: 1.1;
+    text-shadow: none !important;
+}
+
+#sidebar .navbar-brand:hover .brand-name {
+    color: #b56a62;
+}
+
+#sidebar .brand-sub {
+    font-family: 'Lato', sans-serif;
+    font-weight: 300;
+    font-size: 0.75em;
+    color: #6b7a5e;
+    letter-spacing: 0.08em;
+    display: block;
+    line-height: 1;
+    margin-top: 2px;
+    text-shadow: none !important;
+}
+
+/* Menu list in sidebar */
+#sidebar #menu {
+    list-style: none;
+    padding: 12px 16px;
+    margin: 0;
+    flex: 1;
+}
+
+#sidebar #menu li {
+    margin: 2px 0;
+}
+
+#sidebar #menu a,
+#menu a {
+    color: #4a5440;
+    text-decoration: none;
+    padding: 8px 12px;
+    display: block;
+    transition: all 0.3s ease;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    text-shadow: none !important;
+    border-radius: 4px;
+}
+
+#sidebar #menu a:hover,
+#menu a:hover {
+    color: #c97b73;
+    background-color: rgba(201, 123, 115, 0.08);
+}
+
+#sidebar #menu a.active,
+#menu a.active,
+#menu .active > a {
+    color: #c97b73 !important;
+    font-weight: 600;
+    border-left: 3px solid #c97b73;
+    padding-left: 9px;
+}
+
+/* Language toggle in sidebar */
+#lang-toggle {
+    display: block;
+    margin: 12px 16px 16px 16px;
+    color: #4a5440 !important;
+    border-color: rgba(74, 84, 64, 0.25) !important;
+    text-shadow: none !important;
+    font-size: 0.85em;
+    padding: 4px 12px;
+}
+
+#lang-toggle:hover {
+    background-color: rgba(201, 123, 115, 0.08);
+    color: #c97b73 !important;
+}
+
+/* Dropdown menus in sidebar */
+.dropdown-menu {
+    background-color: rgba(250, 248, 242, 0.98);
+    border: 1px solid rgba(156, 170, 142, 0.2);
+}
+
+.dropdown-item {
+    color: #4a5440;
+    text-shadow: none !important;
+}
+
+.dropdown-item:hover {
+    color: #c97b73;
+    background-color: rgba(201, 123, 115, 0.08);
+}
+
+/* ============================================
+   CONTENT AREAS
+   ============================================ */
+
+#a, #b {
+    background-color: rgba(42, 48, 34, 0.85);
+    border: 1px solid rgba(156, 170, 142, 0.15) !important;
+    border-left: none !important;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3) !important;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    padding: 40px;
+    border-radius: 0 8px 8px 0;
+}
+
+/* Mobile: stack sidebar on top */
+@media (max-width: 767.98px) {
+    #sidebar {
+        border-radius: 8px 8px 0 0;
+        padding: 0;
+    }
+
+    #a, #b {
+        border-left: 1px solid rgba(156, 170, 142, 0.15) !important;
+        border-top: none !important;
+        border-radius: 0 0 8px 8px;
+    }
+}
+
+/* ============================================
+   TYPOGRAPHY & CONTENT
+   ============================================ */
+
+/* Headings - coral serif font matching logo */
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', Georgia, serif;
+    color: #c97b73;
+    font-weight: 600;
+    margin-top: 1.4em;
+    margin-bottom: 0.5em;
+}
+
+h1 {
+    font-size: 2.8em;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: #d4897f;
+}
+
+h2 {
+    font-size: 2em;
+}
+
+h3 {
+    font-size: 1.5em;
+}
+
+/* Body text */
+p {
+    line-height: 1.75;
+    color: #ddd8cc;
+    margin-bottom: 1em;
+}
+
+/* Links - coral accent */
+a {
+    color: #c97b73;
+    text-decoration: underline;
+    text-decoration-color: rgba(201, 123, 115, 0.35);
+    transition: all 0.2s ease;
+}
+
+a:hover {
+    color: #d4897f;
+    text-decoration-color: rgba(212, 137, 127, 0.7);
+}
+
+/* Code blocks */
+code {
+    background-color: rgba(156, 170, 142, 0.15);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: "Courier New", Courier, monospace;
+    color: #c8d2b8;
+    border: 1px solid rgba(156, 170, 142, 0.12);
+}
+
+pre {
+    background-color: rgba(30, 35, 25, 0.5);
+    padding: 16px;
+    border-radius: 4px;
+    overflow-x: auto;
+    border-left: 3px solid #9caa8e;
+}
+
+/* Blockquotes */
+blockquote {
+    border-left: 3px solid #c97b73;
+    padding-left: 20px;
+    margin-left: 0;
+    color: #b0b8a0;
+    font-style: italic;
+}
+
+/* Images */
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 20px 0;
+    border-radius: 6px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Lists */
+ul, ol {
+    line-height: 1.75;
+    color: #ddd8cc;
+}
+
+/* Tables */
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 20px 0;
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid rgba(156, 170, 142, 0.15);
+    color: #ddd8cc;
+}
+
+th {
+    background-color: rgba(156, 170, 142, 0.12);
+    font-weight: 600;
+    color: #c8d2b8;
+}
+
+tr:hover {
+    background-color: rgba(156, 170, 142, 0.06);
+}
+
+/* ============================================
+   LAYOUT & CANVAS
+   ============================================ */
+
+#background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100% !important;
+    z-index: -1;
+}
+
+.container-fluid {
+    position: relative;
+    z-index: 1;
+}
+
+.container {
+    padding-bottom: 8px !important;
+}
+
+/* Splash page */
+#splash {
+    background-color: rgba(42, 48, 34, 0.92);
+    border: none;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* Carousel adjustments */
+.carousel-caption {
+    background-color: rgba(42, 48, 34, 0.8);
+    padding: 8px 16px;
+    border-radius: 6px;
+}
+
+/* Discussion system adjustments */
+.discussion-comment {
+    background-color: rgba(42, 48, 34, 0.6) !important;
+    border-color: rgba(156, 170, 142, 0.15) !important;
+}
+
+.discussion-comment:hover {
+    background-color: rgba(42, 48, 34, 0.75) !important;
+}
+
+/* Form adjustments */
+.form-control {
+    background-color: rgba(50, 58, 40, 0.6);
+    border-color: rgba(156, 170, 142, 0.25);
+    color: #ddd8cc;
+}
+
+.form-control:focus {
+    background-color: rgba(55, 63, 45, 0.7);
+    border-color: #9caa8e;
+    color: #faf5ee;
+    box-shadow: 0 0 0 0.2rem rgba(156, 170, 142, 0.2);
+}
+
+.btn-primary {
+    background-color: #c97b73;
+    border-color: #b56a62;
+    color: #fff;
+}
+
+.btn-primary:hover {
+    background-color: #b56a62;
+    border-color: #a35d55;
+}

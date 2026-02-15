@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+		<meta charset="UTF-8">
+		<title>Dinidish - Indonesian Restaurant</title>
+
+		<!-- Configuration -->
+		<script>
+			var default_background = "dinidish";
+			var ajaxcms_google_analytics = '';
+			var ajaxcms_splash_time = 3000;
+		</script>
+
+		<!-- jQuery (from npm) -->
+		<script src="node_modules/jquery/dist/jquery.min.js"></script>
+		<script src="node_modules/jquery-ui-dist/jquery-ui.min.js"></script>
+		<link href="node_modules/jquery-ui-dist/jquery-ui.min.css" rel="stylesheet">
+
+		<!-- Bootstrap (from npm) -->
+		<link href="node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+		<script src="node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+		<!-- Markdown parser (from npm) -->
+		<script src="node_modules/marked/lib/marked.umd.js"></script>
+
+		<!-- Background Animation Libraries (from npm) -->
+		<script src="js/victor.js"></script>
+		<script src="node_modules/segment-js/dist/segment.min.js"></script>
+
+		<!-- Custom Background Animation & Swipe Support -->
+		<script src="js/canvasstuff.js"></script>
+		<script src="js/jquery-mobile-swipe.js"></script>
+
+		<!-- CMS Javascript -->
+		<script src="js/ajaxcms.js"></script>
+
+		<!-- Fonts -->
+		<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Lato:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+		<!-- Load theme -->
+		<script>
+			theme = default_background;
+			// Load theme CSS
+			$('<link>').appendTo('head').attr({type : 'text/css', rel : 'stylesheet'}).attr('href', 'themes/'+default_background+'/theme.css');
+			// Load theme background.js and signal when ready
+			$.getScript('themes/'+default_background+'/background.js')
+				.done(function() {
+					setTimeout(function() {
+						if (window.themeReady) {
+							window.themeReady();
+						}
+					}, 100);
+				})
+				.fail(function(jqxhr, settings, exception) {
+					console.error('Error loading theme:', exception);
+					if (window.themeReady) {
+						window.themeReady();
+					}
+				});
+		</script>
+
+		<style>
+			body {
+				overflow-x: hidden;
+				padding-bottom: 100px;
+			}
+
+			#background {
+			  position:fixed;
+			  z-index:-1;
+			  width:100%;
+			  height:100%;
+			  background: linear-gradient(#3a4230, #2a3020);
+			}
+			#background-div {
+			  position:fixed;
+			  z-index:0;
+			  width:100%;
+			  height:100%;
+			}
+
+			.container {
+			  min-height: 200px;
+			}
+
+			#main {
+			  width: 100%;
+			  position: relative;
+			}
+
+			#a, #b {
+			  position: absolute;
+			  top: 0;
+			  left: 0;
+			  right: 0;
+			  z-index: 0;
+			  padding: 0 10px 20px 10px;
+			}
+
+			#splash {
+			  position:fixed;
+			  display:none;
+			  width:100%;
+			  height:100%;
+			  background:rgba(42, 48, 34, 0.95);
+			  z-index:10;
+			  text-align:center;
+			  padding-top:20%;
+			  font-size:300%;
+			}
+
+		</style>
+	</head>
+	<body>
+		<canvas id="background" width="800" height="800"></canvas>
+		<div id="background-div"></div>
+
+		<div class="container" style="display:none;">
+			<div class="row g-0">
+				<div class="col-md-3 col-lg-2" id="sidebar">
+					<a class="navbar-brand" href="javascript:void(0);"><span class="brand-name">Dini Dish</span><span class="brand-sub">home service catering</span></a>
+					<ul id="menu"></ul>
+					<button id="lang-toggle" class="btn btn-sm" onclick="toggleLang()"></button>
+				</div>
+				<div class="col-md-9 col-lg-10">
+					<main id="main" style="position:relative; width:100%;">
+						<div id="a"></div>
+						<div id="b" style="display:none;"></div>
+					</main>
+				</div>
+			</div>
+		</div>
+		<!-- Language System -->
+		<script>
+			// Detect initial language: localStorage > browser > default to Bahasa
+			function detectLang() {
+				var stored = localStorage.getItem('dinidish-lang');
+				if (stored) return stored;
+				var browserLang = (navigator.language || navigator.userLanguage || '').toLowerCase();
+				if (browserLang.startsWith('en')) return 'en';
+				return 'id';
+			}
+
+			var currentLang = detectLang();
+
+			function applyLang(lang) {
+				currentLang = lang;
+				localStorage.setItem('dinidish-lang', lang);
+				// Show matching lang blocks, hide others
+				$('.lang-id').toggle(lang === 'id');
+				$('.lang-en').toggle(lang === 'en');
+				// Update toggle button
+				$('#lang-toggle').text(lang === 'id' ? 'English' : 'Bahasa');
+			}
+
+			function toggleLang() {
+				applyLang(currentLang === 'id' ? 'en' : 'id');
+			}
+
+			// Apply language after each page load
+			$(document).on('ajaxcms:pageloaded', function() { applyLang(currentLang); });
+
+			// Sync #main height to the visible content div so the row stretches properly
+			function syncMainHeight() {
+				var a = document.getElementById('a');
+				var b = document.getElementById('b');
+				var main = document.getElementById('main');
+				if (!main) return;
+				var visible = (b && b.style.display !== 'none') ? b : a;
+				if (visible) {
+					main.style.minHeight = visible.scrollHeight + 'px';
+				}
+			}
+
+			// Also observe DOM changes on #a and #b to catch page transitions
+			var contentObserver = new MutationObserver(function() {
+				applyLang(currentLang);
+				syncMainHeight();
+			});
+			$(function() {
+				applyLang(currentLang);
+				['a','b'].forEach(function(id) {
+					var el = document.getElementById(id);
+					if (el) contentObserver.observe(el, { childList: true, subtree: true });
+				});
+				// Also sync on window resize and after transitions
+				$(window).on('resize', syncMainHeight);
+				setInterval(syncMainHeight, 500);
+			});
+		</script>
+	</body>
+</html>
