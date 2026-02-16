@@ -23,7 +23,9 @@
 
     // Configuration
     const config = {
-        panSpeed: 0.3,              // Pixels per frame to move camera
+        panSpeed: 0.4,              // Pixels per frame to move camera
+        waypointCount: 12,          // Number of random waypoints in the spline loop
+        waypointSpread: 0.7,        // How far waypoints spread across the world (0-1)
         photoScale: 0.175,          // Base scale for photos (fraction of viewport width)
         photoScaleMobile: 0.275,    // Larger on mobile so photos are visible
         photoRotationMax: 15,       // Max rotation in degrees
@@ -281,17 +283,101 @@
     }
 
     /**
+     * Catmull-Rom spline interpolation between four points.
+     * Returns a point between p1 and p2, with p0 and p3 providing curvature.
+     * @param {number} t - Parameter 0-1 between p1 and p2
+     */
+    function catmullRom(p0, p1, p2, p3, t) {
+        var t2 = t * t;
+        var t3 = t2 * t;
+        return 0.5 * (
+            (2 * p1) +
+            (-p0 + p2) * t +
+            (2 * p0 - 5 * p1 + 4 * p2 - p3) * t2 +
+            (-p0 + 3 * p1 - 3 * p2 + p3) * t3
+        );
+    }
+
+    /**
+     * Generate random waypoints for the camera spline path.
+     * The path loops seamlessly by wrapping the waypoint array.
+     */
+    let waypoints = [];
+    let splineT = 0;           // Current position along the spline (0 to waypointCount)
+    let splineSegment = 0;     // Current segment index
+
+    function generateWaypoints() {
+        var rng = seededRandom(31);
+        var count = config.waypointCount;
+        var spreadX = worldWidth * config.waypointSpread;
+        var spreadY = worldHeight * config.waypointSpread;
+        var offsetX = (worldWidth - spreadX) / 2;
+        var offsetY = (worldHeight - spreadY) / 2;
+
+        waypoints = [];
+        for (var i = 0; i < count; i++) {
+            waypoints.push({
+                x: offsetX + rng() * spreadX,
+                y: offsetY + rng() * spreadY
+            });
+        }
+        splineT = 0;
+        splineSegment = 0;
+    }
+
+    /**
+     * Get the camera position along the Catmull-Rom spline.
+     * Wraps indices so the path loops seamlessly.
+     */
+    function getSplinePosition(segment, t) {
+        var n = waypoints.length;
+        var p0 = waypoints[((segment - 1) % n + n) % n];
+        var p1 = waypoints[segment % n];
+        var p2 = waypoints[(segment + 1) % n];
+        var p3 = waypoints[(segment + 2) % n];
+        return {
+            x: catmullRom(p0.x, p1.x, p2.x, p3.x, t),
+            y: catmullRom(p0.y, p1.y, p2.y, p3.y, t)
+        };
+    }
+
+    /**
+     * Calculate the length of a spline segment by sampling it.
+     */
+    function segmentLength(segment) {
+        var steps = 20;
+        var len = 0;
+        var prev = getSplinePosition(segment, 0);
+        for (var i = 1; i <= steps; i++) {
+            var curr = getSplinePosition(segment, i / steps);
+            var dx = curr.x - prev.x;
+            var dy = curr.y - prev.y;
+            len += Math.sqrt(dx * dx + dy * dy);
+            prev = curr;
+        }
+        return len;
+    }
+
+    /**
      * Draw the full scene for one frame.
-     * The camera wraps around using modulo so the pan loops seamlessly.
+     * The camera follows a smooth Catmull-Rom spline through random waypoints.
      */
     function drawFrame() {
-        // Advance camera diagonally
-        cameraX += config.panSpeed;
-        cameraY += config.panSpeed * 0.4;
+        // Advance along spline at constant speed
+        var segLen = segmentLength(splineSegment);
+        var tStep = (segLen > 0) ? config.panSpeed / segLen : 0.001;
+        splineT += tStep;
 
-        // Wrap camera position
-        cameraX = cameraX % worldWidth;
-        cameraY = cameraY % worldHeight;
+        // Move to next segment when t exceeds 1
+        while (splineT >= 1) {
+            splineT -= 1;
+            splineSegment = (splineSegment + 1) % waypoints.length;
+        }
+
+        // Get camera position from spline
+        var pos = getSplinePosition(splineSegment, splineT);
+        cameraX = ((pos.x % worldWidth) + worldWidth) % worldWidth;
+        cameraY = ((pos.y % worldHeight) + worldHeight) % worldHeight;
 
         // Clear and draw wood background
         ctx.fillStyle = woodPattern || config.tableColor1;
@@ -336,18 +422,33 @@
      * Resize canvas and re-scatter if needed.
      */
     let prevWidth = 0;
+    let resizeTimer = null;
     function handleResize() {
-        width = window.innerWidth;
-        height = window.innerHeight;
-        canvas.width = width;
-        canvas.height = height;
+        // Debounce to avoid reacting to transient layout shifts
+        if (resizeTimer) clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function() {
+            // Don't resize during page transitions
+            if (window.in_transition) return;
 
-        // Only re-scatter if width changed significantly (not mobile URL bar)
-        if (Math.abs(width - prevWidth) > 50 && imageElements.length > 0) {
-            prevWidth = width;
-            createWoodPattern();
-            scatterPhotos(imageElements.filter(function(el) { return el.complete && el.naturalWidth > 0; }));
-        }
+            var newWidth = window.innerWidth;
+            var newHeight = window.innerHeight;
+
+            // Skip if width hasn't changed (mobile URL bar, content reflow)
+            if (newWidth === width) return;
+
+            width = newWidth;
+            height = newHeight;
+            canvas.width = width;
+            canvas.height = height;
+
+            // Only re-scatter if width changed significantly
+            if (Math.abs(width - prevWidth) > 50 && imageElements.length > 0) {
+                prevWidth = width;
+                createWoodPattern();
+                scatterPhotos(imageElements.filter(function(el) { return el.complete && el.naturalWidth > 0; }));
+                generateWaypoints();
+            }
+        }, 300);
     }
 
     /**
@@ -373,6 +474,7 @@
             if (paths.length === 0) {
                 // No images yet - just show the wood table
                 console.log('Dinidish theme: No images found in themes/dinidish/images/. Add photos and refresh.');
+                generateWaypoints();
                 animationId = requestAnimationFrame(drawFrame);
                 return;
             }
@@ -385,6 +487,7 @@
 
                 imageElements = loadedImages;
                 scatterPhotos(loadedImages);
+                generateWaypoints();
                 animationId = requestAnimationFrame(drawFrame);
             });
         });

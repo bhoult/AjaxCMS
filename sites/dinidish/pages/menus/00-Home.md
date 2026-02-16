@@ -1,60 +1,80 @@
 <div class="lang-id">
 
-### Good meals, happy tummy
+## Masakan Rumahan, Cita Rasa Istimewa
 
-**Masakan sehat & rumahan setiap hari.**
-Makanan enak, bergizi, dan terjangkau untuk semua.
+**Sehat, segar, dan dibuat dengan sepenuh hati — setiap hari.**
 
 ---
 
-Selamat datang di **Dini Dish!**
-Kami memasak dari dapur rumah untuk keluarga dan warga Tulungagung setiap hari.
+Selamat datang di **Dini Dish**, layanan katering rumahan berbasis di Tulungagung, Jawa Timur. Kami menyajikan masakan rumahan berkualitas yang dibuat fresh setiap hari menggunakan bahan-bahan pilihan, bumbu alami, dan teknik memasak yang menjaga nutrisi dan rasa.
+
+Setiap hidangan kami disiapkan dengan standar kebersihan tinggi di dapur kami yang terawat, karena kami percaya bahwa makanan yang baik dimulai dari proses yang baik.
 
 ### Layanan Kami
 
-- **Menu Diet Sehat** (Eat Clean)
-- **Menu Lauk Rumahan**
-- **Nasi Kotak / Rice Box**
-- **Tumpeng & Pesanan Acara Rumahan**
+- **Menu Diet Sehat** — Program makan seimbang untuk gaya hidup aktif, rendah kalori namun tetap mengenyangkan dan lezat
+- **Menu Lauk Rumahan** — Hidangan klasik Indonesia yang mengingatkan Anda pada masakan ibu di rumah
+- **Nasi Kotak / Rice Box** — Paket praktis untuk acara kantor, arisan, pengajian, atau makan siang harian
+- **Tumpeng & Katering Acara** — Sajian spesial untuk ulang tahun, syukuran, dan perayaan keluarga
 
-Semua dibuat **fresh setiap hari**, higienis, halal, dan menggunakan bahan berkualitas.
+### Mengapa Memilih Dini Dish?
+
+| | |
+|---|---|
+| **Bahan Segar** | Kami belanja bahan setiap pagi untuk menjamin kesegaran |
+| **100% Halal** | Semua bahan dan proses memasak dijamin halal |
+| **Tanpa Pengawet** | Tidak menggunakan MSG berlebih, pewarna, atau pengawet buatan |
+| **Porsi Pas** | Dirancang untuk mengenyangkan dengan nutrisi seimbang |
+| **Gratis Ongkir** | Pengiriman gratis untuk area tertentu di Tulungagung |
 
 ---
 
-💬 **Order via WhatsApp:** [0898-5506-208](https://wa.me/6289855062080)
+### Pesan Sekarang
 
-🚚 **Free Delivery** — Area tertentu Tulungagung
+Pemesanan dibuka setiap hari. Hubungi kami melalui WhatsApp untuk melihat menu hari ini dan melakukan pemesanan.
 
-> *Makan praktis, sehat, dan tetap nikmat.*
+[Pesan via WhatsApp: 0898-5506-208](https://wa.me/6289855062080)
+
+> *Dari dapur rumah kami, untuk meja makan Anda.*
 
 </div>
 <div class="lang-en">
 
-### Good meals, happy tummy
+## Home Cooking, Extraordinary Flavour
 
-**Healthy & homemade cooking every day.**
-Delicious, nutritious, and affordable food for everyone.
+**Healthy, fresh, and made with heart — every single day.**
 
 ---
 
-Welcome to **Dini Dish!**
-We cook from our home kitchen for families and the people of Tulungagung every day.
+Welcome to **Dini Dish**, a home-based catering service located in Tulungagung, East Java. We prepare quality homemade meals fresh daily using carefully selected ingredients, natural seasonings, and cooking techniques that preserve both nutrition and flavour.
+
+Every dish is prepared to high hygiene standards in our well-maintained kitchen, because we believe that good food starts with a good process.
 
 ### Our Services
 
-- **Healthy Diet Menu** (Eat Clean)
-- **Home-Style Side Dishes**
-- **Rice Box / Nasi Kotak**
-- **Tumpeng & Home Catering**
+- **Healthy Diet Menu** — Balanced meal plans for active lifestyles, low-calorie yet satisfying and delicious
+- **Home-Style Side Dishes** — Classic Indonesian dishes that remind you of home cooking
+- **Rice Box / Nasi Kotak** — Convenient packages for office events, gatherings, or daily lunch
+- **Tumpeng & Event Catering** — Special presentations for birthdays, celebrations, and family occasions
 
-Everything is made **fresh daily**, hygienic, halal, and using quality ingredients.
+### Why Choose Dini Dish?
+
+| | |
+|---|---|
+| **Fresh Ingredients** | We source ingredients every morning to guarantee freshness |
+| **100% Halal** | All ingredients and cooking processes are certified halal |
+| **No Preservatives** | No excessive MSG, artificial colouring, or chemical preservatives |
+| **Right-Sized Portions** | Designed to satisfy with balanced nutrition |
+| **Free Delivery** | Complimentary delivery to select areas in Tulungagung |
 
 ---
 
-💬 **Order via WhatsApp:** [0898-5506-208](https://wa.me/6289855062080)
+### Order Now
 
-🚚 **Free Delivery** — Select areas in Tulungagung
+Orders are open daily. Contact us via WhatsApp to see today's menu and place your order.
 
-> *Convenient, healthy, and always delicious.*
+[Order via WhatsApp: 0898-5506-208](https://wa.me/6289855062080)
+
+> *From our home kitchen, to your dining table.*
 
 </div>
