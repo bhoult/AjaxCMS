@@ -9,7 +9,7 @@
 		<script>
 			var default_background = "dinidish";
 			var ajaxcms_google_analytics = '';
-			var ajaxcms_splash_time = 3000;
+			var ajaxcms_splash_time = 0;
 		</script>
 
 		<!-- jQuery (from npm) -->
@@ -69,9 +69,13 @@
 			#background {
 			  position:fixed;
 			  z-index:-1;
-			  width:100%;
-			  height:100%;
+			  top: 0;
+			  left: 0;
 			  background: linear-gradient(#3a4230, #2a3020);
+			  transition: filter 0.5s ease;
+			}
+			#background.blurred {
+			  filter: blur(6px);
 			}
 			#background-div {
 			  position:fixed;
@@ -103,12 +107,52 @@
 			  display:none;
 			  width:100%;
 			  height:100%;
-			  background:rgba(42, 48, 34, 0.95);
+			  background:rgba(176, 189, 160, 0.95);
 			  z-index:10;
 			  text-align:center;
 			  padding-top:20%;
 			  font-size:300%;
 			}
+
+		/* Lightbox for expanded images */
+		.image-lightbox {
+			display: none;
+			position: fixed;
+			z-index: 9999;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background-color: rgba(0, 0, 0, 0);
+			cursor: pointer;
+			transition: background-color 0.3s ease;
+		}
+
+		.image-lightbox.active {
+			background-color: rgba(0, 0, 0, 0.9);
+		}
+
+		.image-lightbox img {
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%) scale(0.8);
+			width: 100%;
+			height: auto;
+			max-height: 100vh;
+			object-fit: contain;
+			opacity: 0;
+			transition: all 0.3s ease;
+			margin: 0;
+			border-radius: 0;
+			box-shadow: none;
+			text-shadow: none;
+		}
+
+		.image-lightbox.active img {
+			transform: translate(-50%, -50%) scale(1);
+			opacity: 1;
+		}
 
 		</style>
 	</head>
@@ -117,8 +161,24 @@
 		<div id="background-div"></div>
 
 		<div class="container" style="display:none;">
+			<!-- Mobile top bar -->
+			<div id="mobile-topbar" class="d-md-none">
+				<div id="mobile-topbar-inner">
+					<a class="navbar-brand" href="javascript:void(0);"><span class="brand-name">Dini Dish</span><span class="brand-sub">home service catering</span></a>
+					<div id="mobile-nav">
+						<ul id="mobile-quick-links"></ul>
+						<button id="hamburger-btn" class="btn" onclick="$('#mobile-menu-dropdown').slideToggle(200);">
+							<span class="hamburger-icon">&#9776;</span>
+						</button>
+					</div>
+				</div>
+				<div id="mobile-menu-dropdown" style="display:none;">
+					<ul id="mobile-more-links"></ul>
+					<button id="lang-toggle-mobile" class="btn btn-sm" onclick="toggleLang()"></button>
+				</div>
+			</div>
 			<div class="row g-0">
-				<div class="col-md-3 col-lg-2" id="sidebar">
+				<div class="col-md-3 col-lg-2 d-none d-md-flex" id="sidebar">
 					<a class="navbar-brand" href="javascript:void(0);"><span class="brand-name">Dini Dish</span><span class="brand-sub">home service catering</span></a>
 					<ul id="menu"></ul>
 					<button id="lang-toggle" class="btn btn-sm" onclick="toggleLang()"></button>
@@ -151,7 +211,7 @@
 				$('.lang-id').toggle(lang === 'id');
 				$('.lang-en').toggle(lang === 'en');
 				// Update toggle button
-				$('#lang-toggle').text(lang === 'id' ? 'English' : 'Bahasa');
+				$('#lang-toggle, #lang-toggle-mobile').text(lang === 'id' ? 'English' : 'Bahasa');
 			}
 
 			function toggleLang() {
@@ -163,6 +223,8 @@
 
 			// Sync #main height to the visible content div so the row stretches properly
 			function syncMainHeight() {
+				// Don't change height during page transitions
+				if (window.in_transition) return;
 				var a = document.getElementById('a');
 				var b = document.getElementById('b');
 				var main = document.getElementById('main');
@@ -178,7 +240,35 @@
 				applyLang(currentLang);
 				syncMainHeight();
 			});
-			$(function() {
+			// Build mobile menu from #menu after ajaxcms populates it
+		function buildMobileMenu() {
+			var $items = $('#menu > li');
+			$('#mobile-quick-links').empty();
+			$('#mobile-more-links').empty();
+			$items.each(function(i) {
+				var $clone = $(this).clone(true);
+				if (i < 2) {
+					// Home and Menu go in the quick links bar
+					$('#mobile-quick-links').append($clone);
+				} else {
+					// About, Contact, etc go in the hamburger dropdown
+					$('#mobile-more-links').append($clone);
+				}
+			});
+		}
+
+		// Watch #menu for changes (ajaxcms populates it async)
+		var menuObserver = new MutationObserver(function() { buildMobileMenu(); });
+		$(function() {
+			var menuEl = document.getElementById('menu');
+			if (menuEl) menuObserver.observe(menuEl, { childList: true });
+			// Close hamburger dropdown when a link is clicked
+			$(document).on('click', '#mobile-more-links a', function() {
+				$('#mobile-menu-dropdown').slideUp(200);
+			});
+		});
+
+		$(function() {
 				applyLang(currentLang);
 				['a','b'].forEach(function(id) {
 					var el = document.getElementById(id);

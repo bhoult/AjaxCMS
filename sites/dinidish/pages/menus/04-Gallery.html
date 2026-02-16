@@ -1,0 +1,66 @@
+<div class="lang-id">
+<h2>Galeri</h2>
+<p>Klik foto untuk melihat lebih besar.</p>
+</div>
+<div class="lang-en">
+<h2>Gallery</h2>
+<p>Click a photo to view full size.</p>
+</div>
+
+<div id="gallery-grid"></div>
+
+<script>
+(function() {
+    // Blur the background on the gallery page, remove on navigation
+    var bg = document.getElementById('background');
+    if (bg) bg.classList.add('blurred');
+    var blurObserver = new MutationObserver(function() {
+        if (!document.getElementById('gallery-grid')) {
+            if (bg) bg.classList.remove('blurred');
+            blurObserver.disconnect();
+        }
+    });
+    var aEl = document.getElementById('a');
+    if (aEl) blurObserver.observe(aEl, { childList: true });
+
+    var baseDir = './themes/dinidish/images';
+    var imgExtensions = /\.(jpe?g|png|webp|gif|bmp|avif)$/i;
+
+    $.ajax({
+        url: 'api/list-recursive?dir=' + encodeURIComponent(baseDir),
+        dataType: 'json',
+        success: function(data) {
+            var items = Array.isArray(data) ? data : (data && data.files ? data.files : []);
+            var paths = [];
+            items.forEach(function(item) {
+                var name = typeof item === 'string' ? item : (item.name || item.path || '');
+                if (imgExtensions.test(name)) {
+                    paths.push('themes/dinidish/images/' + encodeURIComponent(name));
+                }
+            });
+            renderGallery(paths);
+        },
+        error: function() {
+            var el = document.getElementById('gallery-grid');
+            if (el) el.textContent = 'Could not load gallery images.';
+        }
+    });
+
+    function renderGallery(paths) {
+        var grid = document.getElementById('gallery-grid');
+        if (!grid) return;
+        if (paths.length === 0) {
+            grid.textContent = 'No images found.';
+            return;
+        }
+        var html = '';
+        paths.forEach(function(src) {
+            var alt = decodeURIComponent(src.split('/').pop().replace(/\.[^/.]+$/, ''));
+            html += '<div class="gallery-item">' +
+                    '<img src="' + src + '" alt="' + alt + '" loading="lazy" onclick="openLightbox(\'' + src + '\')">' +
+                    '</div>';
+        });
+        grid.innerHTML = html;
+    }
+})();
+</script>
