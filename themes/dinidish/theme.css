@@ -38,9 +38,20 @@ body, h1, h2, h3, h4, h5, h6, p, a, li, td, th, blockquote, code, pre, span, lab
             0 0 28px rgba(176, 189, 160, 0.7),
             1px 1px 4px rgba(200, 210, 190, 0.9);
     }
+    body { color: #2a2e24; }
+    p, ul, ol, li, td, th, blockquote { color: #2a2e24; }
+    a { color: #000000; }
     h1 {
         font-size: 2.2em !important;
     }
+}
+
+/* Mobile top bar - fully opaque */
+#mobile-topbar {
+    background-color: #f5f3ed;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='200' viewBox='0 0 400 200' preserveAspectRatio='none'%3E%3Crect width='400' height='200' fill='%23f5f3ed'/%3E%3Cpath d='M180 0 C210 50, 170 150, 200 200 L400 200 L400 0 Z' fill='%23b0bda0'/%3E%3C/svg%3E");
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
 }
 
 /* ============================================
@@ -203,32 +214,19 @@ body, h1, h2, h3, h4, h5, h6, p, a, li, td, th, blockquote, code, pre, span, lab
 @media (max-width: 767.98px) {
     #a, #b {
         border-radius: 0 0 8px 8px;
-        background-color: rgba(176, 189, 160, 0.65);
+        background-color: rgba(176, 189, 160, 0.77);
     }
 
     .row.g-0 {
         border-radius: 0 0 8px 8px;
-        backdrop-filter: blur(2px);
-        -webkit-backdrop-filter: blur(2px);
+        backdrop-filter: blur(3px);
+        -webkit-backdrop-filter: blur(3px);
     }
 
-    /* Mobile top bar - brand left, nav right, wave dividing */
     #mobile-topbar {
         position: relative;
-        z-index: 0;
         border-radius: 8px 8px 0 0;
         overflow: hidden;
-    }
-
-    #mobile-topbar::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='200' viewBox='0 0 400 200' preserveAspectRatio='none'%3E%3Crect width='400' height='200' fill='%23f5f3ed'/%3E%3Cpath d='M180 0 C210 50, 170 150, 200 200 L400 200 L400 0 Z' fill='%23b0bda0'/%3E%3C/svg%3E");
-        background-size: 100% 100%;
-        background-repeat: no-repeat;
-        opacity: 0.65;
-        z-index: -1;
     }
 
     #mobile-topbar-inner {

@@ -42,7 +42,7 @@
 		<script>
 			theme = default_background;
 			// Load theme CSS
-			$('<link>').appendTo('head').attr({type : 'text/css', rel : 'stylesheet'}).attr('href', 'themes/'+default_background+'/theme.css');
+			$('<link>').appendTo('head').attr({type : 'text/css', rel : 'stylesheet'}).attr('href', 'themes/'+default_background+'/theme.css?v=' + Date.now());
 			// Load theme background.js and signal when ready
 			$.getScript('themes/'+default_background+'/background.js')
 				.done(function() {
