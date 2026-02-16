@@ -18,7 +18,7 @@ Fresh, rendah minyak, tinggi protein, siap saji
 | Lauk Rumahan (Ayam / Ikan / Udang) | 35K | 300–400 kcal | Bisa tambah protein ekstra |
 | Extra Protein (Telur / Plant-based / Ayam / Ikan / Udang) | 8–15K | +100–160 kcal | Bisa ditambahkan ke menu lain |
 
-[**Pesan Menu Diet →**](https://wa.me/6289855062080?text=Halo%20Dini%20Dish!%20Saya%20mau%20pesan%20Menu%20Diet%20Sehat)
+[**Pesan Menu Diet →**](https://wa.me/628985506208?text=Halo%20Dini%20Dish!%20Saya%20mau%20pesan%20Menu%20Diet%20Sehat)
 
 ---
 
@@ -34,7 +34,7 @@ Untuk diet sehari penuh (~900–1.200 kcal):
 
 > Paket bisa terdiri dari kombinasi **Smoothie + Overnight Oats + Lauk Rumahan**
 
-[**Pesan Paket Diet →**](https://wa.me/6289855062080?text=Halo%20Dini%20Dish!%20Saya%20mau%20pesan%20Paket%20Meal%20Plan)
+[**Pesan Paket Diet →**](https://wa.me/628985506208?text=Halo%20Dini%20Dish!%20Saya%20mau%20pesan%20Paket%20Meal%20Plan)
 
 ---
 
@@ -50,7 +50,7 @@ Untuk diet sehari penuh (~900–1.200 kcal):
 - Cocok untuk kantor, sekolah, acara kecil
 - Bisa custom jumlah & lauk (10–200 pax)
 
-[**Pesan Lauk / Nasi Kotak →**](https://wa.me/6289855062080?text=Halo%20Dini%20Dish!%20Saya%20mau%20pesan%20Lauk%20Rumahan%20/%20Nasi%20Kotak)
+[**Pesan Lauk / Nasi Kotak →**](https://wa.me/628985506208?text=Halo%20Dini%20Dish!%20Saya%20mau%20pesan%20Lauk%20Rumahan%20/%20Nasi%20Kotak)
 
 ---
 
@@ -62,7 +62,7 @@ Untuk diet sehari penuh (~900–1.200 kcal):
 - **Free delivery** — area tertentu Tulungagung
 - Bisa custom menu sesuai permintaan
 
-[**Pesan Tumpeng / Acara →**](https://wa.me/6289855062080?text=Halo%20Dini%20Dish!%20Saya%20mau%20pesan%20Tumpeng%20/%20Pesanan%20Acara)
+[**Pesan Tumpeng / Acara →**](https://wa.me/628985506208?text=Halo%20Dini%20Dish!%20Saya%20mau%20pesan%20Tumpeng%20/%20Pesanan%20Acara)
 
 </div>
 <div class="lang-en">
@@ -85,7 +85,7 @@ Fresh, low oil, high protein, ready to eat
 | Home-Style Protein (Chicken / Fish / Shrimp) | 35K | 300–400 kcal | Extra protein available |
 | Extra Protein (Egg / Plant-based / Chicken / Fish / Shrimp) | 8–15K | +100–160 kcal | Can be added to any menu item |
 
-[**Order Diet Menu →**](https://wa.me/6289855062080?text=Hi%20Dini%20Dish!%20I'd%20like%20to%20order%20the%20Healthy%20Diet%20Menu)
+[**Order Diet Menu →**](https://wa.me/628985506208?text=Hi%20Dini%20Dish!%20I'd%20like%20to%20order%20the%20Healthy%20Diet%20Menu)
 
 ---
 
@@ -101,7 +101,7 @@ For a full day's diet (~900–1,200 kcal):
 
 > Packages can include a combination of **Smoothie + Overnight Oats + Home-Style Protein**
 
-[**Order Meal Plan →**](https://wa.me/6289855062080?text=Hi%20Dini%20Dish!%20I'd%20like%20to%20order%20a%20Meal%20Plan%20Package)
+[**Order Meal Plan →**](https://wa.me/628985506208?text=Hi%20Dini%20Dish!%20I'd%20like%20to%20order%20a%20Meal%20Plan%20Package)
 
 ---
 
@@ -117,7 +117,7 @@ For a full day's diet (~900–1,200 kcal):
 - Great for offices, schools, small events
 - Custom quantity & dishes (10–200 pax)
 
-[**Order Side Dishes / Rice Box →**](https://wa.me/6289855062080?text=Hi%20Dini%20Dish!%20I'd%20like%20to%20order%20Side%20Dishes%20/%20Rice%20Box)
+[**Order Side Dishes / Rice Box →**](https://wa.me/628985506208?text=Hi%20Dini%20Dish!%20I'd%20like%20to%20order%20Side%20Dishes%20/%20Rice%20Box)
 
 ---
 
@@ -129,6 +129,6 @@ For a full day's diet (~900–1,200 kcal):
 - **Free delivery** — select areas in Tulungagung
 - Custom menu available on request
 
-[**Order Tumpeng / Catering →**](https://wa.me/6289855062080?text=Hi%20Dini%20Dish!%20I'd%20like%20to%20order%20Tumpeng%20/%20Catering)
+[**Order Tumpeng / Catering →**](https://wa.me/628985506208?text=Hi%20Dini%20Dish!%20I'd%20like%20to%20order%20Tumpeng%20/%20Catering)
 
 </div>

@@ -38,7 +38,7 @@ Kami percaya makanan berkualitas tidak harus mahal. Harga kami mencerminkan nila
 
 Kami selalu senang mendengar dari Anda — baik untuk pemesanan, pertanyaan tentang menu, atau kebutuhan katering khusus.
 
-[Hubungi via WhatsApp: 0898-5506-208](https://wa.me/6289855062080)
+[Hubungi via WhatsApp: 089 855 062 08](https://wa.me/628985506208)
 
 > *Dini Dish — Makanan enak, perut senang.*
 
@@ -83,7 +83,7 @@ We believe quality food does not have to be expensive. Our prices reflect real v
 
 We are always happy to hear from you — whether for orders, menu enquiries, or special catering needs.
 
-[Contact via WhatsApp: 0898-5506-208](https://wa.me/6289855062080)
+[Contact via WhatsApp: 089 855 062 08](https://wa.me/628985506208)
 
 > *Dini Dish — Good meals, happy tummy.*
 

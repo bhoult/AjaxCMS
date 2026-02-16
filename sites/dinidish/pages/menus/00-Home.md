@@ -33,7 +33,7 @@ Setiap hidangan kami disiapkan dengan standar kebersihan tinggi di dapur kami ya
 
 Pemesanan dibuka setiap hari. Hubungi kami melalui WhatsApp untuk melihat menu hari ini dan melakukan pemesanan.
 
-[Pesan via WhatsApp: 0898-5506-208](https://wa.me/6289855062080)
+[Pesan via WhatsApp: 089 855 062 08](https://wa.me/628985506208)
 
 > *Dari dapur rumah kami, untuk meja makan Anda.*
 
@@ -73,7 +73,7 @@ Every dish is prepared to high hygiene standards in our well-maintained kitchen,
 
 Orders are open daily. Contact us via WhatsApp to see today's menu and place your order.
 
-[Order via WhatsApp: 0898-5506-208](https://wa.me/6289855062080)
+[Order via WhatsApp: 089 855 062 08](https://wa.me/628985506208)
 
 > *From our home kitchen, to your dining table.*
 
