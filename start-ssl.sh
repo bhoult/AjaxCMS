@@ -3,6 +3,8 @@
 # AjaxCMS SSL Server Startup Script
 # This script starts the AjaxCMS server with SSL enabled on ports 80 and 443
 
+set -euo pipefail
+
 # Configuration
 MAINTAINER_EMAIL="your@email.com"  # Change this to your email address
 APP_NAME="ajaxcms"
@@ -19,15 +21,22 @@ echo ""
 
 # Check if running as root
 if [ "$EUID" -ne 0 ]; then
-    echo -e "${RED}Error: This script must be run as root (ports 80 and 443 require root privileges)${NC}"
-    echo "Please run: sudo ./start-ssl.sh"
+    echo -e "${RED}Error: This script must be run as root (ports 80 and 443 require root privileges)${NC}" >&2
+    echo "Please run: sudo ./start-ssl.sh" >&2
     exit 1
 fi
 
 # Check if maintainer email is set
 if [ "$MAINTAINER_EMAIL" = "your@email.com" ]; then
-    echo -e "${YELLOW}Warning: Please edit this script and set MAINTAINER_EMAIL to your actual email address${NC}"
-    echo "This email is required by Let's Encrypt for SSL certificates"
+    echo -e "${YELLOW}Warning: Please edit this script and set MAINTAINER_EMAIL to your actual email address${NC}" >&2
+    echo "This email is required by Let's Encrypt for SSL certificates" >&2
+    exit 1
+fi
+
+# Preflight: pm2 must be installed
+if ! command -v pm2 >/dev/null 2>&1; then
+    echo -e "${RED}Error: pm2 is not installed or not on PATH${NC}" >&2
+    echo "Install it with: sudo npm install -g pm2" >&2
     exit 1
 fi
 
@@ -50,6 +59,20 @@ pm2 save
 # Setup pm2 to start on boot (only needs to be done once)
 echo "Setting up pm2 to start on system boot..."
 pm2 startup
+
+# Verify the process is actually online
+sleep 1
+STATUS=$(pm2 jlist 2>/dev/null | node -e "
+  let d='';process.stdin.on('data',c=>d+=c).on('end',()=>{
+    try{const p=JSON.parse(d).find(x=>x.name==='$APP_NAME');
+      console.log(p?p.pm2_env.status:'missing');}catch(e){console.log('parse-error');}
+  });" 2>/dev/null || echo "unknown")
+
+if [ "$STATUS" != "online" ]; then
+    echo -e "${RED}Error: pm2 process '$APP_NAME' is not online (status: $STATUS)${NC}" >&2
+    echo "Check logs with: pm2 logs $APP_NAME" >&2
+    exit 1
+fi
 
 echo ""
 echo -e "${GREEN}✓ Server started successfully!${NC}"
