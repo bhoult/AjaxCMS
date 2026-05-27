@@ -44,23 +44,17 @@
 		<!-- Load theme -->
 		<script>
 			theme = default_background;
-			// Load theme CSS
+			// Load theme CSS only; background animation intentionally disabled.
 			$('<link>').appendTo('head').attr({type : 'text/css', rel : 'stylesheet'}).attr('href', 'themes/'+default_background+'/theme.css');
-			// Load theme background.js and signal when ready
-			$.getScript('themes/'+default_background+'/background.js')
-				.done(function() {
-					setTimeout(function() {
-						if (window.themeReady) {
-							window.themeReady();
-						}
-					}, 100);
-				})
-				.fail(function(jqxhr, settings, exception) {
-					console.error('Error loading theme:', exception);
-					if (window.themeReady) {
-						window.themeReady();
-					}
-				});
+			// Signal ready *after* document.ready so that load_images()/load_pages()
+			// have incremented their counters; otherwise checkAndLoadInitialPage()
+			// would fire on empty arrays and the first page would render before any
+			// images are registered.
+			$(function() {
+				if (window.themeReady) {
+					window.themeReady();
+				}
+			});
 		</script>
 
 		<style>
