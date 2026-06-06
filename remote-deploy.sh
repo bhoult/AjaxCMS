@@ -16,5 +16,10 @@ else
 fi
 
 echo "Deploying to ajaxcms.org..."
-ssh ajaxcms.org "cd AjaxCMS && git pull"
+# Run deploy.sh on the server so it pulls AND restarts the service.
+# A restart is required for greenlock to discover newly added site domains
+# and provision their Let's Encrypt certificates; a bare "git pull" leaves
+# new sites unreachable over HTTPS until the next manual restart.
+# -t allocates a tty so the restart can prompt for sudo (server runs as root).
+ssh -t ajaxcms.org "cd AjaxCMS && ./deploy.sh"
 echo "Deployment complete."
