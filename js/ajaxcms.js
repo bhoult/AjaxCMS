@@ -82,7 +82,8 @@ var blogExcerptCache = {};
  * @returns {string|undefined} The parameter value or undefined if not found
  */
 function param(key) {
-	var params = window.location.href.replace(/.*\?/,'').split('&');
+	// Strip any URL fragment (#...) before parsing so it doesn't leak into values
+	var params = window.location.href.replace(/#.*$/,'').replace(/.*\?/,'').split('&');
 
 	for (var i=0; i<params.length; i++) {
 		var x = params[i].split("=");
@@ -170,6 +171,7 @@ function checkAndLoadInitialPage() {
 		// Load the page in the params if specified, first menu page otherwise.
 		var p = param('page');
 		if (p) {
+			p = p.split('#')[0]; // Drop any URL fragment so the page path stays clean
 			loadPage('./'+p, true);
 			current_page = p;
 		} else {
@@ -1387,12 +1389,20 @@ function fileToClass(n){
  */
 function highlightMenu(fn) {
 	var c = fn;
+	// Drop any URL fragment so it doesn't corrupt the generated selector
+	c = c.split('#')[0];
 	// Truncate to first 4 path segments for menu matching
-	if (fn.split('/').length > 4){ c = fn.split('/').slice(0,4).join('/');}
+	if (c.split('/').length > 4){ c = c.split('/').slice(0,4).join('/');}
 
     c = fileToClass(c);
 	$('#menu li').removeClass('active');
-	$('.'+c).addClass('active');
+	try {
+		$('.'+c).addClass('active');
+	} catch (e) {
+		// Invalid selector (unexpected characters in path) - skip highlighting
+		// rather than aborting the whole page load.
+		console.warn('highlightMenu: could not highlight "' + c + '":', e.message);
+	}
 }
 
 /**
@@ -1496,9 +1506,12 @@ $( document ).ready(function() {
 
 	// Browser back/forward button support
 	$(window).on("popstate", function(e) {
-		var page = e.originalEvent.state.page
+		var state = e.originalEvent.state;
+		if (!state || !state.page) { return; } // No stored page (e.g. fragment-only navigation)
 	    // Extract page path from URL and load without adding to history
-	    loadPage('./' + /(.*)\?page\=(.*)/.exec(page)[2],false);
+	    var match = /(.*)\?page\=(.*)/.exec(state.page);
+	    if (!match) { return; }
+	    loadPage('./' + match[2],false);
 	});
 
 	// Keyboard navigation with arrow keys
