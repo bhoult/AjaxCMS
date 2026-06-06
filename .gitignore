@@ -19,6 +19,7 @@ npm-debug.log
 
 # SSL certificates (Let's Encrypt via Greenlock)
 greenlock.d/
+.greenlockrc
 
 # Logs
 logs/
