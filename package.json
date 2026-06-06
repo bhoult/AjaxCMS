@@ -17,6 +17,9 @@
   ],
   "author": "",
   "license": "ISC",
+  "engines": {
+    "node": ">=20"
+  },
   "dependencies": {
     "@greenlock/manager": "^3.1.0",
     "bootstrap": "^5.3.8",
