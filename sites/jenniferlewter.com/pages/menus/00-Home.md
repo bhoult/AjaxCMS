@@ -23,7 +23,7 @@ I would like to serve in a state-level leadership position where I can help iden
 Your contribution helps us fight for public education, food security, and healthcare access for all Arkansans.
 
 <div style="text-align: center; margin: 25px 0;">
-<a href="https://secure.actblue.com/donate/lewter" class="btn btn-primary btn-lg" style="margin: 8px; min-width: 200px;">Donate via ActBlue</a>
+<a href="https://secure.actblue.com/donate/jennifer-lewter" class="btn btn-primary btn-lg" style="margin: 8px; min-width: 200px;">Donate via ActBlue</a>
 <a href="https://goodchange.app/donate/lewter" class="btn btn-success btn-lg" style="margin: 8px; min-width: 200px;">Donate via Goodchange</a>
 </div>
 
