@@ -432,24 +432,30 @@ app.use((req, res, next) => {
   }
 
   // Domain-based routing: Map hostnames to directories
-  // Check if hostname corresponds to a site directory
-  const hostSitePath = path.join(sitesPath, hostname);
-  try {
-    const indexPath = path.join(hostSitePath, 'index.html');
-    const stat = require('fs').statSync(indexPath);
-    if (stat.isFile()) {
-      // Hostname matches a site directory
-      req.siteName = hostname;
-      req.sitePath = hostSitePath;
-    } else {
-      // No site found for this hostname, show index
-      req.siteName = null;
-      req.sitePath = null;
+  // Check if hostname corresponds to a site directory.
+  // Try the raw hostname first, then a "www."-stripped variant so that
+  // www.example.com resolves to the sites/example.com directory.
+  const hostCandidates = [hostname];
+  if (hostname.startsWith('www.')) {
+    hostCandidates.push(hostname.slice(4));
+  }
+
+  req.siteName = null;
+  req.sitePath = null;
+  for (const candidate of hostCandidates) {
+    const hostSitePath = path.join(sitesPath, candidate);
+    try {
+      const indexPath = path.join(hostSitePath, 'index.html');
+      const stat = require('fs').statSync(indexPath);
+      if (stat.isFile()) {
+        // Hostname matches a site directory
+        req.siteName = candidate;
+        req.sitePath = hostSitePath;
+        break;
+      }
+    } catch (err) {
+      // No site directory for this candidate, try the next one
     }
-  } catch (err) {
-    // No site directory for this hostname, show index
-    req.siteName = null;
-    req.sitePath = null;
   }
 
   next();
