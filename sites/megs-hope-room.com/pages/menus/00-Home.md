@@ -8,9 +8,9 @@ Meg's Hope Room is a place to find hope in Jesus through prayer, encouragement, 
 
 <img src="images/megs-bird.png" alt="bird" class="megs-bird">
 
-<p style="margin: 5px 0;">{{a | coming-soon | Purchase <strong>The Equation for Hope</strong> on Amazon}}</p>
+<p style="margin: 5px 0;"><a href="https://www.amazon.com/dp/B0HCX3C3MT?lv=shuf&amp;bestFormat=true&amp;social_share=cm_sw_r_ffobk_cp_ud_dp_KQVA7VQDH1102PK3YAJ2_2&amp;channelId=704&amp;ref_=cm_sw_r_ffobk_cp_ud_dp_KQVA7VQDH1102PK3YAJ2_2&amp;plpRedirect=mhFallback" target="_blank">Purchase <strong>The Equation for Hope</strong> on Amazon</a></p>
 <p style="margin: 5px 0;">Equation for Hope Quick Guide: <a href="documents/quick-guide-color.pdf" target="_blank">Color</a> &nbsp;|&nbsp; <a href="documents/quick-guide-bw.pdf" target="_blank">Black &amp; White</a></p>
-<p style="margin: 5px 0;">{{a | coming-soon | Song "Get Your Hopes Up" by Alana Smith}}</p>
+<p style="margin: 5px 0;"><a href="https://www.youtube.com/watch?v=MBzcwLJMpo0" target="_blank">Song "Get Your Hopes Up" by Alana Smith</a></p>
 
 </div>
 
