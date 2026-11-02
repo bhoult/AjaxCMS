@@ -2,6 +2,8 @@
 
 > A lightweight, database-free CMS powered by JavaScript and Node.js
 
+Made by [Brandon Hoult](https://hoult.co) in 2016, with Claude since 2025.
+
 **AjaxCMS** is a modern content management system that generates dynamic websites from static files. No database required, no complex setup - just pure JavaScript magic with animated themes and powerful content helpers.
 
 **✨ Perfect for AI/LLM-Assisted Development** - Simple architecture, well-documented code, and clear patterns make it ideal for creating content and themes with AI assistants like Claude Code.
